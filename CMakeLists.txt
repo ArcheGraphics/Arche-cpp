@@ -39,5 +39,5 @@ add_subdirectory(math)
 add_subdirectory(test.math)
 
 add_subdirectory(framework)
-
+add_subdirectory(application)
 add_subdirectory(apps)
