@@ -38,4 +38,6 @@ add_subdirectory(third_party)
 add_subdirectory(math)
 add_subdirectory(test.math)
 
+add_subdirectory(framework)
+
 add_subdirectory(apps)
