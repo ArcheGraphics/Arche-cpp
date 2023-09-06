@@ -23,7 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		044DC3F22AA89D1400D26560 /* Arche-cpp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Arche-cpp"; sourceTree = BUILT_PRODUCTS_DIR; };
+		044DC3F22AA89D1400D26560 /* apps */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = apps; sourceTree = BUILT_PRODUCTS_DIR; };
 		044DC3F52AA89D1400D26560 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -41,7 +41,7 @@
 		044DC3E92AA89D1400D26560 = {
 			isa = PBXGroup;
 			children = (
-				044DC3F42AA89D1400D26560 /* Arche-cpp */,
+				044DC3F42AA89D1400D26560 /* apps */,
 				044DC3F32AA89D1400D26560 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -49,25 +49,25 @@
 		044DC3F32AA89D1400D26560 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				044DC3F22AA89D1400D26560 /* Arche-cpp */,
+				044DC3F22AA89D1400D26560 /* apps */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		044DC3F42AA89D1400D26560 /* Arche-cpp */ = {
+		044DC3F42AA89D1400D26560 /* apps */ = {
 			isa = PBXGroup;
 			children = (
 				044DC3F52AA89D1400D26560 /* main.cpp */,
 			);
-			path = "Arche-cpp";
+			path = apps;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		044DC3F12AA89D1400D26560 /* Arche-cpp */ = {
+		044DC3F12AA89D1400D26560 /* apps */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 044DC3F92AA89D1400D26560 /* Build configuration list for PBXNativeTarget "Arche-cpp" */;
+			buildConfigurationList = 044DC3F92AA89D1400D26560 /* Build configuration list for PBXNativeTarget "apps" */;
 			buildPhases = (
 				044DC3EE2AA89D1400D26560 /* Sources */,
 				044DC3EF2AA89D1400D26560 /* Frameworks */,
@@ -77,9 +77,9 @@
 			);
 			dependencies = (
 			);
-			name = "Arche-cpp";
+			name = apps;
 			productName = "Arche-cpp";
-			productReference = 044DC3F22AA89D1400D26560 /* Arche-cpp */;
+			productReference = 044DC3F22AA89D1400D26560 /* apps */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -109,7 +109,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				044DC3F12AA89D1400D26560 /* Arche-cpp */,
+				044DC3F12AA89D1400D26560 /* apps */,
 			);
 		};
 /* End PBXProject section */
@@ -267,7 +267,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		044DC3F92AA89D1400D26560 /* Build configuration list for PBXNativeTarget "Arche-cpp" */ = {
+		044DC3F92AA89D1400D26560 /* Build configuration list for PBXNativeTarget "apps" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				044DC3FA2AA89D1400D26560 /* Debug */,
