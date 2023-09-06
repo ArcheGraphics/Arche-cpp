@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef singleton_h
-#define singleton_h
+#pragma once
 
 #include <cassert>
 
@@ -48,4 +47,3 @@ public:
 };
 
 }// namespace vox
-#endif /* singleton_h */

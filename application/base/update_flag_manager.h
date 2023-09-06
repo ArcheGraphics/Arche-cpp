@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef updateFlag_manager_hpp
-#define updateFlag_manager_hpp
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -25,4 +24,3 @@ private:
 };
 
 }// namespace vox
-#endif /* updateFlag_manager_hpp */

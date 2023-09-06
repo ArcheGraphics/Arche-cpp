@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef wireframe_primitive_mesh_hpp
-#define wireframe_primitive_mesh_hpp
+#pragma once
 
 #include "model_mesh.h"
 #include "vector3.h"
@@ -39,4 +38,3 @@ private:
 };
 
 }// namespace vox
-#endif /* wireframe_primitive_mesh_hpp */

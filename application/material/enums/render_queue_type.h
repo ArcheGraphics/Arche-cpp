@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_queue_type_h
-#define render_queue_type_h
+#pragma once
 
 /**
  * Render queue type.
@@ -20,5 +19,3 @@ struct RenderQueueType {
         Transparent = 3000
     };
 };
-
-#endif /* render_queue_type_h */

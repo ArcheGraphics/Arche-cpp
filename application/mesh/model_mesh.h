@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef model_mesh_hpp
-#define model_mesh_hpp
+#pragma once
 
 #include "graphics/mesh.h"
 #include "vector2.h"
@@ -180,5 +179,3 @@ private:
 using ModelMeshPtr = std::shared_ptr<ModelMesh>;
 
 }// namespace vox
-
-#endif /* model_mesh_hpp */

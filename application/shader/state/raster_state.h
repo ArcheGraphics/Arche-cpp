@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef raster_state_hpp
-#define raster_state_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -34,5 +33,3 @@ struct RasterState {
 };
 
 }// namespace vox
-
-#endif /* raster_state_hpp */

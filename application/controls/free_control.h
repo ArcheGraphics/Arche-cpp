@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef free_control_hpp
-#define free_control_hpp
+#pragma once
 
 #include "../script.h"
 #include "spherical.h"
@@ -131,5 +130,3 @@ private:
 
 }
 }// namespace vox::control
-
-#endif /* free_control_hpp */

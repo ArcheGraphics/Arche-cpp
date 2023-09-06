@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef stb_hpp
-#define stb_hpp
+#pragma once
 
 #include "image.h"
 
@@ -18,4 +17,3 @@ public:
 };
 
 }// namespace vox
-#endif /* stb_hpp */

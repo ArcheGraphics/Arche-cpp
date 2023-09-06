@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef updateFlag_hpp
-#define updateFlag_hpp
+#pragma once
 
 #include <stdio.h>
 
@@ -31,5 +30,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* updateFlag_hpp */

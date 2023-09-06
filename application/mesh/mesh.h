@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef mesh_hpp
-#define mesh_hpp
+#pragma once
 
 #include "sub_mesh.h"
 #include "bounding_box3.h"
@@ -91,5 +90,3 @@ protected:
 using MeshPtr = std::shared_ptr<Mesh>;
 
 }// namespace vox
-
-#endif /* mesh_hpp */

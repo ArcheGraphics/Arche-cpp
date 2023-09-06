@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_context_hpp
-#define render_context_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
@@ -51,5 +50,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* render_context_hpp */

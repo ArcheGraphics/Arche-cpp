@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef spot_light_hpp
-#define spot_light_hpp
+#pragma once
 
 #include "light.h"
 #include "color.h"
@@ -50,5 +49,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* spot_light_hpp */

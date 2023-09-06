@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef gui_hpp
-#define gui_hpp
+#pragma once
 
 #include "gui/imgui.h"
 #include <Metal/Metal.hpp>
@@ -25,5 +24,3 @@ public:
 };
 
 }// namespace vox
-
-#endif /* gui_hpp */

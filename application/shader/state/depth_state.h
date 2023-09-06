@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef depth_state_hpp
-#define depth_state_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -36,5 +35,3 @@ struct DepthState {
 };
 
 }// namespace vox
-
-#endif /* depth_state_hpp */

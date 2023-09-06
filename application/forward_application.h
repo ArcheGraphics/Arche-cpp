@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef forward_hpp
-#define forward_hpp
+#pragma once
 
 #include "graphics_application.h"
 #include "shadow/shadow_manager.h"
@@ -59,5 +58,3 @@ protected:
 };
 
 }// namespace vox
-
-#endif /* forward_hpp */

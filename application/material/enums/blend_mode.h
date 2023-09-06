@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef blend_mode_h
-#define blend_mode_h
+#pragma once
 
 /**
  * Alpha blend mode.
@@ -16,5 +15,3 @@ enum class BlendMode {
     /** SRC ALPHA * SRC + ONE * DEST */
     Additive
 };
-
-#endif /* blend_mode_h */

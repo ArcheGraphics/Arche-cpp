@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef sampled_texturecube_hpp
-#define sampled_texturecube_hpp
+#pragma once
 
 #include "sampled_texture2d_view.h"
 #include "image/image.h"
@@ -40,4 +39,3 @@ public:
 using SampledTextureCubePtr = std::shared_ptr<SampledTextureCube>;
 
 }// namespace vox
-#endif /* sampled_texturecube_hpp */

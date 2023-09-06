@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef shader_hpp
-#define shader_hpp
+#pragma once
 
 #include <unordered_map>
 #include <string>
@@ -72,5 +71,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* shader_hpp */

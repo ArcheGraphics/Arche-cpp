@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef layer_h
-#define layer_h
+#pragma once
 
 namespace vox {
 /**
@@ -83,5 +82,3 @@ enum Layer {
 };
 
 }// namespace vox
-
-#endif /* layer_h */

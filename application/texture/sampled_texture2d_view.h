@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef sampled_texture2d_view_hpp
-#define sampled_texture2d_view_hpp
+#pragma once
 
 #include "sampled_texture2d.h"
 
@@ -23,5 +22,3 @@ private:
 using SampledTexture2DViewPtr = std::shared_ptr<SampledTexture2DView>;
 
 }// namespace vox
-
-#endif /* sampled_texture2d_view_hpp */

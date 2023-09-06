@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef image_hpp
-#define image_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 #include <string>
@@ -90,5 +89,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* image_hpp */

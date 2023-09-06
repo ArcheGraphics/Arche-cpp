@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef orbit_control_hpp
-#define orbit_control_hpp
+#pragma once
 
 #include "../script.h"
 #include "vector3.h"
@@ -351,5 +350,3 @@ private:
 
 }
 }// namespace vox::control
-
-#endif /* orbit_control_hpp */

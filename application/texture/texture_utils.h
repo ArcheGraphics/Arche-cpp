@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef texture_utils_hpp
-#define texture_utils_hpp
+#pragma once
 
 #include "sampled_texturecube.h"
 #include "sampled_texture2d.h"
@@ -42,5 +41,3 @@ public:
 };
 
 }// namespace vox
-
-#endif /* texture_utils_hpp */

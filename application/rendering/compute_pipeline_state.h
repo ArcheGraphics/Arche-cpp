@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef compute_pipeline_state_hpp
-#define compute_pipeline_state_hpp
+#pragma once
 
 #include "shader/shader_uniform.h"
 #include <Metal/Metal.hpp>
@@ -32,4 +31,3 @@ private:
 };
 
 }// namespace vox
-#endif /* compute_pipeline_state_hpp */

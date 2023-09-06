@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef metal_application_hpp
-#define metal_application_hpp
+#pragma once
 
 #include "application.h"
 #include <Metal/Metal.hpp>
@@ -66,5 +65,3 @@ protected:
 };
 
 }// namespace vox
-
-#endif /* metal_application_hpp */

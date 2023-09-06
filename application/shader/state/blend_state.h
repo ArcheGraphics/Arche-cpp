@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef blend_state_hpp
-#define blend_state_hpp
+#pragma once
 
 #include "renderTarget_blend_state.h"
 #include "color.h"
@@ -38,5 +37,3 @@ struct BlendState {
 };
 
 }// namespace vox
-
-#endif /* blend_state_hpp */

@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef shader_macro_collection_hpp
-#define shader_macro_collection_hpp
+#pragma once
 
 #include <unordered_map>
 #include <Metal/Metal.hpp>
@@ -40,5 +39,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* shader_macro_collection_hpp */

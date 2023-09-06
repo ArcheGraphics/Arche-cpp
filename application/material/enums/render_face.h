@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_face_h
-#define render_face_h
+#pragma once
 
 /**
  * Set which face for render.
@@ -18,5 +17,3 @@ enum class RenderFace {
     /** Render double face. */
     Double
 };
-
-#endif /* render_face_h */

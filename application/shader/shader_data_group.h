@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef shaderData_group_h
-#define shaderData_group_h
+#pragma once
 
 namespace vox {
 /**
@@ -26,5 +25,3 @@ enum class ShaderDataGroup {
 };
 
 }// namespace vox
-
-#endif /* shaderData_group_h */

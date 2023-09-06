@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef material_hpp
-#define material_hpp
+#pragma once
 
 #include "shader/shader.h"
 #include "shader/shader_data.h"
@@ -39,5 +38,3 @@ public:
 using MaterialPtr = std::shared_ptr<Material>;
 
 }// namespace vox
-
-#endif /* material_hpp */

@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef sub_mesh_hpp
-#define sub_mesh_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -63,5 +62,3 @@ inline const std::shared_ptr<MTL::Buffer> &SubMesh::indexBuffer() const {
 }
 
 }// namespace vox
-
-#endif /* sub_mesh_hpp */

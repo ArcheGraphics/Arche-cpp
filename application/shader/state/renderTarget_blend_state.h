@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef renderTarget_blend_state_hpp
-#define renderTarget_blend_state_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -33,5 +32,3 @@ struct RenderTargetBlendState {
 };
 
 }// namespace vox
-
-#endif /* renderTarget_blend_state_hpp */

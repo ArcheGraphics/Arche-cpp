@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef compute_subpass_hpp
-#define compute_subpass_hpp
+#pragma once
 
 #include "resource_cache.h"
 #include "scene.h"
@@ -78,4 +77,3 @@ private:
 };
 
 }// namespace vox
-#endif /* compute_subpass_hpp */

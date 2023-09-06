@@ -5,8 +5,7 @@
 //  Created by 杨丰 on 2021/11/27.
 //
 
-#ifndef shader_pool_hpp
-#define shader_pool_hpp
+#pragma once
 
 #include <stdio.h>
 
@@ -20,5 +19,3 @@ public:
 };
 
 }// namespace vox
-
-#endif /* shader_pool_hpp */

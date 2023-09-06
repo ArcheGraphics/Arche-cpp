@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_pipeline_state_hpp
-#define render_pipeline_state_hpp
+#pragma once
 
 #include "shader/shader_uniform.h"
 #include "shader/shader_data_group.h"
@@ -40,5 +39,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* render_pipeline_state_hpp */

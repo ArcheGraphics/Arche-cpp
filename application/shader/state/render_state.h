@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_state_hpp
-#define render_state_hpp
+#pragma once
 
 #include "blend_state.h"
 #include "raster_state.h"
@@ -32,5 +31,3 @@ struct RenderState {
 };
 
 }// namespace vox
-
-#endif /* render_state_hpp */

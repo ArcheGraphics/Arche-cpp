@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef stencil_state_hpp
-#define stencil_state_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -51,4 +50,3 @@ struct StencilState {
 };
 
 }// namespace vox
-#endif /* stencil_state_hpp */

@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef buffer_mesh_hpp
-#define buffer_mesh_hpp
+#pragma once
 
 #include "graphics/mesh.h"
 
@@ -46,5 +45,3 @@ public:
 };
 
 }// namespace vox
-
-#endif /* buffer_mesh_hpp */

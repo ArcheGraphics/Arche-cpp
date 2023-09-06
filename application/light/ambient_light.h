@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef ambient_light_hpp
-#define ambient_light_hpp
+#pragma once
 
 #include "scene_forward.h"
 #include <Metal/Metal.hpp>
@@ -138,5 +137,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* ambient_light_hpp */

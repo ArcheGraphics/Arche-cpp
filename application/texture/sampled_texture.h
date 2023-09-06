@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef sampled_texture_hpp
-#define sampled_texture_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 
@@ -119,5 +118,3 @@ protected:
 using SampledTexturePtr = std::shared_ptr<SampledTexture>;
 
 }// namespace vox
-
-#endif /* sampled_texture_hpp */

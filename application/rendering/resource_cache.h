@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef resource_cache_hpp
-#define resource_cache_hpp
+#pragma once
 
 #include "shader/shader_macro_collection.h"
 #include "render_pipeline_state.h"
@@ -78,5 +77,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* resource_cache_hpp */

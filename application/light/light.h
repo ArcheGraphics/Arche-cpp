@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef light_hpp
-#define light_hpp
+#pragma once
 
 #include "component.h"
 #include "matrix4x4.h"
@@ -69,4 +68,3 @@ private:
 };
 
 }// namespace vox
-#endif /* light_hpp */

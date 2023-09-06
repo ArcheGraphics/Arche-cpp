@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef subpass_hpp
-#define subpass_hpp
+#pragma once
 
 #include <Metal/Metal.hpp>
 #include "scene.h"
@@ -70,5 +69,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* subpass_hpp */

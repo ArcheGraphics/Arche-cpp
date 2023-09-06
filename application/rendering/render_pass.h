@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef render_pass_hpp
-#define render_pass_hpp
+#pragma once
 
 #include "subpass.h"
 #include "resource_cache.h"
@@ -79,5 +78,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* render_pass_hpp */

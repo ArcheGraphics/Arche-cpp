@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef unlit_material_hpp
-#define unlit_material_hpp
+#pragma once
 
 #include "base_material.h"
 #include "color.h"
@@ -51,5 +50,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* unlit_material_hpp */

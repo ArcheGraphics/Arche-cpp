@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef base_material_hpp
-#define base_material_hpp
+#pragma once
 
 #include "material.h"
 #include "enums/render_face.h"
@@ -64,4 +63,3 @@ private:
 };
 
 }// namespace vox
-#endif /* base_material_hpp */

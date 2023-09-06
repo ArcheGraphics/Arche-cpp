@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef shader_property_hpp
-#define shader_property_hpp
+#pragma once
 
 #include "shader_data_group.h"
 #include <string>
@@ -29,4 +28,3 @@ private:
 };
 
 }// namespace vox
-#endif /* shader_property_hpp */

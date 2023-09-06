@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef spherical_hpp
-#define spherical_hpp
+#pragma once
 
 #include "vector3.h"
 
@@ -36,5 +35,3 @@ private:
 
 }
 }// namespace vox::control
-
-#endif /* spherical_hpp */

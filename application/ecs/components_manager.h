@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef component_manager_hpp
-#define component_manager_hpp
+#pragma once
 
 #include "matrix4x4.h"
 #include "bounding_frustum.h"
@@ -102,5 +101,3 @@ private:
 };
 
 }// namespace vox
-
-#endif /* component_manager_hpp */

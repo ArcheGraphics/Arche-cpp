@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef light_manager_hpp
-#define light_manager_hpp
+#pragma once
 
 #include "point_light.h"
 #include "spot_light.h"
@@ -145,5 +144,3 @@ template<>
 inline LightManager *Singleton<LightManager>::msSingleton{nullptr};
 
 }// namespace vox
-
-#endif /* light_manager_hpp */
