@@ -25,6 +25,18 @@ set(RENDERING_FILES
         rendering/render_context.mm
 )
 
+set(FG_FILES
+        fg/framegraph.h
+        fg/realize.h
+        fg/render_task.h
+        fg/render_task_base.h
+        fg/render_task_builder.h
+        fg/resource.h
+        fg/resource_base.h
+        # Source Files
+        fg/framegraph.cpp
+)
+
 source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
 source_group("rendering\\" FILES ${RENDERING_FILES})
@@ -32,6 +44,7 @@ source_group("rendering\\" FILES ${RENDERING_FILES})
 set(PROJECT_FILES
         ${COMMON_FILES}
         ${RENDERING_FILES}
+        ${FG_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.

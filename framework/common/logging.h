@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #define LOGGER_FORMAT "[%^%l%$] %v"
-#define PROJECT_NAME "VkCompute"
+#define PROJECT_NAME "Arche-cpp"
 
 // Mainly for IDEs
 #ifndef ROOT_PATH_SIZE
