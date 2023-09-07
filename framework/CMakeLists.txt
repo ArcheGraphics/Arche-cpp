@@ -13,16 +13,11 @@ set(COMMON_FILES
         common/helpers.h
         common/logging.h
         common/timer.h
+        common/filesystem.h
         # Source Files
         common/logging.cpp
         common/timer.cpp
-)
-
-set(RENDERING_FILES
-        # Header files
-        rendering/render_context.h
-        # Source files
-        rendering/render_context.mm
+        common/filesystem.cpp
 )
 
 set(FG_FILES
@@ -43,7 +38,6 @@ source_group("rendering\\" FILES ${RENDERING_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
-        ${RENDERING_FILES}
         ${FG_FILES}
 )
 

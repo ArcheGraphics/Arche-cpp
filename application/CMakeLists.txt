@@ -39,6 +39,8 @@ set(TEXTURE_FILES
         texture/sampled_texture.cpp
         texture/sampled_texture2d.h
         texture/sampled_texture2d.cpp
+        texture/sampled_texture3d.h
+        texture/sampled_texture3d.cpp
         texture/sampled_texture2d_view.h
         texture/sampled_texture2d_view.cpp
         texture/sampled_texturecube.h
@@ -172,6 +174,19 @@ set(GUI_FILES
         gui/gui.cpp
 )
 
+set(PLATFORM_FILES
+        platform/platform.cpp
+        platform/platform.h
+        platform/unix_platform.cpp
+        platform/unix_platform.h
+        platform/input_events.cpp
+        platform/input_events.h
+        platform/window.cpp
+        platform/window.h
+        platform/glfw_window.cpp
+        platform/glfw_window.h
+)
+
 source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
 
@@ -189,6 +204,7 @@ set(PROJECT_FILES
         ${CONTROL_FILES}
         ${RENDERING_FILES}
         ${GUI_FILES}
+        ${PLATFORM_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
