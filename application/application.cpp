@@ -14,8 +14,6 @@ Application::Application() : name{"Sample Name"} {
 }
 
 bool Application::prepare(Platform &engine) {
-    assert(options.window != nullptr && "Window must be valid");
-
     window = &engine.get_window();
 
     return true;

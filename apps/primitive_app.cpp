@@ -54,14 +54,14 @@ Camera *PrimitiveApp::load_scene() {
     auto material = std::make_shared<UnlitMaterial>(*_device);
     material->set_base_color(Color(0.4, 0.6, 0.6));
     renderer->set_material(material);
-
-    auto plane_entity = root_entity->create_child();
-    plane_entity->transform->set_position(0, 5, 0);
-    auto plane_renderer = plane_entity->add_component<MeshRenderer>();
-    plane_renderer->setMesh(PrimitiveMesh::createSphere(*_device, 1));
-    auto textured_material = std::make_shared<UnlitMaterial>(*_device);
-    textured_material->set_base_texture(TextureManager::get_singleton().load_texture("Textures/wood.png"));
-    plane_renderer->set_material(textured_material);
+//
+//    auto plane_entity = root_entity->create_child();
+//    plane_entity->transform->set_position(0, 5, 0);
+//    auto plane_renderer = plane_entity->add_component<MeshRenderer>();
+//    plane_renderer->setMesh(PrimitiveMesh::createSphere(*_device, 1));
+//    auto textured_material = std::make_shared<UnlitMaterial>(*_device);
+//    textured_material->set_base_texture(TextureManager::get_singleton().load_texture("Textures/wood.png"));
+//    plane_renderer->set_material(textured_material);
 
     scene->play();
     return main_camera;
