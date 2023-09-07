@@ -95,7 +95,7 @@ static void throughput(::benchmark::State &state,
         encoder->setBuffer(src0_buffer.get(), 0, 0);
         encoder->setBuffer(src1_buffer.get(), 0, 1);
         encoder->setBuffer(dst_buffer.get(), 0, 2);
-        encoder->dispatchThreads({(uint32_t)num_element / (4 * 16), 1, 1}, {w, 1, 1});
+        encoder->dispatchThreads({(uint32_t)num_element / 4, 1, 1}, {w, 1, 1});
 
         encoder->endEncoding();
         commandBuffer->commit();
@@ -145,7 +145,7 @@ static void throughput(::benchmark::State &state,
             encoder->setBuffer(src0_buffer.get(), 0, 0);
             encoder->setBuffer(src1_buffer.get(), 0, 1);
             encoder->setBuffer(dst_buffer.get(), 0, 2);
-            encoder->dispatchThreads({(uint32_t)num_element / (4 * 16), 1, 1}, {w, 1, 1});
+            encoder->dispatchThreads({(uint32_t)num_element / 4, 1, 1}, {w, 1, 1});
 
             encoder->endEncoding();
 
