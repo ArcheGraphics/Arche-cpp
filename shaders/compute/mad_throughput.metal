@@ -17,16 +17,16 @@ kernel void mad_throughput(device float4* inputA [[buffer(0)]],
     float4 b = inputB[tpig.x];
     float4 c = float4(1.f, 1.f, 1.f, 1.f);
     for(int i = 0; i < kLoopSize; i++) {
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
-      c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
+        c = a * c + b;
     }
     output[tpig.x] = c;
 }
