@@ -9,6 +9,7 @@
 #include "compute/status_util.h"
 #include "compute/data_type_util.h"
 #include "framework/common/metal_helpers.h"
+#include "framework/common/filesystem.h"
 #include <spdlog/fmt/fmt.h>
 #include <gtest/gtest.h>
 
@@ -168,12 +169,11 @@ static void throughput(::benchmark::State &state,
 void MADThroughPut::register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queue) {
     const char *gpu_name = queue->device()->name()->cString(NS::UTF8StringEncoding);
 
-    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::alloc()->init());
+    auto raw_source = fs::read_shader("compute/mad_throughput.metal");
+    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::alloc()->string(raw_source.c_str(), NS::UTF8StringEncoding));
     NS::Error *error{nullptr};
     auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
     _library = CLONE_METAL_CUSTOM_DELETER(MTL::Library, queue->device()->newLibrary(source.get(), option.get(), &error));
-    auto functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::alloc()->init());
-    _function = CLONE_METAL_CUSTOM_DELETER(MTL::Function, _library->newFunction(functionName.get()));
 
     const size_t num_element = 1024 * 1024;
     const int min_loop_count = 100000;
@@ -182,7 +182,13 @@ void MADThroughPut::register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queu
     for (int loop_count = min_loop_count; loop_count <= max_loop_count;
          loop_count += min_loop_count) {
         std::string test_name = fmt::format("{}/{}/{}/{}", gpu_name, "mad_throughput", num_element, loop_count);
-        ::benchmark::RegisterBenchmark(test_name, throughput, queue, _function,
+
+        auto constantValue = CLONE_METAL_CUSTOM_DELETER(MTL::FunctionConstantValues, MTL::FunctionConstantValues::alloc()->init());
+        constantValue->setConstantValue(&loop_count, MTL::DataTypeInt, NS::UInteger(0));
+        auto functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::alloc()->string("mad_throughput", NS::UTF8StringEncoding));
+        auto function = CLONE_METAL_CUSTOM_DELETER(MTL::Function, _library->newFunction(functionName.get()));
+
+        ::benchmark::RegisterBenchmark(test_name, throughput, queue, function,
                                        num_element, loop_count, compute::DataType::fp32)
             ->UseManualTime()
             ->Unit(::benchmark::kMicrosecond)

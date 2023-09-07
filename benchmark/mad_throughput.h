@@ -15,7 +15,6 @@ public:
 
 private:
     std::shared_ptr<MTL::Library> _library{nullptr};
-    std::shared_ptr<MTL::Function> _function{nullptr};
 };
 
 }// namespace vox
