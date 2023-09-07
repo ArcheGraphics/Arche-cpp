@@ -294,7 +294,7 @@ bool Renderer::drawMainView(MTK::View *view, double timeCode) {
     }];
 
     // Copy the rendered texture to the view.
-    blitToView(view, static_cast<MTL::CommandBuffer *>(commandBuffer), static_cast<MTL::Texture *>(texture));
+    blitToView(view, (__bridge MTL::CommandBuffer *)(commandBuffer), (__bridge MTL::Texture *)(texture));
 
     // Tell Hydra to commit the command buffer, and complete the work.
     hgi->CommitPrimaryCommandBuffer();
