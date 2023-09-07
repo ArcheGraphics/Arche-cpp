@@ -15,7 +15,7 @@ class Renderer;
 class MyMTKViewDelegate : public MTK::ViewDelegate {
 public:
     explicit MyMTKViewDelegate(MTL::Device *pDevice);
-    ~MyMTKViewDelegate() override = default;
+    ~MyMTKViewDelegate() override;
 
     void drawInMTKView(MTK::View *pView) override;
 

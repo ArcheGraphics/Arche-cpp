@@ -7,6 +7,11 @@
 #include "delegate.h"
 #include "renderer.h"
 
+#include "framework/common/logging.h"
+#include <spdlog/async_logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+
 namespace vox {
 
 MyAppDelegate::~MyAppDelegate() {
@@ -76,7 +81,7 @@ void MyAppDelegate::applicationDidFinishLaunching(NS::Notification *pNotificatio
     _pDevice = MTL::CreateSystemDefaultDevice();
 
     _pMtkView = MTK::View::alloc()->init(frame, _pDevice);
-    _pMtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
+    _pMtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
     _pMtkView->setClearColor(MTL::ClearColor::Make(1.0, 0.0, 0.0, 1.0));
 
     _pViewDelegate = new MyMTKViewDelegate(_pDevice);
@@ -97,7 +102,27 @@ bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed(NS::Applicat
 
 MyMTKViewDelegate::MyMTKViewDelegate(MTL::Device *pDevice)
     : MTK::ViewDelegate(), _pRenderer(std::make_unique<Renderer>(pDevice)) {
+    // setup logger
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+
+    auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
+
+#ifdef METAL_DEBUG
+    logger->set_level(spdlog::level::debug);
+#else
+    logger->set_level(spdlog::level::info);
+#endif
+
+    logger->set_pattern(LOGGER_FORMAT);
+    spdlog::set_default_logger(logger);
+
     _pRenderer->setupScene("/Users/yangfeng/Downloads/Kitchen_set/Kitchen_set.usd");
+}
+
+MyMTKViewDelegate::~MyMTKViewDelegate() {
+    _pRenderer.reset();
+    spdlog::drop_all();
 }
 
 void MyMTKViewDelegate::drawInMTKView(MTK::View *pView) {
