@@ -5,7 +5,6 @@
 //  property of any third parties.
 
 #include "common/filesystem.h"
-#include "platform/platform.h"
 
 namespace vox::fs {
 namespace path {
@@ -20,13 +19,6 @@ const std::unordered_map<Type, std::string> relative_paths = {
 std::string get(const Type type, const std::string &file) {
     assert(relative_paths.size() == Type::TotalRelativePathTypes && "Not all paths are defined in filesystem, please check that each enum is specified");
 
-    // Check for special cases first
-    if (type == Type::WorkingDir) {
-        return Platform::get_external_storage_directory();
-    } else if (type == Type::Temp) {
-        return Platform::get_temp_directory();
-    }
-
     // Check for relative paths
     auto it = relative_paths.find(type);
 
@@ -38,10 +30,10 @@ std::string get(const Type type, const std::string &file) {
         throw std::runtime_error("Path was found, but it is empty");
     }
 
-    auto path = Platform::get_external_storage_directory() + it->second;
+    auto path = it->second;
 
     if (!is_directory(path)) {
-        create_path(Platform::get_external_storage_directory(), it->second);
+        create_path("", it->second);
     }
 
     return path + file;
@@ -62,6 +54,12 @@ bool is_directory(const std::string &path) {
 bool is_file(const std::string &filename) {
     std::ifstream f(filename.c_str());
     return !f.fail();
+}
+
+void create_directory(const std::string &path) {
+    if (!is_directory(path)) {
+        mkdir(path.c_str(), 0777);
+    }
 }
 
 void create_path(const std::string &root, const std::string &path) {

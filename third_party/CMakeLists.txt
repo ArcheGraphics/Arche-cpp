@@ -1,3 +1,9 @@
+#  Copyright (c) 2023 Feng Yang
+#
+#  I am making my contributions/submissions to this project solely in my
+#  personal capacity and am not conveying any rights to any intellectual
+#  property of any third parties.
+
 # Metal cpp
 add_library(metal-cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/definition.cpp
@@ -24,9 +30,6 @@ set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(benchmark EXCLUDE_FROM_ALL)
 
-# tinygltf
-add_subdirectory(tinygltf)
-
 # imgui
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/imgui")
 set(IMGUI_FILES
@@ -51,13 +54,3 @@ target_include_directories(stb INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/stb")
 
 # spdlog
 add_subdirectory(spdlog)
-
-# GLFW
-option(GLFW_BUILD_DOCS OFF)
-option(GLFW_BUILD_TESTS OFF)
-option(GLFW_BUILD_EXAMPLES OFF)
-option(GLFW_BUILD_TESTS OFF)
-option(GLFW_INSTALL OFF)
-option(BUILD_SHARED_LIBS ON)
-add_subdirectory(glfw)
-set_property(TARGET glfw PROPERTY FOLDER "ThirdParty")

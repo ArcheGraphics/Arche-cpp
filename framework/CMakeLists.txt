@@ -34,24 +34,6 @@ set(FG_FILES
         fg/framegraph.cpp
 )
 
-set(PLATFORM_FILES
-        platform/platform.cpp
-        platform/platform.h
-        platform/unix_platform.cpp
-        platform/unix_platform.h
-        platform/input_events.cpp
-        platform/input_events.h
-        platform/window.cpp
-        platform/window.h
-        platform/glfw_window.cpp
-        platform/glfw_window.h
-)
-
-set(RENDERING_FILES
-        rendering/render_context.h
-        rendering/render_context.mm
-)
-
 set(COMPUTE_FILES
         compute/data_type_util.h
         compute/data_type_util.cpp
@@ -65,16 +47,12 @@ set(COMPUTE_FILES
 
 source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
-source_group("rendering\\" FILES ${RENDERING_FILES})
 source_group("compute\\" FILES ${COMPUTE_FILES})
-source_group("platform\\" FILES ${PLATFORM_FILES})
 source_group("framegraph\\" FILES ${FG_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
         ${FG_FILES}
-        ${PLATFORM_FILES}
-        ${RENDERING_FILES}
         ${COMPUTE_FILES}
 )
 
@@ -101,7 +79,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         metal-cpp
-        glfw
 )
 
 if (${NEED_LINK_ATOMIC})
