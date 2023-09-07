@@ -26,11 +26,13 @@ public:
 
     void draw(MTK::View *pView);
 
+    void drawableSizeWillChange(MTK::View *pView, CGSize size);
+
     /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
     void requestFrame();
 
-    /// Uses Hydra to load the USD or USDZ file.
-    bool loadStage(const std::string &filePath);
+    /// Loads the scene from the provided URL and prepares the camera.
+    void setupScene(const std::string &url);
 
     [[nodiscard]] bool isZUp() const { return _isZUp; }
 
@@ -56,8 +58,8 @@ private:
     /// Returns false if the engine wasn't initialized.
     bool drawMainView(MTK::View *view, double timeCode);
 
-    /// Loads the scene from the provided URL and prepares the camera.
-    void setupScene(const std::string &url);
+    /// Uses Hydra to load the USD or USDZ file.
+    bool loadStage(const std::string &filePath);
 
     /// Determine the size of the world so the camera will frame its entire bounding box.
     void calculateWorldCenterAndSize();

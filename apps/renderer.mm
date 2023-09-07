@@ -141,9 +141,8 @@ void Renderer::initializeMaterial() {
 /// Prepares the Metal objects for copying to the view.
 void Renderer::loadMetal() {
     auto raw_source = fs::read_shader("usd_blit.metal");
-    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding))
-                      NS::Error *
-                  error{nullptr};
+    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding));
+    NS::Error * error{nullptr};
     auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
     auto defaultLibrary = CLONE_METAL_CUSTOM_DELETER(MTL::Library, _device->newLibrary(source.get(), option.get(), &error));
     if (error != nullptr) {
@@ -400,8 +399,6 @@ double Renderer::updateTime() {
 }
 
 void Renderer::draw(MTK::View *view) {
-    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
-
     // There's nothing to render until the scene is set up.
     if (!_sceneSetup) {
         return;
@@ -425,8 +422,6 @@ void Renderer::draw(MTK::View *view) {
     if (drawSucceeded) {
         _requestedFrames--;
     }
-
-    pPool->release();
 }
 
 /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
@@ -458,6 +453,10 @@ Renderer::~Renderer() {
     _device->release();
     _engine.reset();
     _stage.Reset();
+}
+
+void Renderer::drawableSizeWillChange(MTK::View *pView, CGSize size) {
+    requestFrame();
 }
 
 }// namespace vox

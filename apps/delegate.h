@@ -15,11 +15,14 @@ class Renderer;
 class MyMTKViewDelegate : public MTK::ViewDelegate {
 public:
     explicit MyMTKViewDelegate(MTL::Device *pDevice);
-    ~MyMTKViewDelegate() override;
+    ~MyMTKViewDelegate() override = default;
+
     void drawInMTKView(MTK::View *pView) override;
 
+    void drawableSizeWillChange(MTK::View *pView, CGSize size) override;
+
 private:
-    Renderer *_pRenderer;
+    std::unique_ptr<Renderer> _pRenderer;
 };
 
 class MyAppDelegate : public NS::ApplicationDelegate {

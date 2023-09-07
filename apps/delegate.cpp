@@ -96,14 +96,16 @@ bool MyAppDelegate::applicationShouldTerminateAfterLastWindowClosed(NS::Applicat
 }
 
 MyMTKViewDelegate::MyMTKViewDelegate(MTL::Device *pDevice)
-    : MTK::ViewDelegate(), _pRenderer(new Renderer(pDevice)) {
-}
-
-MyMTKViewDelegate::~MyMTKViewDelegate() {
-    delete _pRenderer;
+    : MTK::ViewDelegate(), _pRenderer(std::make_unique<Renderer>(pDevice)) {
+    _pRenderer->setupScene("/Users/yangfeng/Downloads/Kitchen_set/Kitchen_set.usd");
 }
 
 void MyMTKViewDelegate::drawInMTKView(MTK::View *pView) {
     _pRenderer->draw(pView);
 }
+
+void MyMTKViewDelegate::drawableSizeWillChange(MTK::View *pView, CGSize size) {
+    _pRenderer->drawableSizeWillChange(pView, size);
+}
+
 }// namespace vox
