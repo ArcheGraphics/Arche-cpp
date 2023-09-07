@@ -186,7 +186,7 @@ void Renderer::blitToView(MTK::View *view, MTL::CommandBuffer *commandBuffer, MT
         return;
 
     // Create a render command encoder to encode copy command.
-    auto renderEncoder = CLONE_METAL_CUSTOM_DELETER(MTL::RenderCommandEncoder, commandBuffer->renderCommandEncoder(renderPassDescriptor));
+    auto renderEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
     if (!renderEncoder) return;
 
     // Blit the texture to the view.
