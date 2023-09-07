@@ -10,33 +10,23 @@
 namespace vox {
 ShaderData::ShaderData(MTL::Device &device) : device_(device) {}
 
-void ShaderData::setBufferFunctor(const std::string &property_name,
-                                  std::function<std::shared_ptr<MTL::Buffer>()> functor) {
-    auto property = Shader::getPropertyByName(property_name);
-    if (property.has_value()) {
-        setBufferFunctor(property.value(), functor);
-    } else {
-        assert(false && "can't find property");
-    }
-}
-
 //MARK: - Macro
-void ShaderData::enableMacro(MacroName macroName) {
+void ShaderData::enable_macro(MacroName macroName) {
     _macroCollection._value.insert(std::make_pair(macroName, std::make_pair(1, MTL::DataTypeBool)));
 }
 
-void ShaderData::enableMacro(MacroName macroName, std::pair<int, MTL::DataType> value) {
+void ShaderData::enable_macro(MacroName macroName, std::pair<int, MTL::DataType> value) {
     _macroCollection._value.insert(std::make_pair(macroName, value));
 }
 
-void ShaderData::disableMacro(MacroName macroName) {
+void ShaderData::disable_macro(MacroName macroName) {
     auto iter = _macroCollection._value.find(macroName);
     if (iter != _macroCollection._value.end()) {
         _macroCollection._value.erase(iter);
     }
 }
 
-void ShaderData::mergeMacro(const ShaderMacroCollection &macros,
+void ShaderData::merge_macro(const ShaderMacroCollection &macros,
                             ShaderMacroCollection &result) const {
     ShaderMacroCollection::unionCollection(macros, _macroCollection, result);
 }

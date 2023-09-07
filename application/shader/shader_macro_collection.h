@@ -15,10 +15,6 @@ namespace vox {
  * Shader macro collection.
  */
 struct ShaderMacroCollection {
-    static std::unordered_map<MacroName, std::pair<int, MTL::DataType>> defaultValue;
-
-    static std::shared_ptr<MTL::FunctionConstantValues> createDefaultFunction();
-
     /**
      * Union of two macro collection.
      * @param left - input macro collection

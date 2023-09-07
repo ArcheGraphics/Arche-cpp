@@ -19,9 +19,6 @@ class ShaderData {
 public:
     explicit ShaderData(MTL::Device &device);
 
-    void setBufferFunctor(const std::string &property_name,
-                          std::function<std::shared_ptr<MTL::Buffer>()> functor);
-
     template<typename T>
     void set_data(const std::string &property_name, T &value) {
         auto iter = shader_buffers_.find(property_name);
@@ -63,7 +60,7 @@ public:
      * Enable macro.
      * @param macroName - Shader macro
      */
-    void enableMacro(MacroName macroName);
+    void enable_macro(MacroName macroName);
 
     /**
      * Enable macro.
@@ -71,21 +68,20 @@ public:
      * @param macroName - Macro name
      * @param value - Macro value
      */
-    void enableMacro(MacroName macroName, std::pair<int, MTL::DataType> value);
+    void enable_macro(MacroName macroName, std::pair<int, MTL::DataType> value);
 
     /**
      * Disable macro
      * @param macroName - Macro name
      */
-    void disableMacro(MacroName macroName);
+    void disable_macro(MacroName macroName);
 
-    void mergeMacro(const ShaderMacroCollection &macros,
-                    ShaderMacroCollection &result) const;
+    void merge_macro(const ShaderMacroCollection &macros,
+                     ShaderMacroCollection &result) const;
 
 private:
     MTL::Device &device_;
 
-    std::unordered_map<uint32_t, std::function<std::shared_ptr<MTL::Buffer>()>> _shaderBufferFunctors{};
     std::unordered_map<std::string, std::shared_ptr<MTL::Buffer>> shader_buffers_{};
 
     ShaderMacroCollection _macroCollection;

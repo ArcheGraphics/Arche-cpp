@@ -50,12 +50,12 @@ public:
 
     /**
      * Create a BaseMaterial instance.
-     * @param shader - Shader used by the material
      */
-    explicit BaseMaterial(Shader *shader);
+    BaseMaterial(MTL::Device &device, const std::string &name = "");
 
 private:
-    ShaderProperty _alphaCutoffProp;
+    float alpha_cutoff_ = 0.f;
+    const std::string alpha_cutoff_prop_;
 
     RenderFace _renderFace = RenderFace::BACK;
     BlendMode _blendMode = BlendMode::NORMAL;

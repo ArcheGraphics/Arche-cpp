@@ -19,20 +19,28 @@ class Material {
 public:
     /** Name. */
     std::string name;
-    /** Shader used by the material. */
-    Shader *shader;
+
     /** Render queue type. */
     RenderQueueType::Enum renderQueueType = RenderQueueType::Enum::OPAQUE;
+
+    /** Shader used by the material. */
+    std::string vertex_source;
+    std::string fragment_source;
+
     /** Shader data. */
-    ShaderData shaderData = ShaderData();
+    ShaderData shader_data;
+
     /** Render state. */
     RenderState renderState = RenderState();
 
-    /**
-     * Create a material instance.
-     * @param shader - Shader used by the material
-     */
-    explicit Material(Shader *shader);
+    explicit Material(MTL::Device &device, std::string name = "");
+
+    Material(Material &&other) = default;
+
+    virtual ~Material() = default;
+
+protected:
+    MTL::Device &device_;
 };
 
 }// namespace vox

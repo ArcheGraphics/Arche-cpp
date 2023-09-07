@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include "base_material.h"
 #include "math/color.h"
-#include "math/vector4.h"
-#include "texture/sampled_texture2d.h"
+#include "material/base_material.h"
+#include "texture/texture.h"
 
 namespace vox {
 /**
@@ -20,33 +19,30 @@ public:
     /**
      * Base color.
      */
-    [[nodiscard]] Color baseColor() const;
+    [[nodiscard]] const Color &get_base_color() const;
 
-    void setBaseColor(const Color &newValue);
+    void set_base_color(const Color &new_value);
 
     /**
      * Base texture.
      */
-    [[nodiscard]] SampledTexture2DPtr baseTexture() const;
+    [[nodiscard]] std::shared_ptr<Texture> get_base_texture() const;
 
-    void setBaseTexture(const SampledTexture2DPtr &newValue);
+    void set_base_texture(const std::shared_ptr<Texture> &new_value);
 
-    /**
-     * Tiling and offset of main textures.
-     */
-    [[nodiscard]] Vector4F tilingOffset() const;
-
-    void setTilingOffset(const Vector4F &newValue);
+    void set_base_texture(const std::shared_ptr<Texture> &new_value, const MTL::SamplerDescriptor &info);
 
     /**
      * Create a unlit material instance.
      */
-    explicit UnlitMaterial();
+    UnlitMaterial(MTL::Device &device, const std::string &name = "");
 
 private:
-    ShaderProperty _baseColorProp;
-    ShaderProperty _baseTextureProp;
-    ShaderProperty _tilingOffsetProp;
+    Color base_color_ = Color(1, 1, 1, 1);
+    const std::string base_color_prop_;
+
+    std::shared_ptr<Texture> base_texture_{nullptr};
+    const std::string base_texture_prop_;
 };
 
 }// namespace vox

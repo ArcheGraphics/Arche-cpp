@@ -7,7 +7,6 @@
 #include "material.h"
 
 namespace vox {
-Material::Material(Shader *shader) : shader(shader) {
-}
+Material::Material(MTL::Device &device, std::string name) : device_(device), shader_data(device), name{std::move(name)} {}
 
 }// namespace vox

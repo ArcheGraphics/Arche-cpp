@@ -4,48 +4,44 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "unlit_material.h"
+#include "material/unlit_material.h"
 
 namespace vox {
-Color UnlitMaterial::baseColor() const {
-    return std::any_cast<Color>(shaderData.getData(_baseColorProp).value());
+const Color &UnlitMaterial::get_base_color() const { return base_color_; }
+
+void UnlitMaterial::set_base_color(const Color &new_value) {
+    base_color_ = new_value;
+    shader_data.set_data(UnlitMaterial::base_color_prop_, base_color_);
 }
 
-void UnlitMaterial::setBaseColor(const Color &newValue) {
-    shaderData.setData(UnlitMaterial::_baseColorProp, newValue);
-}
+std::shared_ptr<Texture> UnlitMaterial::get_base_texture() const { return base_texture_; }
 
-SampledTexture2DPtr UnlitMaterial::baseTexture() const {
-    return std::any_cast<SampledTexture2DPtr>(shaderData.getData(_baseTextureProp).value());
-}
-
-void UnlitMaterial::setBaseTexture(const SampledTexture2DPtr &newValue) {
-    shaderData.setSampledTexure(UnlitMaterial::_baseTextureProp, newValue);
-
-    if (newValue) {
-        shaderData.enableMacro(HAS_BASE_TEXTURE);
-    } else {
-        shaderData.disableMacro(HAS_BASE_TEXTURE);
+void UnlitMaterial::set_base_texture(const std::shared_ptr<Texture> &new_value) {
+    if (new_value) {
+//        BaseMaterial::last_sampler_create_info_.maxLod = static_cast<float>(new_value->get_mipmaps().size());
+//        set_base_texture(new_value, BaseMaterial::last_sampler_create_info_);
     }
 }
 
-Vector4F UnlitMaterial::tilingOffset() const {
-    return std::any_cast<Vector4F>(shaderData.getData(_tilingOffsetProp).value());
+void UnlitMaterial::set_base_texture(const std::shared_ptr<Texture> &new_value, const MTL::SamplerDescriptor &info) {
+    base_texture_ = new_value;
+    if (new_value) {
+//        shader_data.set_sampled_texture(base_texture_prop_, new_value->get_vk_image_view(),
+//                                         &device_.get_resource_cache().request_sampler(info));
+        shader_data.enable_macro(HAS_BASE_TEXTURE);
+    } else {
+        shader_data.disable_macro(HAS_BASE_TEXTURE);
+    }
 }
 
-void UnlitMaterial::setTilingOffset(const Vector4F &newValue) {
-    shaderData.setData(UnlitMaterial::_tilingOffsetProp, newValue);
-}
+UnlitMaterial::UnlitMaterial(MTL::Device &device, const std::string &name)
+    : BaseMaterial(device, name), base_color_prop_("baseColor"), base_texture_prop_("baseTexture") {
+    vertex_source = "";
+    fragment_source = "";
 
-UnlitMaterial::UnlitMaterial() : BaseMaterial(Shader::find("unlit")),
-                                 _baseColorProp(Shader::createProperty("u_baseColor", ShaderDataGroup::Material)),
-                                 _baseTextureProp(Shader::createProperty("u_baseTexture", ShaderDataGroup::Material)),
-                                 _tilingOffsetProp(Shader::createProperty("u_tilingOffset", ShaderDataGroup::Material)) {
-    shaderData.enableMacro(OMIT_NORMAL);
-    shaderData.enableMacro(NEED_TILINGOFFSET);
+    shader_data.enable_macro(OMIT_NORMAL);
 
-    shaderData.setData(_baseColorProp, Color(1, 1, 1, 1));
-    shaderData.setData(_tilingOffsetProp, Vector4F(1, 1, 0, 0));
+    shader_data.set_data(base_color_prop_, base_color_);
 }
 
 }// namespace vox

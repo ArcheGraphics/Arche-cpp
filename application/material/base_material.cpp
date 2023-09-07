@@ -27,22 +27,22 @@ void BaseMaterial::setIsTransparent(bool newValue) {
     } else {
         targetBlendState.enabled = false;
         depthState.writeEnabled = true;
-        renderQueueType = (shaderData.getData(BaseMaterial::_alphaCutoffProp).has_value()) ? RenderQueueType::ALPHA_TEST : RenderQueueType::OPAQUE;
+        renderQueueType = alpha_cutoff_ > 0 ? RenderQueueType::ALPHA_TEST : RenderQueueType::OPAQUE;
     }
 }
 
 float BaseMaterial::alphaCutoff() const {
-    return std::any_cast<float>(shaderData.getData(BaseMaterial::_alphaCutoffProp).value());
+    return alpha_cutoff_;
 }
 
 void BaseMaterial::setAlphaCutoff(float newValue) {
-    shaderData.setData(BaseMaterial::_alphaCutoffProp, newValue);
+    shader_data.set_data(BaseMaterial::alpha_cutoff_prop_, newValue);
 
     if (newValue > 0) {
-        shaderData.enableMacro(NEED_ALPHA_CUTOFF);
+        shader_data.enable_macro(NEED_ALPHA_CUTOFF);
         renderQueueType = _isTransparent ? RenderQueueType::TRANSPARENT : RenderQueueType::ALPHA_TEST;
     } else {
-        shaderData.disableMacro(NEED_ALPHA_CUTOFF);
+        shader_data.enable_macro(NEED_ALPHA_CUTOFF);
         renderQueueType = _isTransparent ? RenderQueueType::TRANSPARENT : RenderQueueType::OPAQUE;
     }
 }
@@ -96,10 +96,11 @@ void BaseMaterial::setBlendMode(const BlendMode &newValue) {
     }
 }
 
-BaseMaterial::BaseMaterial(Shader *shader) : Material(shader),
-                                             _alphaCutoffProp(Shader::createProperty("u_alphaCutoff", ShaderDataGroup::Material)) {
+BaseMaterial::BaseMaterial(MTL::Device &device, const std::string &name)
+    : Material(device),
+      alpha_cutoff_prop_("u_alphaCutoff") {
     setBlendMode(BlendMode::NORMAL);
-    shaderData.setData(_alphaCutoffProp, 0.0f);
+    shader_data.set_data(alpha_cutoff_prop_, alpha_cutoff_);
 }
 
 }// namespace vox
