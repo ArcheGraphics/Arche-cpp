@@ -52,15 +52,30 @@ set(RENDERING_FILES
         rendering/render_context.mm
 )
 
+set(COMPUTE_FILES
+        compute/data_type_util.h
+        compute/data_type_util.cpp
+        compute/status_util.h
+        compute/status_util.cpp
+        compute/buffer_utils.h
+        compute/buffer_utils.cpp
+        compute/image_utils.h
+        compute/image_utils.cpp
+)
+
 source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
 source_group("rendering\\" FILES ${RENDERING_FILES})
+source_group("compute\\" FILES ${COMPUTE_FILES})
+source_group("platform\\" FILES ${PLATFORM_FILES})
+source_group("framegraph\\" FILES ${FG_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
         ${FG_FILES}
         ${PLATFORM_FILES}
         ${RENDERING_FILES}
+        ${COMPUTE_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.

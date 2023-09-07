@@ -9,8 +9,6 @@
 #include "framework/common/metal_helpers.h"
 #include "mad_throughput.h"
 
-using namespace vox::compute;
-
 int main(int argc, char **argv) {
     ::benchmark::Initialize(&argc, argv);
     auto device = CLONE_METAL_CUSTOM_DELETER(MTL::Device, MTL::CreateSystemDefaultDevice());
