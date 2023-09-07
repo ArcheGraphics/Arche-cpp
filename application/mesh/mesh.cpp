@@ -12,7 +12,7 @@ uint32_t Mesh::instanceCount() const {
 }
 
 const SubMesh *Mesh::subMesh() const {
-    if (_subMeshes.size() > 0) {
+    if (!_subMeshes.empty()) {
         return &_subMeshes[0];
     } else {
         return nullptr;
@@ -20,7 +20,7 @@ const SubMesh *Mesh::subMesh() const {
 }
 
 SubMesh *Mesh::subMesh() {
-    if (_subMeshes.size() > 0) {
+    if (!_subMeshes.empty()) {
         return &_subMeshes[0];
     } else {
         return nullptr;
@@ -31,7 +31,7 @@ const std::vector<SubMesh> &Mesh::subMeshes() const {
     return _subMeshes;
 }
 
-void Mesh::addSubMesh(SubMesh subMesh) {
+void Mesh::addSubMesh(const SubMesh &subMesh) {
     _subMeshes.push_back(subMesh);
 }
 
@@ -39,7 +39,7 @@ void Mesh::addSubMesh(MTL::PrimitiveType primitiveType,
                       MTL::IndexType indexType,
                       NS::UInteger indexCount,
                       const std::shared_ptr<MTL::Buffer> &indexBuffer) {
-    _subMeshes.push_back(SubMesh(primitiveType, indexType, indexCount, indexBuffer));
+    _subMeshes.emplace_back(primitiveType, indexType, indexCount, indexBuffer);
 }
 
 void Mesh::clearSubMesh() {

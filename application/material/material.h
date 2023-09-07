@@ -18,11 +18,11 @@ namespace vox {
 class Material {
 public:
     /** Name. */
-    std::string name = "";
+    std::string name;
     /** Shader used by the material. */
     Shader *shader;
     /** Render queue type. */
-    RenderQueueType::Enum renderQueueType = RenderQueueType::Enum::Opaque;
+    RenderQueueType::Enum renderQueueType = RenderQueueType::Enum::OPAQUE;
     /** Shader data. */
     ShaderData shaderData = ShaderData();
     /** Render state. */
@@ -32,9 +32,7 @@ public:
      * Create a material instance.
      * @param shader - Shader used by the material
      */
-    Material(Shader *shader);
+    explicit Material(Shader *shader);
 };
-
-using MaterialPtr = std::shared_ptr<Material>;
 
 }// namespace vox

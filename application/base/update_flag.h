@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace vox {
 class UpdateFlagManager;
@@ -16,17 +16,14 @@ class UpdateFlagManager;
  */
 class UpdateFlag {
 public:
-    bool flag = true;
+    bool flag_ = true;
 
-    UpdateFlag(UpdateFlagManager *_flags);
+    explicit UpdateFlag(UpdateFlagManager *flags);
 
-    /**
-     * Destroy.
-     */
-    void destroy();
+    ~UpdateFlag();
 
 private:
-    UpdateFlagManager *_flags;
+    UpdateFlagManager *flags_{nullptr};
 };
 
 }// namespace vox

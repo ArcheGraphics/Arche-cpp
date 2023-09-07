@@ -4,422 +4,401 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "transform.h"
-#include "math_utils.h"
-#include "matrix_utils.h"
-#include "entity.h"
+#include "components/transform.h"
+
+#include "math/matrix_utils.h"
+#include "ecs/entity.h"
 
 namespace vox {
-Transform::Transform(Entity *entity) : Component(entity) {
+Transform::Transform(Entity *entity) : Component(entity) {}
+
+Point3F Transform::get_position() { return position_; }
+
+void Transform::set_position(const Point3F &value) {
+    position_ = value;
+    set_dirty_flag_true(TransformFlag::LOCAL_MATRIX);
+    update_world_position_flag();
 }
 
-Point3F Transform::position() {
-    return _position;
-}
-
-void Transform::setPosition(const Point3F &value) {
-    _position = value;
-    _setDirtyFlagTrue(TransformFlag::LocalMatrix);
-    _updateWorldPositionFlag();
-}
-
-Point3F Transform::worldPosition() {
-    if (_isContainDirtyFlag(TransformFlag::WorldPosition)) {
-        if (_getParentTransform()) {
-            _worldPosition = getTranslation(worldMatrix());
+Point3F Transform::get_world_position() {
+    if (is_contain_dirty_flag(TransformFlag::WORLD_POSITION)) {
+        if (get_parent_transform()) {
+            world_position_ = getTranslation(get_world_matrix());
         } else {
-            _worldPosition = _position;
+            world_position_ = position_;
         }
-        _setDirtyFlagFalse(TransformFlag::WorldPosition);
+        set_dirty_flag_false(TransformFlag::WORLD_POSITION);
     }
-    return _worldPosition;
+    return world_position_;
 }
 
-void Transform::setWorldPosition(const Point3F &value) {
-    _worldPosition = value;
-    const auto parent = _getParentTransform();
-    if (parent) {
-        _position = parent->worldMatrix().inverse() * value;
+void Transform::set_world_position(const Point3F &value) {
+    world_position_ = value;
+    const auto kParent = get_parent_transform();
+    if (kParent) {
+        position_ = kParent->get_world_matrix().inverse() * value;
     } else {
-        _position = value;
+        position_ = value;
     }
-    setPosition(_position);
-    _setDirtyFlagFalse(TransformFlag::WorldPosition);
+    set_position(position_);
+    set_dirty_flag_false(TransformFlag::WORLD_POSITION);
 }
 
-Vector3F Transform::rotation() {
-    if (_isContainDirtyFlag(TransformFlag::LocalEuler)) {
-        _rotation = _rotationQuaternion.toEuler();
-        _rotation *= kRadianToDegree;// radians to degrees
+Vector3F Transform::get_rotation() {
+    if (is_contain_dirty_flag(TransformFlag::LOCAL_EULER)) {
+        rotation_ = rotation_quaternion_.toEuler();
+        rotation_ *= kRadianToDegree;// radians to degrees
 
-        _setDirtyFlagFalse(TransformFlag::LocalEuler);
+        set_dirty_flag_false(TransformFlag::LOCAL_EULER);
     }
-    return _rotation;
+    return rotation_;
 }
 
-void Transform::setRotation(const Vector3F &value) {
-    _rotation = value;
-    _setDirtyFlagTrue(TransformFlag::LocalMatrix | TransformFlag::LocalQuat);
-    _setDirtyFlagFalse(TransformFlag::LocalEuler);
-    _updateWorldRotationFlag();
+void Transform::set_rotation(const Vector3F &value) {
+    rotation_ = value;
+    set_dirty_flag_true(TransformFlag::LOCAL_MATRIX | TransformFlag::LOCAL_QUAT);
+    set_dirty_flag_false(TransformFlag::LOCAL_EULER);
+    update_world_rotation_flag();
 }
 
-Vector3F Transform::worldRotation() {
-    if (_isContainDirtyFlag(TransformFlag::WorldEuler)) {
-        _worldRotation = worldRotationQuaternion().toEuler();
-        _worldRotation *= kRadianToDegree;// Radian to angle
-        _setDirtyFlagFalse(TransformFlag::WorldEuler);
+Vector3F Transform::get_world_rotation() {
+    if (is_contain_dirty_flag(TransformFlag::WORLD_EULER)) {
+        world_rotation_ = get_world_rotation_quaternion().toEuler();
+        world_rotation_ *= kRadianToDegree;// Radian to angle
+        set_dirty_flag_false(TransformFlag::WORLD_EULER);
     }
-    return _worldRotation;
+    return world_rotation_;
 }
 
-void Transform::setWorldRotation(const Vector3F &value) {
-    _worldRotation = value;
-    _worldRotationQuaternion = QuaternionF::makeRotationEuler(degreesToRadians(value.x),
-                                                              degreesToRadians(value.y),
-                                                              degreesToRadians(value.z));
-    setWorldRotationQuaternion(_worldRotationQuaternion);
-    _setDirtyFlagFalse(TransformFlag::WorldEuler);
+void Transform::set_world_rotation(const Vector3F &value) {
+    world_rotation_ = value;
+    world_rotation_quaternion_ = QuaternionF::makeRotationEuler(degreesToRadians(value.x), degreesToRadians(value.y),
+                                                                degreesToRadians(value.z));
+    set_world_rotation_quaternion(world_rotation_quaternion_);
+    set_dirty_flag_false(TransformFlag::WORLD_EULER);
 }
 
-QuaternionF Transform::rotationQuaternion() {
-    if (_isContainDirtyFlag(TransformFlag::LocalQuat)) {
-        _rotationQuaternion = QuaternionF::makeRotationEuler(degreesToRadians(_rotation.x),
-                                                             degreesToRadians(_rotation.y),
-                                                             degreesToRadians(_rotation.z));
-        _setDirtyFlagFalse(TransformFlag::LocalQuat);
+QuaternionF Transform::get_rotation_quaternion() {
+    if (is_contain_dirty_flag(TransformFlag::LOCAL_QUAT)) {
+        rotation_quaternion_ = QuaternionF::makeRotationEuler(
+            degreesToRadians(rotation_.x), degreesToRadians(rotation_.y), degreesToRadians(rotation_.z));
+        set_dirty_flag_false(TransformFlag::LOCAL_QUAT);
     }
-    return _rotationQuaternion;
+    return rotation_quaternion_;
 }
 
-void Transform::setRotationQuaternion(const QuaternionF &value) {
-    _rotationQuaternion = value;
-    _setDirtyFlagTrue(TransformFlag::LocalMatrix | TransformFlag::LocalEuler);
-    _setDirtyFlagFalse(TransformFlag::LocalQuat);
-    _updateWorldRotationFlag();
+void Transform::set_rotation_quaternion(const QuaternionF &value) {
+    rotation_quaternion_ = value.normalized();
+    set_dirty_flag_true(TransformFlag::LOCAL_MATRIX | TransformFlag::LOCAL_EULER);
+    set_dirty_flag_false(TransformFlag::LOCAL_QUAT);
+    update_world_rotation_flag();
 }
 
-QuaternionF Transform::worldRotationQuaternion() {
-    if (_isContainDirtyFlag(TransformFlag::WorldQuat)) {
-        const auto parent = _getParentTransform();
-        if (parent) {
-            _worldRotationQuaternion = parent->worldRotationQuaternion() * rotationQuaternion();
+QuaternionF Transform::get_world_rotation_quaternion() {
+    if (is_contain_dirty_flag(TransformFlag::WORLD_QUAT)) {
+        const auto kParent = get_parent_transform();
+        if (kParent) {
+            world_rotation_quaternion_ = kParent->get_world_rotation_quaternion() * get_rotation_quaternion();
         } else {
-            _worldRotationQuaternion = rotationQuaternion();
+            world_rotation_quaternion_ = get_rotation_quaternion();
         }
-        _setDirtyFlagFalse(TransformFlag::WorldQuat);
+        set_dirty_flag_false(TransformFlag::WORLD_QUAT);
     }
-    return _worldRotationQuaternion;
+    return world_rotation_quaternion_;
 }
 
-void Transform::setWorldRotationQuaternion(const QuaternionF &value) {
-    _worldRotationQuaternion = value;
-    const auto parent = _getParentTransform();
-    if (parent) {
-        auto _tempQuat0 = parent->worldRotationQuaternion().inverse();
-        _rotationQuaternion = value * _tempQuat0;
+void Transform::set_world_rotation_quaternion(const QuaternionF &value) {
+    world_rotation_quaternion_ = value.normalized();
+    const auto kParent = get_parent_transform();
+    if (kParent) {
+        auto temp_quat_0 = kParent->get_world_rotation_quaternion().inverse();
+        rotation_quaternion_ = world_rotation_quaternion_ * temp_quat_0;
     } else {
-        _rotationQuaternion = value;
+        rotation_quaternion_ = world_rotation_quaternion_;
     }
-    setRotationQuaternion(_rotationQuaternion);
-    _setDirtyFlagFalse(TransformFlag::WorldQuat);
+    set_rotation_quaternion(rotation_quaternion_);
+    set_dirty_flag_false(TransformFlag::WORLD_QUAT);
 }
 
-Vector3F Transform::scale() {
-    return _scale;
+Vector3F Transform::get_scale() { return scale_; }
+
+void Transform::set_scale(const Vector3F &value) {
+    scale_ = value;
+    set_dirty_flag_true(TransformFlag::LOCAL_MATRIX);
+    update_world_scale_flag();
 }
 
-void Transform::setScale(const Vector3F &value) {
-    _scale = value;
-    _setDirtyFlagTrue(TransformFlag::LocalMatrix);
-    _updateWorldScaleFlag();
-}
-
-Vector3F Transform::lossyWorldScale() {
-    if (_isContainDirtyFlag(TransformFlag::WorldScale)) {
-        if (_getParentTransform()) {
-            const auto scaleMat = _getScaleMatrix();
-            _lossyWorldScale = Vector3F(scaleMat[0], scaleMat[4], scaleMat[8]);
+Vector3F Transform::get_lossy_world_scale() {
+    if (is_contain_dirty_flag(TransformFlag::WORLD_SCALE)) {
+        if (get_parent_transform()) {
+            const auto kScaleMat = get_scale_matrix();
+            lossy_world_scale_ = Vector3F(kScaleMat[0], kScaleMat[4], kScaleMat[8]);
         } else {
-            _lossyWorldScale = _scale;
+            lossy_world_scale_ = scale_;
         }
-        _setDirtyFlagFalse(TransformFlag::WorldScale);
+        set_dirty_flag_false(TransformFlag::WORLD_SCALE);
     }
-    return _lossyWorldScale;
+    return lossy_world_scale_;
 }
 
-Matrix4x4F Transform::localMatrix() {
-    if (_isContainDirtyFlag(TransformFlag::LocalMatrix)) {
-        _localMatrix = makeAffineMatrix(_scale, rotationQuaternion(), _position);
-        _setDirtyFlagFalse(TransformFlag::LocalMatrix);
+Matrix4x4F Transform::get_local_matrix() {
+    if (is_contain_dirty_flag(TransformFlag::LOCAL_MATRIX)) {
+        local_matrix_ = makeAffineMatrix(scale_, get_rotation_quaternion(), position_);
+        set_dirty_flag_false(TransformFlag::LOCAL_MATRIX);
     }
-    return _localMatrix;
+    return local_matrix_;
 }
 
-void Transform::setLocalMatrix(const Matrix4x4F &value) {
-    _localMatrix = value;
-    decompose(_localMatrix, _position, _rotationQuaternion, _scale);
-    _setDirtyFlagTrue(TransformFlag::LocalEuler);
-    _setDirtyFlagFalse(TransformFlag::LocalMatrix);
-    _updateAllWorldFlag();
+void Transform::set_local_matrix(const Matrix4x4F &value) {
+    local_matrix_ = value;
+    decompose(local_matrix_, position_, rotation_quaternion_, scale_);
+    set_dirty_flag_true(TransformFlag::LOCAL_EULER);
+    set_dirty_flag_false(TransformFlag::LOCAL_MATRIX);
+    update_all_world_flag();
 }
 
-Matrix4x4F Transform::worldMatrix() {
-    if (_isContainDirtyFlag(TransformFlag::WorldMatrix)) {
-        const auto parent = _getParentTransform();
-        if (parent) {
-            _worldMatrix = parent->worldMatrix() * localMatrix();
+Matrix4x4F Transform::get_world_matrix() {
+    if (is_contain_dirty_flag(TransformFlag::WORLD_MATRIX)) {
+        const auto kParent = get_parent_transform();
+        if (kParent) {
+            world_matrix_ = kParent->get_world_matrix() * get_local_matrix();
         } else {
-            _worldMatrix = localMatrix();
+            world_matrix_ = get_local_matrix();
         }
-        _setDirtyFlagFalse(TransformFlag::WorldMatrix);
+        set_dirty_flag_false(TransformFlag::WORLD_MATRIX);
     }
-    return _worldMatrix;
+    return world_matrix_;
 }
 
-void Transform::setWorldMatrix(const Matrix4x4F &value) {
-    _worldMatrix = value;
-    const auto parent = _getParentTransform();
-    if (parent) {
-        auto _tempMat42 = parent->worldMatrix().inverse();
-        _localMatrix = value * _tempMat42;
+void Transform::set_world_matrix(const Matrix4x4F &value) {
+    world_matrix_ = value;
+    const auto kParent = get_parent_transform();
+    if (kParent) {
+        auto temp_mat_42 = kParent->get_world_matrix().inverse();
+        local_matrix_ = value * temp_mat_42;
     } else {
-        _localMatrix = value;
+        local_matrix_ = value;
     }
-    setLocalMatrix(_localMatrix);
-    _setDirtyFlagFalse(TransformFlag::WorldMatrix);
+    set_local_matrix(local_matrix_);
+    set_dirty_flag_false(TransformFlag::WORLD_MATRIX);
 }
 
-void Transform::setPosition(float x, float y, float z) {
-    _position = Point3F(x, y, z);
-    setPosition(_position);
+void Transform::set_position(float x, float y, float z) {
+    position_ = Point3F(x, y, z);
+    set_position(position_);
 }
 
-void Transform::setRotation(float x, float y, float z) {
-    _rotation = Vector3F(x, y, z);
-    setRotation(_rotation);
+void Transform::set_rotation(float x, float y, float z) {
+    rotation_ = Vector3F(x, y, z);
+    set_rotation(rotation_);
 }
 
-void Transform::setRotationQuaternion(float x, float y, float z, float w) {
-    _rotationQuaternion = QuaternionF(x, y, z, w);
-    setRotationQuaternion(_rotationQuaternion);
+void Transform::set_rotation_quaternion(float x, float y, float z, float w) {
+    rotation_quaternion_ = QuaternionF(x, y, z, w);
+    set_rotation_quaternion(rotation_quaternion_);
 }
 
-void Transform::setScale(float x, float y, float z) {
-    _scale = Vector3F(x, y, z);
-    setScale(_scale);
+void Transform::set_scale(float x, float y, float z) {
+    scale_ = Vector3F(x, y, z);
+    set_scale(scale_);
 }
 
-void Transform::setWorldPosition(float x, float y, float z) {
-    _worldPosition = Point3F(x, y, z);
-    setWorldPosition(_worldPosition);
+void Transform::set_world_position(float x, float y, float z) {
+    world_position_ = Point3F(x, y, z);
+    set_world_position(world_position_);
 }
 
-void Transform::setWorldRotation(float x, float y, float z) {
-    _worldRotation = Vector3F(x, y, z);
-    setWorldRotation(_worldRotation);
+void Transform::set_world_rotation(float x, float y, float z) {
+    world_rotation_ = Vector3F(x, y, z);
+    set_world_rotation(world_rotation_);
 }
 
-void Transform::setWorldRotationQuaternion(float x, float y, float z, float w) {
-    _worldRotationQuaternion = QuaternionF(x, y, z, w);
-    setWorldRotationQuaternion(_worldRotationQuaternion);
+void Transform::set_world_rotation_quaternion(float x, float y, float z, float w) {
+    world_rotation_quaternion_ = QuaternionF(x, y, z, w);
+    set_world_rotation_quaternion(world_rotation_quaternion_);
 }
 
-Vector3F Transform::worldForward() {
-    const auto &e = worldMatrix();
+Vector3F Transform::get_world_forward() {
+    const auto &e = get_world_matrix();
     auto forward = Vector3F(-e[8], -e[9], -e[10]);
     return forward.normalized();
 }
 
-Vector3F Transform::worldRight() {
-    const auto &e = worldMatrix();
+Vector3F Transform::get_world_right() {
+    const auto &e = get_world_matrix();
     auto right = Vector3F(e[0], e[1], e[2]);
     return right.normalized();
 }
 
-Vector3F Transform::worldUp() {
-    const auto &e = worldMatrix();
+Vector3F Transform::get_world_up() {
+    const auto &e = get_world_matrix();
     auto up = Vector3F(e[4], e[5], e[6]);
     return up.normalized();
 }
 
-void Transform::translate(const Vector3F &translation, bool relativeToLocal) {
-    _translate(translation, relativeToLocal);
+void Transform::translate(const Vector3F &translation, bool relative_to_local) {
+    if (relative_to_local) {
+        position_ = position_ + translation;
+        set_position(position_);
+    } else {
+        world_position_ = world_position_ + translation;
+        set_world_position(world_position_);
+    }
 }
 
-void Transform::translate(float x, float y, float z, bool relativeToLocal) {
-    Vector3F translate = Vector3F(x, y, z);
-    _translate(translate, relativeToLocal);
+void Transform::translate(float x, float y, float z, bool relative_to_local) {
+    translate(Vector3F(x, y, z), relative_to_local);
 }
 
-void Transform::rotate(const Vector3F &rotation, bool relativeToLocal) {
-    _rotateXYZ(rotation.x, rotation.y, rotation.z, relativeToLocal);
+void Transform::rotate(const Vector3F &rotation, bool relative_to_local) {
+    rotate_xyz(rotation.x, rotation.y, rotation.z, relative_to_local);
 }
 
-void Transform::rotate(float x, float y, float z, bool relativeToLocal) {
-    _rotateXYZ(x, y, z, relativeToLocal);
+void Transform::rotate(float x, float y, float z, bool relative_to_local) { rotate_xyz(x, y, z, relative_to_local); }
+
+void Transform::rotate_by_axis(const Vector3F &axis, float angle, bool relative_to_local) {
+    const auto kRad = angle * kDegreeToRadian;
+    QuaternionF temp_quat_0(axis, kRad);
+    rotate_by_quat(temp_quat_0, relative_to_local);
 }
 
-void Transform::rotateByAxis(const Vector3F &axis, float angle, bool relativeToLocal) {
-    const auto rad = angle * kDegreeToRadian;
-    QuaternionF _tempQuat0(axis, rad);
-    _rotateByQuat(_tempQuat0, relativeToLocal);
-}
-
-void Transform::lookAt(const Point3F &worldPosition, const Vector3F &worldUp) {
-    const auto position = this->worldPosition();
-    if (std::abs(position.x - worldPosition.x) < std::numeric_limits<float>::epsilon() &&
-        std::abs(position.y - worldPosition.y) < std::numeric_limits<float>::epsilon() &&
-        std::abs(position.z - worldPosition.z) < std::numeric_limits<float>::epsilon()) {
+void Transform::look_at(const Point3F &world_position, const Vector3F &world_up) {
+    const auto kPosition = this->get_world_position();
+    if (std::abs(kPosition.x - world_position.x) < std::numeric_limits<float>::epsilon() &&
+        std::abs(kPosition.y - world_position.y) < std::numeric_limits<float>::epsilon() &&
+        std::abs(kPosition.z - world_position.z) < std::numeric_limits<float>::epsilon()) {
         return;
     }
-    Matrix4x4F rotMat = makeLookAtMatrix(position, worldPosition, worldUp);
-    auto worldRotationQuaternion = getRotation(rotMat);
-    worldRotationQuaternion = worldRotationQuaternion.inverse();
-    setWorldRotationQuaternion(worldRotationQuaternion);
+    Matrix4x4F rot_mat = makeLookAtMatrix(kPosition, world_position, world_up);
+    auto world_rotation_quaternion = getRotation(rot_mat);
+    world_rotation_quaternion = world_rotation_quaternion.inverse();
+    set_world_rotation_quaternion(world_rotation_quaternion);
 }
 
-std::unique_ptr<UpdateFlag> Transform::registerWorldChangeFlag() {
-    return _updateFlagManager.registration();
+std::unique_ptr<UpdateFlag> Transform::register_world_change_flag() { return update_flag_manager_.registration(); }
+
+void Transform::parent_change() {
+    is_parent_dirty_ = true;
+    update_all_world_flag();
 }
 
-void Transform::_parentChange() {
-    _isParentDirty = true;
-    _updateAllWorldFlag();
-}
-
-void Transform::_updateWorldPositionFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWp)) {
-        _worldAssociatedChange(TransformFlag::WmWp);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
-            nodeChildren[i]->transform->_updateWorldPositionFlag();
+void Transform::update_world_position_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WP)) {
+        world_associated_change(TransformFlag::WM_WP);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
+            i->transform->update_world_position_flag();
         }
     }
 }
 
-void Transform::_updateWorldRotationFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWeWq)) {
-        _worldAssociatedChange(TransformFlag::WmWeWq);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
+void Transform::update_world_rotation_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WE_WQ)) {
+        world_associated_change(TransformFlag::WM_WE_WQ);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
             // Rotation update of parent entity will trigger world position and rotation update of all child entity.
-            nodeChildren[i]->transform->_updateWorldPositionAndRotationFlag();
+            i->transform->update_world_position_and_rotation_flag();
         }
     }
 }
 
-void Transform::_updateWorldPositionAndRotationFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWpWeWq)) {
-        _worldAssociatedChange(TransformFlag::WmWpWeWq);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
-            nodeChildren[i]->transform->_updateWorldPositionAndRotationFlag();
+void Transform::update_world_position_and_rotation_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WP_WE_WQ)) {
+        world_associated_change(TransformFlag::WM_WP_WE_WQ);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
+            i->transform->update_world_position_and_rotation_flag();
         }
     }
 }
 
-void Transform::_updateWorldScaleFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWs)) {
-        _worldAssociatedChange(TransformFlag::WmWs);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
-            nodeChildren[i]->transform->_updateWorldPositionAndScaleFlag();
+void Transform::update_world_scale_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WS)) {
+        world_associated_change(TransformFlag::WM_WS);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
+            i->transform->update_world_position_and_scale_flag();
         }
     }
 }
 
-void Transform::_updateWorldPositionAndScaleFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWpWs)) {
-        _worldAssociatedChange(TransformFlag::WmWpWs);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
-            nodeChildren[i]->transform->_updateWorldPositionAndScaleFlag();
+void Transform::update_world_position_and_scale_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WP_WS)) {
+        world_associated_change(TransformFlag::WM_WP_WS);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
+            i->transform->update_world_position_and_scale_flag();
         }
     }
 }
 
-void Transform::_updateAllWorldFlag() {
-    if (!_isContainDirtyFlags(TransformFlag::WmWpWeWqWs)) {
-        _worldAssociatedChange(TransformFlag::WmWpWeWqWs);
-        const auto &nodeChildren = _entity->_children;
-        for (size_t i = 0, n = nodeChildren.size(); i < n; i++) {
-            nodeChildren[i]->transform->_updateAllWorldFlag();
+void Transform::update_all_world_flag() {
+    if (!is_contain_dirty_flags(TransformFlag::WM_WP_WE_WQ_WS)) {
+        world_associated_change(TransformFlag::WM_WP_WE_WQ_WS);
+        const auto &node_children = entity_->children;
+        for (const auto &i : node_children) {
+            i->transform->update_all_world_flag();
         }
     }
 }
 
-Transform *Transform::_getParentTransform() {
-    if (!_isParentDirty) {
-        return _parentTransformCache;
+Transform *Transform::get_parent_transform() {
+    if (!is_parent_dirty_) {
+        return parent_transform_cache_;
     }
-    Transform *parentCache = nullptr;
-    auto parent = _entity->parent();
+    Transform *parent_cache = nullptr;
+    auto parent = entity_->get_parent();
     while (parent) {
         const auto &transform = parent->transform;
         if (transform) {
-            parentCache = transform;
+            parent_cache = transform;
             break;
         } else {
-            parent = parent->parent();
+            parent = parent->get_parent();
         }
     }
-    _parentTransformCache = parentCache;
-    _isParentDirty = false;
-    return parentCache;
+    parent_transform_cache_ = parent_cache;
+    is_parent_dirty_ = false;
+    return parent_cache;
 }
 
-Matrix3x3F Transform::_getScaleMatrix() {
-    Matrix3x3F worldRotScaMat = worldMatrix().matrix3();
-    Quaternion invRotation = worldRotationQuaternion().inverse();
-    Matrix3x3F invRotationMat = invRotation.matrix3();
-    return invRotationMat * worldRotScaMat;
+Matrix3x3F Transform::get_scale_matrix() {
+    Matrix3x3F world_rot_sca_mat = get_world_matrix().matrix3();
+    Quaternion inv_rotation = get_world_rotation_quaternion().inverse();
+    Matrix3x3F inv_rotation_mat = inv_rotation.matrix3();
+    return inv_rotation_mat * world_rot_sca_mat;
 }
 
-bool Transform::_isContainDirtyFlags(int targetDirtyFlags) {
-    return (_dirtyFlag & targetDirtyFlags) == targetDirtyFlags;
+bool Transform::is_contain_dirty_flags(int target_dirty_flags) const {
+    // todo
+    return (dirty_flag_ & target_dirty_flags) == target_dirty_flags;
 }
 
-bool Transform::_isContainDirtyFlag(int type) {
-    return (_dirtyFlag & type) != 0;
+bool Transform::is_contain_dirty_flag(int type) const { return (dirty_flag_ & type) != 0; }
+
+void Transform::set_dirty_flag_true(int type) { dirty_flag_ |= type; }
+
+void Transform::set_dirty_flag_false(int type) { dirty_flag_ &= ~type; }
+
+void Transform::world_associated_change(int type) {
+    dirty_flag_ |= type;
+    update_flag_manager_.distribute();
 }
 
-void Transform::_setDirtyFlagTrue(int type) {
-    _dirtyFlag |= type;
-}
-
-void Transform::_setDirtyFlagFalse(int type) {
-    _dirtyFlag &= ~type;
-}
-
-void Transform::_worldAssociatedChange(int type) {
-    _dirtyFlag |= type;
-    _updateFlagManager.distribute();
-}
-
-void Transform::_rotateByQuat(const QuaternionF &rotateQuat, bool relativeToLocal) {
-    if (relativeToLocal) {
-        _rotationQuaternion = rotationQuaternion() * rotateQuat;
-        setRotationQuaternion(_rotationQuaternion);
+void Transform::rotate_by_quat(const QuaternionF &rotate_quat, bool relative_to_local) {
+    if (relative_to_local) {
+        rotation_quaternion_ = get_rotation_quaternion() * rotate_quat;
+        set_rotation_quaternion(rotation_quaternion_);
     } else {
-        _worldRotationQuaternion = worldRotationQuaternion() * rotateQuat;
-        setWorldRotationQuaternion(_worldRotationQuaternion);
+        world_rotation_quaternion_ = get_world_rotation_quaternion() * rotate_quat;
+        set_world_rotation_quaternion(world_rotation_quaternion_);
     }
 }
 
-void Transform::_translate(const Vector3F &translation, bool relativeToLocal) {
-    if (relativeToLocal) {
-        _position = _position + translation;
-        setPosition(_position);
-    } else {
-        _worldPosition = _worldPosition + translation;
-        setWorldPosition(_worldPosition);
-    }
-}
-
-void Transform::_rotateXYZ(float x, float y, float z, bool relativeToLocal) {
-    const auto rotQuat = QuaternionF::makeRotationEuler(x * kDegreeToRadian, y * kDegreeToRadian, z * kDegreeToRadian);
-    _rotateByQuat(rotQuat, relativeToLocal);
+void Transform::rotate_xyz(float x, float y, float z, bool relative_to_local) {
+    const auto kRotQuat = QuaternionF::makeRotationEuler(x * kDegreeToRadian, y * kDegreeToRadian, z * kDegreeToRadian);
+    rotate_by_quat(kRotQuat, relative_to_local);
 }
 
 }// namespace vox

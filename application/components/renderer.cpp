@@ -4,185 +4,150 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "renderer.h"
+#include "components/renderer.h"
+
+#include "ecs/components_manager.h"
 #include "ecs/entity.h"
 #include "ecs/scene.h"
-#include "shader/shader.h"
 #include "material/material.h"
 
 namespace vox {
-size_t Renderer::materialCount() {
-    return _materials.size();
-}
+size_t Renderer::get_material_count() { return materials_.size(); }
 
-BoundingBox3F Renderer::bounds() {
-    auto &changeFlag = _transformChangeFlag;
-    if (changeFlag->flag) {
-        _updateBounds(_bounds);
-        changeFlag->flag = false;
+BoundingBox3F Renderer::get_bounds() {
+    auto &change_flag = transform_change_flag_;
+    if (change_flag->flag_) {
+        update_bounds(bounds_);
+        change_flag->flag_ = false;
     }
-    return _bounds;
+    return bounds_;
 }
 
-Renderer::Renderer(Entity *entity) : Component(entity),
-                                     _transformChangeFlag(entity->transform->registerWorldChangeFlag()),
-                                     _localMatrixProperty(Shader::createProperty("u_localMat", ShaderDataGroup::Renderer)),
-                                     _worldMatrixProperty(Shader::createProperty("u_modelMat", ShaderDataGroup::Renderer)),
-                                     _mvMatrixProperty(Shader::createProperty("u_MVMat", ShaderDataGroup::Renderer)),
-                                     _mvpMatrixProperty(Shader::createProperty("u_MVPMat", ShaderDataGroup::Renderer)),
-                                     _mvInvMatrixProperty(Shader::createProperty("u_MVInvMat", ShaderDataGroup::Renderer)),
-                                     _normalMatrixProperty(Shader::createProperty("u_normalMat", ShaderDataGroup::Renderer)) {
-}
+Renderer::Renderer(Entity *entity)
+    : Component(entity),
+      shader_data_(entity->get_scene()->get_device()),
+      transform_change_flag_(entity->transform->register_world_change_flag()),
+      renderer_property_("rendererData") {}
 
-void Renderer::_onEnable() {
-    auto &componentsManager = entity()->scene()->_componentsManager;
-    componentsManager.addRenderer(this);
-}
+void Renderer::on_enable() { ComponentsManager::get_singleton().add_renderer(this); }
 
-void Renderer::_onDisable() {
-    auto &componentsManager = entity()->scene()->_componentsManager;
-    componentsManager.removeRenderer(this);
-}
+void Renderer::on_disable() { ComponentsManager::get_singleton().remove_renderer(this); }
 
-void Renderer::_onDestroy() {
-    auto &flag = _transformChangeFlag;
-    if (flag != nullptr) {
-        flag->destroy();
-        _transformChangeFlag.reset();
-    }
-}
-
-MaterialPtr Renderer::getInstanceMaterial(size_t index) {
-    const auto &materials = _materials;
+Renderer::MaterialPtr Renderer::get_instance_material(size_t index) {
+    const auto &materials = materials_;
     if (materials.size() > index) {
         const auto &material = materials[index];
         if (material != nullptr) {
-            if (_materialsInstanced[index]) {
+            if (materials_instanced_[index]) {
                 return material;
             } else {
-                return _createInstanceMaterial(material, index);
+                return create_instance_material(material, index);
             }
         }
     }
     return nullptr;
 }
 
-MaterialPtr Renderer::getMaterial(size_t index) {
-    return _materials[index];
-}
+Renderer::MaterialPtr Renderer::get_material(size_t index) { return materials_[index]; }
 
-void Renderer::setMaterial(MaterialPtr material) {
+void Renderer::set_material(const MaterialPtr &material) {
     size_t index = 0;
 
-    if (index >= _materials.size()) {
-        _materials.reserve(index + 1);
-        for (size_t i = _materials.size(); i <= index; i++) {
-            _materials.push_back(nullptr);
+    if (index >= materials_.size()) {
+        materials_.reserve(index + 1);
+        for (size_t i = materials_.size(); i <= index; i++) {
+            materials_.push_back(nullptr);
         }
     }
 
-    const auto &internalMaterial = _materials[index];
-    if (internalMaterial != material) {
-        _materials[index] = material;
-        if (index < _materialsInstanced.size()) {
-            _materialsInstanced[index] = false;
-        }
-    }
-}
-
-void Renderer::setMaterial(size_t index, MaterialPtr material) {
-    if (index >= _materials.size()) {
-        _materials.reserve(index + 1);
-        for (size_t i = _materials.size(); i <= index; i++) {
-            _materials.push_back(nullptr);
-        }
-    }
-
-    const auto &internalMaterial = _materials[index];
-    if (internalMaterial != material) {
-        _materials[index] = material;
-        if (index < _materialsInstanced.size()) {
-            _materialsInstanced[index] = false;
+    const auto &internal_material = materials_[index];
+    if (internal_material != material) {
+        materials_[index] = material;
+        if (index < materials_instanced_.size()) {
+            materials_instanced_[index] = false;
         }
     }
 }
 
-std::vector<MaterialPtr> Renderer::getInstanceMaterials() {
-    for (size_t i = 0; i < _materials.size(); i++) {
-        if (!_materialsInstanced[i]) {
-            _createInstanceMaterial(_materials[i], i);
+void Renderer::set_material(size_t index, const MaterialPtr &material) {
+    if (index >= materials_.size()) {
+        materials_.reserve(index + 1);
+        for (size_t i = materials_.size(); i <= index; i++) {
+            materials_.push_back(nullptr);
         }
     }
-    return _materials;
+
+    const auto &internal_material = materials_[index];
+    if (internal_material != material) {
+        materials_[index] = material;
+        if (index < materials_instanced_.size()) {
+            materials_instanced_[index] = false;
+        }
+    }
 }
 
-std::vector<MaterialPtr> Renderer::getMaterials() {
-    return _materials;
+std::vector<Renderer::MaterialPtr> Renderer::get_instance_materials() {
+    for (size_t i = 0; i < materials_.size(); i++) {
+        if (!materials_instanced_[i]) {
+            create_instance_material(materials_[i], i);
+        }
+    }
+    return materials_;
 }
 
-void Renderer::setMaterials(const std::vector<MaterialPtr> &materials) {
+std::vector<Renderer::MaterialPtr> Renderer::get_materials() { return materials_; }
+
+void Renderer::set_materials(const std::vector<MaterialPtr> &materials) {
     size_t count = materials.size();
-    if (_materials.size() != count) {
-        _materials.reserve(count);
-        for (size_t i = _materials.size(); i < count; i++) {
-            _materials.push_back(nullptr);
+    if (materials_.size() != count) {
+        materials_.reserve(count);
+        for (size_t i = materials_.size(); i < count; i++) {
+            materials_.push_back(nullptr);
         }
     }
-    if (_materialsInstanced.size() != 0) {
-        _materialsInstanced.clear();
+    if (!materials_instanced_.empty()) {
+        materials_instanced_.clear();
     }
 
     for (size_t i = 0; i < count; i++) {
-        const auto &internalMaterial = _materials[i];
+        const auto &internal_material = materials_[i];
         const auto &material = materials[i];
-        if (internalMaterial != material) {
-            _materials[i] = material;
+        if (internal_material != material) {
+            materials_[i] = material;
         }
     }
 }
 
-void Renderer::pushPrimitive(const RenderElement &element,
-                             std::vector<RenderElement> &opaqueQueue,
-                             std::vector<RenderElement> &alphaTestQueue,
-                             std::vector<RenderElement> &transparentQueue) {
-    const auto renderQueueType = element.material->renderQueueType;
+void Renderer::push_primitive(const RenderElement &element,
+                              std::vector<RenderElement> &opaque_queue,
+                              std::vector<RenderElement> &alpha_test_queue,
+                              std::vector<RenderElement> &transparent_queue) {
+    const auto kRenderQueueType = element.material->render_queue_;
 
-    if (renderQueueType > (RenderQueueType::Transparent + RenderQueueType::AlphaTest) >> 1) {
-        transparentQueue.push_back(element);
-    } else if (renderQueueType > (RenderQueueType::AlphaTest + RenderQueueType::Opaque) >> 1) {
-        alphaTestQueue.push_back(element);
+    if (kRenderQueueType > (RenderQueueType::TRANSPARENT + RenderQueueType::ALPHA_TEST) >> 1) {
+        transparent_queue.push_back(element);
+    } else if (kRenderQueueType > (RenderQueueType::ALPHA_TEST + RenderQueueType::OPAQUE) >> 1) {
+        alpha_test_queue.push_back(element);
     } else {
-        opaqueQueue.push_back(element);
+        opaque_queue.push_back(element);
     }
 }
 
-void Renderer::setDistanceForSort(float dist) {
-    _distanceForSort = dist;
+void Renderer::set_distance_for_sort(float dist) { distance_for_sort_ = dist; }
+
+float Renderer::get_distance_for_sort() const { return distance_for_sort_; }
+
+void Renderer::update_shader_data() {
+    auto world_matrix = get_entity()->transform->get_world_matrix();
+    normal_matrix_ = world_matrix.inverse();
+    normal_matrix_ = normal_matrix_.transposed();
+
+    renderer_data_.local_mat = get_entity()->transform->get_local_matrix();
+    renderer_data_.model_mat = world_matrix;
+    renderer_data_.normal_mat = normal_matrix_;
+    shader_data_.set_data(Renderer::renderer_property_, renderer_data_);
 }
 
-float Renderer::distanceForSort() {
-    return _distanceForSort;
-}
-
-void Renderer::updateShaderData(const Matrix4x4F &viewMat,
-                                const Matrix4x4F &projMat) {
-    auto worldMatrix = entity()->transform->worldMatrix();
-    _mvMatrix = viewMat * worldMatrix;
-    _mvpMatrix = projMat * viewMat * worldMatrix;
-    _mvInvMatrix = _mvMatrix.inverse();
-    _normalMatrix = worldMatrix.inverse();
-    _normalMatrix = _normalMatrix.transposed();
-
-    shaderData.setData(Renderer::_localMatrixProperty, entity()->transform->localMatrix());
-    shaderData.setData(Renderer::_worldMatrixProperty, worldMatrix);
-    shaderData.setData(Renderer::_mvMatrixProperty, _mvMatrix);
-    shaderData.setData(Renderer::_mvpMatrixProperty, _mvpMatrix);
-    shaderData.setData(Renderer::_mvInvMatrixProperty, _mvInvMatrix);
-    shaderData.setData(Renderer::_normalMatrixProperty, _normalMatrix);
-}
-
-MaterialPtr Renderer::_createInstanceMaterial(const MaterialPtr &material, size_t index) {
-    return nullptr;
-}
+Renderer::MaterialPtr Renderer::create_instance_material(const Renderer::MaterialPtr &material, size_t index) { return nullptr; }
 
 }// namespace vox

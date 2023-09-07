@@ -6,20 +6,19 @@
 
 #include "forward_application.h"
 #include "rendering/subpasses/forward_subpass.h"
-#include "engine.h"
-#include "camera.h"
-#include "metal_helpers.h"
+#include "platform/platform.h"
+#include "components/camera.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 ForwardApplication::~ForwardApplication() {
     _renderPass.reset();
 }
 
-bool ForwardApplication::prepare(Engine &engine) {
+bool ForwardApplication::prepare(Platform &engine) {
     MetalApplication::prepare(engine);
 
     _scene = std::make_unique<Scene>(*_device);
-    _particleManager = std::make_unique<ParticleManager>(*_library, _scene.get());
     _lightManager = std::make_unique<LightManager>(*_library, _scene.get());
     {
         loadScene();
@@ -29,7 +28,6 @@ bool ForwardApplication::prepare(Engine &engine) {
         _mainCamera->resize(extent.width, extent.height, factor * extent.width, factor * extent.height);
     }
     _lightManager->setCamera(_mainCamera);
-    _shadowManager = std::make_unique<ShadowManager>(*_library, _scene.get(), _mainCamera);
 
     // Create a render pass descriptor for thelighting and composition pass
     // Whatever rendered in the final pass needs to be stored so it can be displayed
@@ -74,9 +72,7 @@ void ForwardApplication::update(float delta_time) {
 }
 
 void ForwardApplication::updateGPUTask(MTL::CommandBuffer &commandBuffer) {
-    _shadowManager->draw(commandBuffer);
     _lightManager->draw(commandBuffer);
-    _particleManager->draw(commandBuffer);
 }
 
 bool ForwardApplication::resize(uint32_t win_width, uint32_t win_height,

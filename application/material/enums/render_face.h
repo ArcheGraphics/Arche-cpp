@@ -6,14 +6,16 @@
 
 #pragma once
 
+namespace vox {
 /**
  * Set which face for render.
  */
 enum class RenderFace {
     /** Render front face. */
-    Front,
+    FRONT,
     /** Render back face. */
-    Back,
+    BACK,
     /** Render double face. */
-    Double
+    DOUBLE
 };
+}// namespace vox

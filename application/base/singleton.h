@@ -14,36 +14,33 @@ namespace vox {
  */
 template<typename T>
 class Singleton {
-private:
+public:
     /** @brief Explicit private copy constructor. This is a forbidden operation.*/
-    Singleton(const Singleton<T> &);
+    Singleton(const Singleton<T> &) = delete;
 
     /** @brief Private operator= . This is a forbidden operation. */
-    Singleton &operator=(const Singleton<T> &);
+    Singleton &operator=(const Singleton<T> &) = delete;
 
 protected:
-
-    static T *msSingleton;
+    static T *ms_singleton;
 
 public:
-    Singleton(void) {
-        assert(!msSingleton);
-        msSingleton = static_cast<T *>(this);
+    Singleton() {
+        assert(!ms_singleton);
+        ms_singleton = static_cast<T *>(this);
     }
 
-    ~Singleton(void) {
-        assert(msSingleton);
-        msSingleton = 0;
+    ~Singleton() {
+        assert(ms_singleton);
+        ms_singleton = 0;
     }
 
-    static T &getSingleton(void) {
-        assert(msSingleton);
-        return (*msSingleton);
+    static T &get_singleton() {
+        assert(ms_singleton);
+        return (*ms_singleton);
     }
 
-    static T *getSingletonPtr(void) {
-        return msSingleton;
-    }
+    static T *get_singleton_ptr() { return ms_singleton; }
 };
 
 }// namespace vox

@@ -21,19 +21,19 @@ public:
 
     SubMesh(SubMesh &&rhs) = default;
 
-    SubMesh &operator=(SubMesh &rhs) = default;
+    SubMesh &operator=(SubMesh const &rhs) = default;
 
     SubMesh &operator=(SubMesh &&rhs) = default;
 
     ~SubMesh() = default;
 
-    MTL::PrimitiveType primitiveType() const;
+    [[nodiscard]] MTL::PrimitiveType primitiveType() const;
 
-    MTL::IndexType indexType() const;
+    [[nodiscard]] MTL::IndexType indexType() const;
 
-    NS::UInteger indexCount() const;
+    [[nodiscard]] NS::UInteger indexCount() const;
 
-    const std::shared_ptr<MTL::Buffer> &indexBuffer() const;
+    [[nodiscard]] const std::shared_ptr<MTL::Buffer> &indexBuffer() const;
 
 private:
     MTL::PrimitiveType _primitiveType;

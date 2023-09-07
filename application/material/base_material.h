@@ -18,7 +18,7 @@ public:
      * @remarks
      * If material is transparent, transparent blend mode will be affected by `blendMode`, default is `BlendMode.Normal`.
      */
-    bool isTransparent() const;
+    [[nodiscard]] bool isTransparent() const;
 
     void setIsTransparent(bool newValue);
 
@@ -28,14 +28,14 @@ public:
      * Fragments with alpha channel lower than cutoff value will be discarded.
      * `0` means no fragment will be discarded.
      */
-    float alphaCutoff() const;
+    [[nodiscard]] float alphaCutoff() const;
 
     void setAlphaCutoff(float newValue);
 
     /**
      * Set which face for render.
      */
-    const RenderFace &renderFace() const;
+    [[nodiscard]] const RenderFace &renderFace() const;
 
     void setRenderFace(const RenderFace &newValue);
 
@@ -44,7 +44,7 @@ public:
      * @remarks
      * Only take effect when `isTransparent` is `true`.
      */
-    const BlendMode &blendMode() const;
+    [[nodiscard]] const BlendMode &blendMode() const;
 
     void setBlendMode(const BlendMode &newValue);
 
@@ -52,13 +52,13 @@ public:
      * Create a BaseMaterial instance.
      * @param shader - Shader used by the material
      */
-    BaseMaterial(Shader *shader);
+    explicit BaseMaterial(Shader *shader);
 
 private:
     ShaderProperty _alphaCutoffProp;
 
-    RenderFace _renderFace = RenderFace::Back;
-    BlendMode _blendMode = BlendMode::Normal;
+    RenderFace _renderFace = RenderFace::BACK;
+    BlendMode _blendMode = BlendMode::NORMAL;
     bool _isTransparent = false;
 };
 

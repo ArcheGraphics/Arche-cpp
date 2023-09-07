@@ -4,347 +4,317 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "orbit_control.h"
+#include "controls/orbit_control.h"
+
 #include "ecs/entity.h"
 
-namespace vox {
-namespace control {
-OrbitControl::OrbitControl(Entity *entity) : Script(entity),
-                                             _cameraEntity(entity) {
+namespace vox::control {
+OrbitControl::OrbitControl(Entity *entity) : Script(entity), camera_entity_(entity) {}
+
+void OrbitControl::on_script_disable() {
+    enable_event_ = false;
+    enable_move_ = false;
 }
 
-void OrbitControl::onDisable() {
-    _enableEvent = false;
-    _enableMove = false;
+void OrbitControl::on_script_enable() { enable_event_ = true; }
+
+void OrbitControl::on_destroy() { on_script_disable(); }
+
+void OrbitControl::resize(uint32_t win_width, uint32_t win_height, uint32_t fb_width, uint32_t fb_height) {
+    width_ = win_width;
+    height_ = win_height;
 }
 
-void OrbitControl::onEnable() {
-    _enableEvent = true;
-}
-
-void OrbitControl::onDestroy() {
-    onDisable();
-}
-
-void OrbitControl::resize(uint32_t win_width, uint32_t win_height,
-                          uint32_t fb_width, uint32_t fb_height) {
-    _width = win_width;
-    _height = win_height;
-}
-
-void OrbitControl::inputEvent(const InputEvent &inputEvent) {
-    if (_enableEvent) {
-        if (inputEvent.source() == EventSource::Keyboard) {
-            const auto &key_event = static_cast<const KeyInputEvent &>(inputEvent);
-            onKeyDown(key_event.code());
-        } else if (inputEvent.source() == EventSource::Mouse) {
-            const auto &mouse_button = static_cast<const MouseButtonInputEvent &>(inputEvent);
-            if (mouse_button.action() == MouseAction::Down) {
-                onMouseDown(mouse_button.button(), mouse_button.pos_x(), mouse_button.pos_y());
-                _enableMove = true;
-            } else if (mouse_button.action() == MouseAction::Up) {
-                onMouseUp();
-                _enableMove = false;
+void OrbitControl::input_event(const vox::InputEvent &input_event) {
+    if (enable_event_) {
+        if (input_event.get_source() == EventSource::Keyboard) {
+            const auto &key_event = static_cast<const KeyInputEvent &>(input_event);
+            OnKeyDown(key_event.get_code());
+        } else if (input_event.get_source() == EventSource::Mouse) {
+            const auto &mouse_button = static_cast<const MouseButtonInputEvent &>(input_event);
+            if (mouse_button.get_action() == MouseAction::Down) {
+                OnMouseDown(mouse_button.get_button(), mouse_button.get_pos_x(), mouse_button.get_pos_y());
+                enable_move_ = true;
+            } else if (mouse_button.get_action() == MouseAction::Up) {
+                OnMouseUp();
+                enable_move_ = false;
             }
 
-            if (_enableMove && mouse_button.action() == MouseAction::Move) {
-                onMouseMove(mouse_button.pos_x(), mouse_button.pos_y());
+            if (enable_move_ && mouse_button.get_action() == MouseAction::Move) {
+                OnMouseMove(mouse_button.get_pos_x(), mouse_button.get_pos_y());
             }
-        } else if (inputEvent.source() == EventSource::Scroll) {
-            const auto &scroll_event = static_cast<const ScrollInputEvent &>(inputEvent);
-            onMouseWheel(scroll_event.offset_x(), scroll_event.offset_y());
-        } else if (inputEvent.source() == EventSource::Touchscreen) {
+        } else if (input_event.get_source() == EventSource::Scroll) {
+            const auto &scroll_event = static_cast<const ScrollInputEvent &>(input_event);
+            OnMouseWheel(scroll_event.get_offset_x(), scroll_event.get_offset_y());
+        } else if (input_event.get_source() == EventSource::Touchscreen) {
             // TODO
         }
     }
 }
 
-void OrbitControl::onUpdate(float dtime) {
-    if (!enabled()) return;
+void OrbitControl::on_update(float delta_time) {
+    if (!is_enabled()) return;
 
-    const auto &position = _cameraEntity->transform->position();
-    _offset = position - target;
-    _spherical.setFromVec3(_offset);
+    const auto &position = camera_entity_->transform->get_position();
+    offset_ = position - target_;
+    spherical_.SetFromVec3(offset_);
 
-    if (autoRotate && _state == STATE::NONE) {
-        rotateLeft(autoRotationAngle(dtime));
+    if (auto_rotate_ && state_ == STATE::NONE) {
+        RotateLeft(AutoRotationAngle(delta_time));
     }
 
-    _spherical._theta += _sphericalDelta._theta;
-    _spherical._phi += _sphericalDelta._phi;
+    spherical_.theta_ += spherical_delta_.theta_;
+    spherical_.phi_ += spherical_delta_.phi_;
 
-    _spherical._theta = std::max(minAzimuthAngle, std::min(maxAzimuthAngle, _spherical._theta));
-    _spherical._phi = std::max(minPolarAngle, std::min(maxPolarAngle, _spherical._phi));
-    _spherical.makeSafe();
+    spherical_.theta_ = std::max(min_azimuth_angle_, std::min(max_azimuth_angle_, spherical_.theta_));
+    spherical_.phi_ = std::max(min_polar_angle_, std::min(max_polar_angle_, spherical_.phi_));
+    spherical_.MakeSafe();
 
-    if (_scale != 1) {
-        _zoomFrag = _spherical._radius * (_scale - 1);
+    if (scale_ != 1) {
+        zoom_frag_ = spherical_.radius_ * (scale_ - 1);
     }
 
-    _spherical._radius += _zoomFrag;
-    _spherical._radius = std::max(minDistance, std::min(maxDistance, _spherical._radius));
+    spherical_.radius_ += zoom_frag_;
+    spherical_.radius_ = std::max(min_distance_, std::min(max_distance_, spherical_.radius_));
 
-    target = target + _panOffset;
-    _spherical.setToVec3(_offset);
-    _position = target;
-    _position = _position + _offset;
+    target_ = target_ + pan_offset_;
+    spherical_.SetToVec3(offset_);
+    position_ = target_;
+    position_ = position_ + offset_;
 
-    _cameraEntity->transform->setPosition(_position);
-    _cameraEntity->transform->lookAt(target, up);
+    camera_entity_->transform->set_position(position_);
+    camera_entity_->transform->look_at(target_, up_);
 
-    if (enableDamping == true) {
-        _sphericalDump._theta *= 1 - dampingFactor;
-        _sphericalDump._phi *= 1 - dampingFactor;
-        _zoomFrag *= 1 - zoomFactor;
+    if (enable_damping_) {
+        spherical_dump_.theta_ *= 1 - damping_factor_;
+        spherical_dump_.phi_ *= 1 - damping_factor_;
+        zoom_frag_ *= 1 - zoom_factor_;
 
-        if (_isMouseUp) {
-            _sphericalDelta._theta = _sphericalDump._theta;
-            _sphericalDelta._phi = _sphericalDump._phi;
+        if (is_mouse_up_) {
+            spherical_delta_.theta_ = spherical_dump_.theta_;
+            spherical_delta_.phi_ = spherical_dump_.phi_;
         } else {
-            _sphericalDelta.set(0, 0, 0);
+            spherical_delta_.Set(0, 0, 0);
         }
     } else {
-        _sphericalDelta.set(0, 0, 0);
-        _zoomFrag = 0;
+        spherical_delta_.Set(0, 0, 0);
+        zoom_frag_ = 0;
     }
 
-    _scale = 1;
-    _panOffset = Vector3F(0, 0, 0);
+    scale_ = 1;
+    pan_offset_ = Vector3F(0, 0, 0);
 }
 
-float OrbitControl::autoRotationAngle(float dtime) {
-    return (autoRotateSpeed / 1000) * dtime;
-}
+float OrbitControl::AutoRotationAngle(float delta_time) const { return (auto_rotate_speed_ / 1000) * delta_time; }
 
-float OrbitControl::zoomScale() {
-    return std::pow(0.95, zoomSpeed);
-}
+float OrbitControl::ZoomScale() const { return std::pow(0.95f, zoom_speed_); }
 
-void OrbitControl::rotateLeft(float radian) {
-    _sphericalDelta._theta -= radian;
-    if (enableDamping) {
-        _sphericalDump._theta = -radian;
+void OrbitControl::RotateLeft(float radian) {
+    spherical_delta_.theta_ -= radian;
+    if (enable_damping_) {
+        spherical_dump_.theta_ = -radian;
     }
 }
 
-void OrbitControl::rotateUp(float radian) {
-    _sphericalDelta._phi -= radian;
-    if (enableDamping) {
-        _sphericalDump._phi = -radian;
+void OrbitControl::RotateUp(float radian) {
+    spherical_delta_.phi_ -= radian;
+    if (enable_damping_) {
+        spherical_dump_.phi_ = -radian;
     }
 }
 
-void OrbitControl::panLeft(float distance, const Matrix4x4F &worldMatrix) {
-    _vPan = Vector3F(worldMatrix[0], worldMatrix[1], worldMatrix[2]);
-    _vPan = _vPan * distance;
-    _panOffset = _panOffset + _vPan;
+void OrbitControl::PanLeft(float distance, const Matrix4x4F &world_matrix) {
+    v_pan_ = Vector3F(world_matrix[0], world_matrix[1], world_matrix[2]);
+    v_pan_ = v_pan_ * distance;
+    pan_offset_ = pan_offset_ + v_pan_;
 }
 
-void OrbitControl::panUp(float distance, const Matrix4x4F &worldMatrix) {
-    _vPan = Vector3F(worldMatrix[4], worldMatrix[5], worldMatrix[6]);
-    _vPan = _vPan * distance;
-    _panOffset = _panOffset + _vPan;
+void OrbitControl::PanUp(float distance, const Matrix4x4F &world_matrix) {
+    v_pan_ = Vector3F(world_matrix[4], world_matrix[5], world_matrix[6]);
+    v_pan_ = v_pan_ * distance;
+    pan_offset_ = pan_offset_ + v_pan_;
 }
 
-void OrbitControl::pan(float deltaX, float deltaY) {
+void OrbitControl::Pan(float delta_x, float delta_y) {
     // perspective only
-    Point3F position = _cameraEntity->transform->position();
-    _vPan = position - target;
-    auto targetDistance = _vPan.length();
+    Point3F position = camera_entity_->transform->get_position();
+    v_pan_ = position - target_;
+    auto target_distance = v_pan_.length();
 
-    targetDistance *= (fov / 2) * (M_PI / 180);
+    target_distance *= (fov_ / 2.f) * (static_cast<float>(M_PI) / 180.f);
 
-    panLeft(-2 * deltaX * (targetDistance / float(_width)), _cameraEntity->transform->worldMatrix());
-    panUp(2 * deltaY * (targetDistance / float(_height)), _cameraEntity->transform->worldMatrix());
+    PanLeft(-2 * delta_x * (target_distance / float(width_)), camera_entity_->transform->get_world_matrix());
+    PanUp(2 * delta_y * (target_distance / float(height_)), camera_entity_->transform->get_world_matrix());
 }
 
-void OrbitControl::zoomIn(float zoomScale) {
-    _scale *= zoomScale;
+void OrbitControl::ZoomIn(float zoom_scale) { scale_ *= zoom_scale; }
+
+void OrbitControl::ZoomOut(float zoom_scale) { scale_ /= zoom_scale; }
+
+// MARK: - Mouse
+void OrbitControl::HandleMouseDownRotate(double xpos, double ypos) {
+    rotate_start_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-void OrbitControl::zoomOut(float zoomScale) {
-    _scale /= zoomScale;
+void OrbitControl::HandleMouseDownZoom(double xpos, double ypos) {
+    zoom_start_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-//MARK: - Mouse
-void OrbitControl::handleMouseDownRotate(double xpos, double ypos) {
-    _rotateStart = Vector2F(xpos, ypos);
+void OrbitControl::HandleMouseDownPan(double xpos, double ypos) {
+    pan_start_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-void OrbitControl::handleMouseDownZoom(double xpos, double ypos) {
-    _zoomStart = Vector2F(xpos, ypos);
+void OrbitControl::HandleMouseMoveRotate(double xpos, double ypos) {
+    rotate_end_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
+    rotate_delta_ = rotate_end_ - rotate_start_;
+
+    RotateLeft(2.f * static_cast<float>(M_PI) * (rotate_delta_.x / static_cast<float>(width_)) * rotate_speed_);
+    RotateUp(2.f * static_cast<float>(M_PI) * (rotate_delta_.y / static_cast<float>(height_)) * rotate_speed_);
+
+    rotate_start_ = rotate_end_;
 }
 
-void OrbitControl::handleMouseDownPan(double xpos, double ypos) {
-    _panStart = Vector2F(xpos, ypos);
-}
+void OrbitControl::HandleMouseMoveZoom(double xpos, double ypos) {
+    zoom_end_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
+    zoom_delta_ = zoom_end_ - zoom_start_;
 
-void OrbitControl::handleMouseMoveRotate(double xpos, double ypos) {
-    _rotateEnd = Vector2F(xpos, ypos);
-    _rotateDelta = _rotateEnd - _rotateStart;
-
-    rotateLeft(2 * M_PI * (_rotateDelta.x / float(_width)) * rotateSpeed);
-    rotateUp(2 * M_PI * (_rotateDelta.y / float(_height)) * rotateSpeed);
-
-    _rotateStart = _rotateEnd;
-}
-
-void OrbitControl::handleMouseMoveZoom(double xpos, double ypos) {
-    _zoomEnd = Vector2F(xpos, ypos);
-    _zoomDelta = _zoomEnd - _zoomStart;
-
-    if (_zoomDelta.y > 0) {
-        zoomOut(zoomScale());
-    } else if (_zoomDelta.y < 0) {
-        zoomIn(zoomScale());
+    if (zoom_delta_.y > 0) {
+        ZoomOut(ZoomScale());
+    } else if (zoom_delta_.y < 0) {
+        ZoomIn(ZoomScale());
     }
 
-    _zoomStart = _zoomEnd;
+    zoom_start_ = zoom_end_;
 }
 
-void OrbitControl::handleMouseMovePan(double xpos, double ypos) {
-    _panEnd = Vector2F(xpos, ypos);
-    _panDelta = _panEnd - _panStart;
+void OrbitControl::HandleMouseMovePan(double xpos, double ypos) {
+    pan_end_ = Vector2F(static_cast<float>(xpos), static_cast<float>(ypos));
+    pan_delta_ = pan_end_ - pan_start_;
 
-    pan(_panDelta.x, _panDelta.y);
+    Pan(pan_delta_.x, pan_delta_.y);
 
-    _panStart = _panEnd;
+    pan_start_ = pan_end_;
 }
 
-void OrbitControl::handleMouseWheel(double xoffset, double yoffset) {
+void OrbitControl::HandleMouseWheel(double xoffset, double yoffset) {
     if (yoffset < 0) {
-        zoomIn(zoomScale());
+        ZoomIn(ZoomScale());
     } else if (yoffset > 0) {
-        zoomOut(zoomScale());
+        ZoomOut(ZoomScale());
     }
 }
 
-void OrbitControl::onMouseDown(MouseButton button, double xpos, double ypos) {
-    if (enabled() == false) return;
+void OrbitControl::OnMouseDown(MouseButton button, double xpos, double ypos) {
+    if (!is_enabled()) return;
 
-    _isMouseUp = false;
+    is_mouse_up_ = false;
 
     switch (button) {
-        case MouseButton::Right:
-            if (enableRotate == false) return;
+        case MouseButton::Left:
+            if (!enable_rotate_) return;
 
-            handleMouseDownRotate(xpos, ypos);
-            _state = STATE::ROTATE;
+            HandleMouseDownRotate(xpos, ypos);
+            state_ = STATE::ROTATE;
             break;
         case MouseButton::Middle:
-            if (enableZoom == false) return;
+            if (!enable_zoom_) return;
 
-            handleMouseDownZoom(xpos, ypos);
-            _state = STATE::ZOOM;
+            HandleMouseDownZoom(xpos, ypos);
+            state_ = STATE::ZOOM;
             break;
+        case MouseButton::Right:
+            if (!enable_pan_) return;
 
-            // Pan turn to be GUI buttom
-        // case MouseButton::Right:
-        //     if (enablePan == false) return;
-        //
-        //    handleMouseDownPan(xpos, ypos);
-        //    _state = STATE::PAN;
-        //    break;
+            HandleMouseDownPan(xpos, ypos);
+            state_ = STATE::PAN;
+            break;
         default:
             break;
     }
 }
 
-void OrbitControl::onMouseMove(double xpos, double ypos) {
-    if (enabled() == false) return;
+void OrbitControl::OnMouseMove(double xpos, double ypos) {
+    if (!is_enabled()) return;
 
-    switch (_state) {
+    switch (state_) {
         case STATE::ROTATE:
-            if (enableRotate == false) return;
+            if (!enable_rotate_) return;
 
-            handleMouseMoveRotate(xpos, ypos);
+            HandleMouseMoveRotate(xpos, ypos);
             break;
 
         case STATE::ZOOM:
-            if (enableZoom == false) return;
+            if (!enable_zoom_) return;
 
-            handleMouseMoveZoom(xpos, ypos);
+            HandleMouseMoveZoom(xpos, ypos);
             break;
 
         case STATE::PAN:
-            if (enablePan == false) return;
+            if (!enable_pan_) return;
 
-            handleMouseMovePan(xpos, ypos);
+            HandleMouseMovePan(xpos, ypos);
             break;
         default:
             break;
-            ;
     }
 }
 
-void OrbitControl::onMouseUp() {
-    if (enabled() == false) return;
+void OrbitControl::OnMouseUp() {
+    if (!is_enabled()) return;
 
-    _isMouseUp = true;
-    _state = STATE::NONE;
+    is_mouse_up_ = true;
+    state_ = STATE::NONE;
 }
 
-void OrbitControl::onMouseWheel(double xoffset, double yoffset) {
-    if (enabled() == false || enableZoom == false ||
-        (_state != STATE::NONE && _state != STATE::ROTATE))
-        return;
+void OrbitControl::OnMouseWheel(double xoffset, double yoffset) {
+    if (!is_enabled() || !enable_zoom_ || (state_ != STATE::NONE && state_ != STATE::ROTATE)) return;
 
-    handleMouseWheel(xoffset, yoffset);
+    HandleMouseWheel(xoffset, yoffset);
 }
 
-//MARK: - KeyBoard
-void OrbitControl::handleKeyDown(KeyCode key) {
+// MARK: - KeyBoard
+void OrbitControl::HandleKeyDown(KeyCode key) {
     switch (key) {
         case KeyCode::Up:
-            pan(0, keyPanSpeed);
+            Pan(0, key_pan_speed_);
             break;
         case KeyCode::Down:
-            pan(0, -keyPanSpeed);
+            Pan(0, -key_pan_speed_);
             break;
         case KeyCode::Left:
-            pan(keyPanSpeed, 0);
+            Pan(key_pan_speed_, 0);
             break;
         case KeyCode::Right:
-            pan(-keyPanSpeed, 0);
+            Pan(-key_pan_speed_, 0);
             break;
         default:
             break;
     }
 }
 
-void OrbitControl::onKeyDown(KeyCode key) {
-    if (enabled() == false || enableKeys == false || enablePan == false) return;
+void OrbitControl::OnKeyDown(KeyCode key) {
+    if (!is_enabled() || !enable_keys_ || !enable_pan_) return;
 
-    handleKeyDown(key);
+    HandleKeyDown(key);
 }
 
-//MARK: - Touch
-void OrbitControl::handleTouchStartRotate() {
-}
+// MARK: - Touch
+void OrbitControl::HandleTouchStartRotate() {}
 
-void OrbitControl::handleTouchStartZoom() {
-}
+void OrbitControl::HandleTouchStartZoom() {}
 
-void OrbitControl::handleTouchStartPan() {
-}
+void OrbitControl::HandleTouchStartPan() {}
 
-void OrbitControl::handleTouchMoveRotate() {
-}
+void OrbitControl::HandleTouchMoveRotate() {}
 
-void OrbitControl::handleTouchMoveZoom() {
-}
+void OrbitControl::HandleTouchMoveZoom() {}
 
-void OrbitControl::handleTouchMovePan() {
-}
+void OrbitControl::HandleTouchMovePan() {}
 
-void OrbitControl::onTouchStart() {
-}
+void OrbitControl::OnTouchStart() {}
 
-void OrbitControl::onTouchMove() {
-}
+void OrbitControl::OnTouchMove() {}
 
-void OrbitControl::onTouchEnd() {
-}
+void OrbitControl::OnTouchEnd() {}
 
-}
 }// namespace vox::control

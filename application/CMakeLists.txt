@@ -121,8 +121,8 @@ set(ECS_FILES
         ecs/entity.cpp
         ecs/scene.h
         ecs/scene.cpp
-        #        ecs/scene_manager.h
-        #        ecs/scene_manager.cpp
+        ecs/scene_manager.h
+        ecs/scene_manager.cpp
 )
 
 set(LIGHT_FILES
@@ -152,8 +152,6 @@ set(RENDERING_FILES
         rendering/compute_pass.h
         rendering/compute_pipeline_state.cpp
         rendering/compute_pipeline_state.h
-        rendering/render_context.h
-        rendering/render_context.mm
         rendering/render_element.cpp
         rendering/render_element.h
         rendering/render_pass.h
@@ -174,19 +172,6 @@ set(GUI_FILES
         gui/gui.cpp
 )
 
-set(PLATFORM_FILES
-        platform/platform.cpp
-        platform/platform.h
-        platform/unix_platform.cpp
-        platform/unix_platform.h
-        platform/input_events.cpp
-        platform/input_events.h
-        platform/window.cpp
-        platform/window.h
-        platform/glfw_window.cpp
-        platform/glfw_window.h
-)
-
 source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
 
@@ -204,7 +189,6 @@ set(PROJECT_FILES
         ${CONTROL_FILES}
         ${RENDERING_FILES}
         ${GUI_FILES}
-        ${PLATFORM_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.

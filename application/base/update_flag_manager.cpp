@@ -4,16 +4,14 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "update_flag_manager.h"
+#include "base/update_flag_manager.h"
 
 namespace vox {
-std::unique_ptr<UpdateFlag> UpdateFlagManager::registration() {
-    return std::make_unique<UpdateFlag>(this);
-}
+std::unique_ptr<UpdateFlag> UpdateFlagManager::registration() { return std::make_unique<UpdateFlag>(this); }
 
 void UpdateFlagManager::distribute() {
-    for (size_t i = 0; i < _updateFlags.size(); i++) {
-        _updateFlags[i]->flag = true;
+    for (auto &update_flag : update_flags_) {
+        update_flag->flag_ = true;
     }
 }
 

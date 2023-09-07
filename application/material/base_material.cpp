@@ -23,11 +23,11 @@ void BaseMaterial::setIsTransparent(bool newValue) {
     if (newValue) {
         targetBlendState.enabled = true;
         depthState.writeEnabled = false;
-        renderQueueType = RenderQueueType::Transparent;
+        renderQueueType = RenderQueueType::TRANSPARENT;
     } else {
         targetBlendState.enabled = false;
         depthState.writeEnabled = true;
-        renderQueueType = (shaderData.getData(BaseMaterial::_alphaCutoffProp).has_value()) ? RenderQueueType::AlphaTest : RenderQueueType::Opaque;
+        renderQueueType = (shaderData.getData(BaseMaterial::_alphaCutoffProp).has_value()) ? RenderQueueType::ALPHA_TEST : RenderQueueType::OPAQUE;
     }
 }
 
@@ -40,10 +40,10 @@ void BaseMaterial::setAlphaCutoff(float newValue) {
 
     if (newValue > 0) {
         shaderData.enableMacro(NEED_ALPHA_CUTOFF);
-        renderQueueType = _isTransparent ? RenderQueueType::Transparent : RenderQueueType::AlphaTest;
+        renderQueueType = _isTransparent ? RenderQueueType::TRANSPARENT : RenderQueueType::ALPHA_TEST;
     } else {
         shaderData.disableMacro(NEED_ALPHA_CUTOFF);
-        renderQueueType = _isTransparent ? RenderQueueType::Transparent : RenderQueueType::Opaque;
+        renderQueueType = _isTransparent ? RenderQueueType::TRANSPARENT : RenderQueueType::OPAQUE;
     }
 }
 
@@ -55,13 +55,13 @@ void BaseMaterial::setRenderFace(const RenderFace &newValue) {
     _renderFace = newValue;
 
     switch (newValue) {
-        case RenderFace::Front:
+        case RenderFace::FRONT:
             renderState.rasterState.cullMode = MTL::CullModeBack;
             break;
-        case RenderFace::Back:
+        case RenderFace::BACK:
             renderState.rasterState.cullMode = MTL::CullModeFront;
             break;
-        case RenderFace::Double:
+        case RenderFace::DOUBLE:
             renderState.rasterState.cullMode = MTL::CullModeNone;
             break;
     }
@@ -77,7 +77,7 @@ void BaseMaterial::setBlendMode(const BlendMode &newValue) {
     auto &target = renderState.blendState.targetBlendState;
 
     switch (newValue) {
-        case BlendMode::Normal:
+        case BlendMode::NORMAL:
             target.sourceColorBlendFactor = MTL::BlendFactorSourceAlpha;
             target.destinationColorBlendFactor = MTL::BlendFactorOneMinusSourceAlpha;
             target.sourceAlphaBlendFactor = MTL::BlendFactorOne;
@@ -85,7 +85,7 @@ void BaseMaterial::setBlendMode(const BlendMode &newValue) {
             target.alphaBlendOperation = MTL::BlendOperationAdd;
             target.colorBlendOperation = MTL::BlendOperationAdd;
             break;
-        case BlendMode::Additive:
+        case BlendMode::ADDITIVE:
             target.sourceColorBlendFactor = MTL::BlendFactorSourceAlpha;
             target.destinationColorBlendFactor = MTL::BlendFactorOne;
             target.sourceAlphaBlendFactor = MTL::BlendFactorOne;
@@ -98,7 +98,7 @@ void BaseMaterial::setBlendMode(const BlendMode &newValue) {
 
 BaseMaterial::BaseMaterial(Shader *shader) : Material(shader),
                                              _alphaCutoffProp(Shader::createProperty("u_alphaCutoff", ShaderDataGroup::Material)) {
-    setBlendMode(BlendMode::Normal);
+    setBlendMode(BlendMode::NORMAL);
     shaderData.setData(_alphaCutoffProp, 0.0f);
 }
 

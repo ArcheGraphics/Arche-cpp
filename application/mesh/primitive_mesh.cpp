@@ -18,10 +18,10 @@ MeshPtr PrimitiveMesh::createSphere(MTL::Device &device,
     const auto vertexCount = count * count;
     const auto rectangleCount = segments * segments;
     auto indices = std::vector<uint32_t>(rectangleCount * 6);
-    const auto thetaRange = M_PI;
-    const auto alphaRange = thetaRange * 2;
-    const auto countReciprocal = 1.0 / count;
-    const auto segmentsReciprocal = 1.0 / segments;
+    const float thetaRange = M_PI;
+    const auto alphaRange = thetaRange * 2.f;
+    const auto countReciprocal = 1.f / float(count);
+    const auto segmentsReciprocal = 1.f / float(segments);
 
     auto positions = std::vector<Vector3F>(vertexCount);
     auto normals = std::vector<Vector3F>(vertexCount);
@@ -67,8 +67,8 @@ MeshPtr PrimitiveMesh::createSphere(MTL::Device &device,
     }
 
     auto &bounds = mesh->bounds;
-    bounds.lowerCorner = Point3F(-radius, -radius, -radius);
-    bounds.upperCorner = Point3F(radius, radius, radius);
+    bounds.lower_corner = Point3F(-radius, -radius, -radius);
+    bounds.upper_corner = Point3F(radius, radius, radius);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -215,8 +215,8 @@ MeshPtr PrimitiveMesh::createCuboid(MTL::Device &device,
     indices[35] = 21;
 
     auto &bounds = mesh->bounds;
-    bounds.lowerCorner = Point3F(-halfWidth, -halfHeight, -halfDepth);
-    bounds.upperCorner = Point3F(halfWidth, halfHeight, halfDepth);
+    bounds.lower_corner = Point3F(-halfWidth, -halfHeight, -halfDepth);
+    bounds.upper_corner = Point3F(halfWidth, halfHeight, halfDepth);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -280,8 +280,8 @@ MeshPtr PrimitiveMesh::createPlane(MTL::Device &device,
     }
 
     auto &bounds = mesh->bounds;
-    bounds.lowerCorner = Point3F(-halfWidth, 0, -halfHeight);
-    bounds.upperCorner = Point3F(halfWidth, 0, halfHeight);
+    bounds.lower_corner = Point3F(-halfWidth, 0, -halfHeight);
+    bounds.upper_corner = Point3F(halfWidth, 0, halfHeight);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -298,7 +298,7 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
 
     const auto radialCount = radialSegments + 1;
     const auto verticalCount = heightSegments + 1;
-    const auto halfHeight = height * 0.5;
+    const auto halfHeight = height * 0.5f;
     const float unitHeight = height / heightSegments;
     const auto torsoVertexCount = radialCount * verticalCount;
     const auto torsoRectangleCount = radialSegments * heightSegments;
@@ -316,8 +316,8 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
     size_t indicesOffset = 0;
 
     // Create torso
-    const auto thetaStart = M_PI;
-    const auto thetaRange = M_PI * 2;
+    const float thetaStart = M_PI;
+    const float thetaRange = M_PI * 2.f;
     const auto radiusDiff = radiusBottom - radiusTop;
     const auto slope = radiusDiff / height;
     const float radiusSlope = radiusDiff / heightSegments;
@@ -378,8 +378,8 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
     // Add cap vertices
     auto offset = torsoVertexCount + 2;
 
-    const auto diameterTopReciprocal = 1.0 / (radiusTop * 2);
-    const auto diameterBottomReciprocal = 1.0 / (radiusBottom * 2);
+    const auto diameterTopReciprocal = 1.f / (radiusTop * 2);
+    const auto diameterBottomReciprocal = 1.f / (radiusBottom * 2);
     const auto positionStride = radialCount * heightSegments;
     for (size_t i = 0; i < radialSegments; ++i) {
         const auto curPosBottom = positions[i];
@@ -391,7 +391,7 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
         // Bottom normal
         normals[offset] = Vector3F(0, -1, 0);
         // Bottom texcoord
-        uvs[offset++] = Vector2F(curPosX * diameterBottomReciprocal + 0.5, 0.5 - curPosZ * diameterBottomReciprocal);
+        uvs[offset++] = Vector2F(curPosX * diameterBottomReciprocal + 0.5f, 0.5f - curPosZ * diameterBottomReciprocal);
 
         const auto &curPosTop = positions[i + positionStride];
         curPosX = curPosTop.x;
@@ -402,7 +402,7 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
         // Top normal
         normals[offset] = Vector3F(0, 1, 0);
         // Top texcoord
-        uvs[offset++] = Vector2F(curPosX * diameterTopReciprocal + 0.5, curPosZ * diameterTopReciprocal + 0.5);
+        uvs[offset++] = Vector2F(curPosX * diameterTopReciprocal + 0.5f, curPosZ * diameterTopReciprocal + 0.5f);
     }
 
     // Add cap indices
@@ -426,8 +426,8 @@ MeshPtr PrimitiveMesh::createCylinder(MTL::Device &device,
 
     auto &bounds = mesh->bounds;
     const auto radiusMax = std::max(radiusTop, radiusBottom);
-    bounds.lowerCorner = Point3F(-radiusMax, -halfHeight, -radiusMax);
-    bounds.upperCorner = Point3F(radiusMax, halfHeight, radiusMax);
+    bounds.lower_corner = Point3F(-radiusMax, -halfHeight, -radiusMax);
+    bounds.upper_corner = Point3F(radiusMax, halfHeight, radiusMax);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -455,8 +455,8 @@ MeshPtr PrimitiveMesh::createTorus(MTL::Device &device,
     size_t offset = 0;
     for (size_t i = 0; i <= radialSegments; i++) {
         for (size_t j = 0; j <= tubularSegments; j++) {
-            const auto u = (j / tubularSegments) * arc;
-            const auto v = (i / radialSegments) * M_PI * 2;
+            const float u = (j / tubularSegments) * arc;
+            const float v = (i / radialSegments) * M_PI * 2;
             const auto cosV = std::cos(v);
             const auto sinV = std::sin(v);
             const auto cosU = std::cos(u);
@@ -495,8 +495,8 @@ MeshPtr PrimitiveMesh::createTorus(MTL::Device &device,
 
     auto &bounds = mesh->bounds;
     const auto outerRadius = radius + tubeRadius;
-    bounds.lowerCorner = Point3F(-outerRadius, -outerRadius, -tubeRadius);
-    bounds.upperCorner = Point3F(outerRadius, outerRadius, tubeRadius);
+    bounds.lower_corner = Point3F(-outerRadius, -outerRadius, -tubeRadius);
+    bounds.upper_corner = Point3F(outerRadius, outerRadius, tubeRadius);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -512,15 +512,15 @@ MeshPtr PrimitiveMesh::createCone(MTL::Device &device,
 
     const auto radialCount = radialSegments + 1;
     const auto verticalCount = heightSegments + 1;
-    const auto halfHeight = height * 0.5;
+    const auto halfHeight = height * 0.5f;
     const auto unitHeight = height / heightSegments;
     const auto torsoVertexCount = radialCount * verticalCount;
     const auto torsoRectangleCount = radialSegments * heightSegments;
     const auto totalVertexCount = torsoVertexCount + 1 + radialSegments;
     auto indices = std::vector<uint32_t>(torsoRectangleCount * 6 + radialSegments * 3);
-    const auto radialCountReciprocal = 1.0 / radialCount;
-    const auto radialSegmentsReciprocal = 1.0 / radialSegments;
-    const auto heightSegmentsReciprocal = 1.0 / heightSegments;
+    const auto radialCountReciprocal = 1.f / radialCount;
+    const auto radialSegmentsReciprocal = 1.f / radialSegments;
+    const auto heightSegmentsReciprocal = 1.f / heightSegments;
 
     auto positions = std::vector<Vector3F>(totalVertexCount);
     auto normals = std::vector<Vector3F>(totalVertexCount);
@@ -529,8 +529,8 @@ MeshPtr PrimitiveMesh::createCone(MTL::Device &device,
     size_t indicesOffset = 0;
 
     // Create torso
-    const auto thetaStart = M_PI;
-    const auto thetaRange = M_PI * 2;
+    const float thetaStart = M_PI;
+    const float thetaRange = M_PI * 2.f;
     const auto slope = radius / height;
 
     for (size_t i = 0; i < torsoVertexCount; ++i) {
@@ -607,8 +607,8 @@ MeshPtr PrimitiveMesh::createCone(MTL::Device &device,
     }
 
     auto &bounds = mesh->bounds;
-    bounds.lowerCorner = Point3F(-radius, -halfHeight, -radius);
-    bounds.upperCorner = Point3F(radius, halfHeight, radius);
+    bounds.lower_corner = Point3F(-radius, -halfHeight, -radius);
+    bounds.upper_corner = Point3F(radius, halfHeight, radius);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -637,12 +637,12 @@ MeshPtr PrimitiveMesh::createCapsule(MTL::Device &device,
     const auto totalVertexCount = torsoVertexCount + 2 * capVertexCount;
     auto indices = std::vector<uint32_t>((torsoRectangleCount + 2 * capRectangleCount) * 6);
 
-    const auto radialCountReciprocal = 1.0 / radialCount;
-    const auto radialSegmentsReciprocal = 1.0 / radialSegments;
-    const auto heightSegmentsReciprocal = 1.0 / heightSegments;
+    const auto radialCountReciprocal = 1.f / radialCount;
+    const auto radialSegmentsReciprocal = 1.f / radialSegments;
+    const auto heightSegmentsReciprocal = 1.f / heightSegments;
 
-    const auto halfPI = M_PI / 2;
-    const auto doublePI = M_PI * 2;
+    const float halfPI = M_PI / 2.f;
+    const float doublePI = M_PI * 2.f;
 
     auto positions = std::vector<Vector3F>(totalVertexCount);
     auto normals = std::vector<Vector3F>(totalVertexCount);
@@ -662,7 +662,7 @@ MeshPtr PrimitiveMesh::createCapsule(MTL::Device &device,
 
         positions[i] = Vector3F(radius * sinTheta, y * unitHeight - halfHeight, radius * cosTheta);
         normals[i] = Vector3F(sinTheta, 0, cosTheta);
-        uvs[i] = Vector2F(u, 1 - v);
+        uvs[i] = Vector2F(u, 1.f - v);
     }
 
     for (size_t i = 0; i < torsoRectangleCount; ++i) {
@@ -707,8 +707,8 @@ MeshPtr PrimitiveMesh::createCapsule(MTL::Device &device,
                                      indicesOffset + 6 * capRectangleCount);
 
     auto &bounds = mesh->bounds;
-    bounds.lowerCorner = Point3F(-radius, -radius - halfHeight, -radius);
-    bounds.upperCorner = Point3F(radius, radius + halfHeight, radius);
+    bounds.lower_corner = Point3F(-radius, -radius - halfHeight, -radius);
+    bounds.upper_corner = Point3F(radius, radius + halfHeight, radius);
 
     PrimitiveMesh::_initialize(mesh, positions, normals, uvs, indices, noLongerAccessible);
     return mesh;
@@ -726,11 +726,11 @@ void PrimitiveMesh::_createCapsuleCap(float radius,
                                       std::vector<uint32_t> &indices,
                                       size_t indicesOffset) {
     const auto radialCount = radialSegments + 1;
-    const auto halfHeight = height * 0.5;
+    const auto halfHeight = height * 0.5f;
     const auto capVertexCount = radialCount * radialCount;
     const auto capRectangleCount = radialSegments * radialSegments;
-    const auto radialCountReciprocal = 1.0 / radialCount;
-    const auto radialSegmentsReciprocal = 1.0 / radialSegments;
+    const auto radialCountReciprocal = 1.f / radialCount;
+    const auto radialSegmentsReciprocal = 1.f / radialSegments;
 
     for (size_t i = 0; i < capVertexCount; ++i) {
         const auto x = i % radialCount;
@@ -738,7 +738,7 @@ void PrimitiveMesh::_createCapsuleCap(float radius,
         const auto u = x * radialSegmentsReciprocal;
         const auto v = y * radialSegmentsReciprocal;
         const auto alphaDelta = u * capAlphaRange;
-        const auto thetaDelta = (v * M_PI) / 2;
+        const float thetaDelta = (v * M_PI) / 2.f;
         const auto sinTheta = std::sin(thetaDelta);
 
         const auto posX = -radius * std::cos(alphaDelta) * sinTheta;

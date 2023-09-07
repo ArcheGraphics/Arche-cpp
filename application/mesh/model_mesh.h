@@ -54,7 +54,7 @@ public:
      * @param device - Engine to which the mesh belongs
      * @param name - Mesh name
      */
-    ModelMesh(MTL::Device &device, const std::string &name = "");
+    explicit ModelMesh(MTL::Device &device, const std::string &name = "");
 
 public:
     /**

@@ -8,7 +8,8 @@
 
 #include <memory>
 #include <vector>
-#include "update_flag.h"
+
+#include "base/update_flag.h"
 
 namespace vox {
 class UpdateFlagManager {
@@ -20,7 +21,7 @@ public:
 private:
     friend class UpdateFlag;
 
-    std::vector<UpdateFlag *> _updateFlags;
+    std::vector<UpdateFlag *> update_flags_;
 };
 
 }// namespace vox

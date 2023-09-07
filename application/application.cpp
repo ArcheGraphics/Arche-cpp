@@ -6,14 +6,14 @@
 
 #include "application.h"
 
-#include "engine.h"
-#include "window.h"
+#include "platform/platform.h"
+#include "platform/window.h"
 
 namespace vox {
 Application::Application() : _name{"Sample Name"} {
 }
 
-bool Application::prepare(Engine &engine) {
+bool Application::prepare(Platform &engine) {
     _engine = &engine;
     return true;
 }

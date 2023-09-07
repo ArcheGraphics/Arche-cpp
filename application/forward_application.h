@@ -7,9 +7,7 @@
 #pragma once
 
 #include "graphics_application.h"
-#include "shadow/shadow_manager.h"
-#include "lighting/light_manager.h"
-#include "particle/particle_manager.h"
+#include "light/light_manager.h"
 
 namespace vox {
 class ForwardApplication : public MetalApplication {
@@ -21,7 +19,7 @@ public:
     /**
      * @brief Additional sample initialization
      */
-    bool prepare(Engine &engine) override;
+    bool prepare(Platform &engine) override;
 
     /**
      * @brief Main loop sample events
@@ -52,9 +50,7 @@ protected:
      */
     std::unique_ptr<RenderPass> _renderPass{nullptr};
 
-    std::unique_ptr<ShadowManager> _shadowManager{nullptr};
     std::unique_ptr<LightManager> _lightManager{nullptr};
-    std::unique_ptr<ParticleManager> _particleManager{nullptr};
 };
 
 }// namespace vox

@@ -7,175 +7,126 @@
 #pragma once
 
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <iomanip>
-#include <Metal/Metal.hpp>
 
-#include "components_manager.h"
-#include "light/ambient_light.h"
-#include "shader/shader_data.h"
 #include "base/background.h"
+#include "light/ambient_light.h"
+#include "platform/input_events.h"
+#include "shader/shader_data.h"
 
 namespace vox {
+class Entity;
+class Camera;
+
 /// @brief A collection of entities organized in a tree structure.
 ///		   It can contain more than one root entity.
-class Scene {
+struct Scene final {
 public:
     /** Scene name. */
     std::string name;
-
-    ComponentsManager _componentsManager;
 
     /** The background of the scene. */
     Background background = Background();
 
     /** Scene-related shader data. */
-    ShaderData shaderData = ShaderData();
+    ShaderData shader_data;
 
     /**
      * Create scene.
      * @param device - Device
      */
-    Scene(MTL::Device &device);
+    explicit Scene(MTL::Device &device);
 
-    MTL::Device &device();
+    ~Scene();
+
+    MTL::Device &get_device();
 
     /**
      * Ambient light.
      */
-    AmbientLight &ambientLight();
+    [[nodiscard]] const std::shared_ptr<AmbientLight> &get_ambient_light() const;
+
+    void set_ambient_light(const std::shared_ptr<vox::AmbientLight> &light);
 
     /**
      * Count of root entities.
      */
-    size_t rootEntitiesCount();
+    size_t get_root_entities_count();
 
     /**
      * Root entity collection.
      */
-    const std::vector<EntityPtr> &rootEntities();
+    [[nodiscard]] const std::vector<std::unique_ptr<Entity>> &get_root_entities() const;
 
     /**
-     * Whether it's destroyed.
+     * Play the scene
      */
-    bool destroyed();
+    void play();
+
+    /**
+     * Returns true if the scene is playing
+     */
+    [[nodiscard]] bool is_playing() const;
 
     /**
      * Create root entity.
      * @param name - Entity name
      * @returns Entity
      */
-    EntityPtr createRootEntity(std::string name = "");
+    Entity *create_root_entity(const std::string &name = "");
 
     /**
      * Append an entity.
      * @param entity - The root entity to add
      */
-    void addRootEntity(EntityPtr entity);
+    void add_root_entity(std::unique_ptr<Entity> &&entity);
 
     /**
      * Remove an entity.
      * @param entity - The root entity to remove
      */
-    void removeRootEntity(EntityPtr entity);
+    void remove_root_entity(Entity *entity);
 
     /**
      * Get root entity from index.
      * @param index - Index
      * @returns Entity
      */
-    EntityPtr getRootEntity(size_t index = 0);
+    Entity *get_root_entity(size_t index = 0);
 
     /**
      * Find entity globally by name.
      * @param name - Entity name
      * @returns Entity
      */
-    EntityPtr findEntityByName(const std::string &name);
+    Entity *find_entity_by_name(const std::string &name);
 
-    /**
-     * Destroy this scene.
-     */
-    void destroy();
+    void attach_render_camera(Camera *camera);
 
-    void attachRenderCamera(Camera *camera);
-
-    void detachRenderCamera(Camera *camera);
+    void detach_render_camera(Camera *camera);
 
 public:
-    void update(float deltaTime);
-
-    void updateInputEvent(const InputEvent &inputEvent);
-
-    void updateSize(uint32_t win_width, uint32_t win_height,
-                    uint32_t fb_width, uint32_t fb_height);
-
-    void updateShaderData();
-
-public:
-    template<class T, class F>
-    inline void registerVertexUploader(F const &f) {
-        std::cout << "Register uploader for type "
-                  << std::quoted(typeid(T).name()) << '\n';
-        _vertexUploader.insert(toAnyUploader<T, MTL::RenderCommandEncoder>(f));
-    }
-
-    template<class T, class F>
-    inline void registerFragmentUploader(F const &f) {
-        std::cout << "Register uploader for type "
-                  << std::quoted(typeid(T).name()) << '\n';
-        _fragmentUploader.insert(toAnyUploader<T, MTL::RenderCommandEncoder>(f));
-    }
-
-    template<class T, class F>
-    inline void registerComputeUploader(F const &f) {
-        std::cout << "Register uploader for type "
-                  << std::quoted(typeid(T).name()) << '\n';
-        _fragmentUploader.insert(toAnyUploader<T, MTL::ComputeCommandEncoder>(f));
-    }
-
-    const std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::RenderCommandEncoder &)>> &
-    vertexUploader();
-
-    const std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::RenderCommandEncoder &)>> &
-    fragmentUploader();
-
-    const std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::ComputeCommandEncoder &)>> &
-    computeUploader();
+    void update_shader_data();
 
 private:
-    template<class T, class Encoder, class F>
-    inline std::pair<const std::type_index, std::function<void(std::any const &, size_t, Encoder &)>>
-    toAnyUploader(F const &f) {
-        return {
-            std::type_index(typeid(T)),
-            [g = f](std::any const &a, size_t location, Encoder &encoder) {
-                if constexpr (std::is_void_v<T>)
-                    g();
-                else
-                    g(std::any_cast<T const &>(a), location, encoder);
-            }};
-    }
+    friend class SceneManager;
 
-    std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::RenderCommandEncoder &)>> _vertexUploader{};
-    std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::RenderCommandEncoder &)>> _fragmentUploader{};
-    std::unordered_map<std::type_index, std::function<void(std::any const &, size_t, MTL::ComputeCommandEncoder &)>> _computeUploader{};
+    void process_active(bool active);
 
-private:
-    void _processActive(bool active);
+    void remove_entity(Entity *old_entity);
 
-    void _removeEntity(EntityPtr entity);
+    std::vector<Camera *> active_cameras{};
 
-    std::vector<Camera *> _activeCameras;
+    bool is_active_in_engine = false;
 
-    bool _destroyed = false;
-    std::vector<EntityPtr> _rootEntities;
-    AmbientLight _ambientLight;
+    std::vector<std::unique_ptr<Entity>> root_entities;
+    std::shared_ptr<vox::AmbientLight> ambient_light;
 
-    MTL::Device &_device;
+    MTL::Device &device;
 };
 
 }// namespace vox

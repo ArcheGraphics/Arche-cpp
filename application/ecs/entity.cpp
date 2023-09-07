@@ -4,294 +4,261 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "entity.h"
-#include "scene.h"
+#include "ecs/entity.h"
 
-#include "component.h"
+#include <utility>
+
+#include "ecs/component.h"
+#include "ecs/components_manager.h"
+#include "ecs/scene.h"
 #include "components/script.h"
 
 namespace vox {
-EntityPtr Entity::_findChildByName(Entity *root, const std::string &name) {
-    const auto &children = root->_children;
-    for (size_t i = 0; i < children.size(); i++) {
-        const auto &child = children[i];
+Entity *Entity::find_child_by_name(vox::Entity *root, const std::string &name) {
+    const auto &children = root->children;
+    for (const auto &child : children) {
         if (child->name == name) {
-            return child;
+            return child.get();
         }
     }
     return nullptr;
 }
 
-void Entity::_traverseSetOwnerScene(Entity *entity, Scene *scene) {
-    entity->_scene = scene;
-    const auto &children = entity->_children;
-    for (size_t i = 0; i < entity->_children.size(); i++) {
-        _traverseSetOwnerScene(children[i].get(), scene);
+void Entity::traverse_set_owner_scene(vox::Entity *entity, vox::Scene *scene) {
+    entity->scene = scene;
+    const auto &children = entity->children;
+    for (size_t i = 0; i < entity->children.size(); i++) {
+        traverse_set_owner_scene(children[i].get(), scene);
     }
 }
 
-Entity::Entity(std::string name) : name(name) {
-    transform = addComponent<Transform>();
-    _inverseWorldMatFlag = transform->registerWorldChangeFlag();
+Entity::Entity(std::string name) : name(std::move(name)) {
+    transform = add_component<Transform>();
+    inverse_world_mat_flag = transform->register_world_change_flag();
 }
 
-bool Entity::isActive() {
-    return _isActive;
+Entity::~Entity() {
+    if (parent) {
+        LOGE("use RemoveChild instead!")
+    }
+
+    for (auto &i : children) {
+        remove_child(i.get());
+    }
+    children.clear();
+
+    for (auto &component : components) {
+        remove_component(component.get());
+    }
+    components.clear();
 }
 
-void Entity::setIsActive(bool value) {
-    if (value != _isActive) {
-        _isActive = value;
+bool Entity::is_active() const { return _is_active; }
+
+void Entity::set_is_active(bool value) {
+    if (value != _is_active) {
+        _is_active = value;
         if (value) {
-            const auto &parent = _parent;
-            if ((parent != nullptr && parent->_isActiveInHierarchy) || (_isRoot)) {
-                _processActive();
+            if ((parent != nullptr && parent->_is_active_in_hierarchy) || (is_root)) {
+                process_active();
             }
         } else {
-            if (_isActiveInHierarchy) {
-                _processInActive();
+            if (_is_active_in_hierarchy) {
+                process_inactive();
             }
         }
     }
 }
 
-bool Entity::isActiveInHierarchy() {
-    return _isActiveInHierarchy;
-}
+bool Entity::is_active_in_hierarchy() const { return _is_active_in_hierarchy; }
 
-Entity *Entity::parent() {
-    return _parent;
-}
+Entity *Entity::get_parent() { return parent; }
 
-const std::vector<EntityPtr> Entity::children() const {
-    return _children;
-}
+const std::vector<std::unique_ptr<Entity>> &Entity::get_children() const { return children; }
 
-size_t Entity::childCount() {
-    return _children.size();
-}
+size_t Entity::get_child_count() { return children.size(); }
 
-Scene *Entity::scene() {
-    return _scene;
-}
+Scene *Entity::get_scene() { return scene; }
 
-void Entity::addChild(EntityPtr child) {
-    if (child->_parent != this) {
-        child->_removeFromParent();
-        child->_parent = this;
-        _children.push_back(child);
-        if (child->_scene != _scene) {
-            Entity::_traverseSetOwnerScene(child.get(), _scene);
+void Entity::add_child(std::unique_ptr<Entity> &&child) {
+    if (child->parent != this) {
+        child->remove_from_parent();
+        child->parent = this;
+
+        if (child->scene != scene) {
+            Entity::traverse_set_owner_scene(child.get(), scene);
         }
 
-        if (_isActiveInHierarchy) {
-            if (!child->_isActiveInHierarchy && child->_isActive) {
-                child->_processActive();
+        if (_is_active_in_hierarchy) {
+            if (!child->_is_active_in_hierarchy && child->_is_active) {
+                child->process_active();
             }
         } else {
-            if (child->_isActiveInHierarchy) {
-                child->_processInActive();
+            if (child->_is_active_in_hierarchy) {
+                child->process_inactive();
             }
         }
-        child->_setTransformDirty();
+        child->set_transform_dirty();
+        children.emplace_back(std::move(child));
     }
 }
 
-void Entity::removeChild(EntityPtr child) {
-    if (child->_parent == this) {
-        child->_removeFromParent();
-        child->_parent = nullptr;
-
-        if (child->_isActiveInHierarchy) {
-            child->_processInActive();
+std::unique_ptr<Entity> Entity::remove_child(vox::Entity *child) {
+    if (child->parent == this) {
+        auto mem = child->remove_from_parent();
+        if (child->_is_active_in_hierarchy) {
+            child->process_inactive();
         }
-        Entity::_traverseSetOwnerScene(child.get(), nullptr);
-        child->_setTransformDirty();
+        Entity::traverse_set_owner_scene(child, nullptr);
+        child->set_transform_dirty();
+        return mem;
+    } else {
+        return nullptr;
     }
 }
 
-EntityPtr Entity::getChild(int index) {
-    return _children[index];
-}
+Entity *Entity::get_child(int index) { return children[index].get(); }
 
-EntityPtr Entity::findByName(const std::string &name) {
-    const auto &children = _children;
-    const auto child = Entity::_findChildByName(this, name);
-    if (child) return child;
-    for (size_t i = 0; i < children.size(); i++) {
-        const auto &child = children[i];
-        const auto grandson = child->findByName(name);
-        if (grandson) {
-            return grandson;
+Entity *Entity::find_by_name(const std::string &name) {
+    const auto kChild = Entity::find_child_by_name(this, name);
+    if (kChild) return kChild;
+    for (const auto &child : children) {
+        const auto kGrandson = child->find_by_name(name);
+        if (kGrandson) {
+            return kGrandson;
         }
     }
     return nullptr;
 }
 
-EntityPtr Entity::createChild(const std::string &name) {
-    auto child = std::make_shared<Entity>(name);
+Entity *Entity::create_child(const std::string &name) {
+    auto child = std::make_unique<Entity>(name);
+    auto child_ptr = child.get();
     child->layer = layer;
-    addChild(child);
-    return child;
+    add_child(std::move(child));
+    return child_ptr;
 }
 
-void Entity::clearChildren() {
-    auto &children = _children;
-    for (size_t i = 0; i < children.size(); i++) {
-        const auto &child = children[i];
-        child->_parent = nullptr;
-        if (child->_isActiveInHierarchy) {
-            child->_processInActive();
+void Entity::clear_children() {
+    for (auto &child : children) {
+        child->parent = nullptr;
+        if (child->_is_active_in_hierarchy) {
+            child->process_inactive();
         }
-        Entity::_traverseSetOwnerScene(child.get(), nullptr);// Must after child._processInActive().
+        Entity::traverse_set_owner_scene(child.get(), nullptr);// Must after child.process_in_active().
     }
     children.clear();
 }
 
-EntityPtr Entity::clone() {
-    auto cloneEntity = std::make_shared<Entity>(name);
+void Entity::remove_component(vox::Component *component) {
+    // ComponentsDependencies._removeCheck(this, component.constructor as any);
+    components.erase(std::remove_if(components.begin(), components.end(),
+                                    [&](const std::unique_ptr<Component> &x) { return x.get() == component; }),
+                     components.end());
+}
 
-    cloneEntity->_isActive = _isActive;
-    cloneEntity->transform->setLocalMatrix(transform->localMatrix());
+std::unique_ptr<Entity> Entity::clone() {
+    auto clone_entity = std::make_unique<Entity>(name);
 
-    const auto &children = _children;
-    for (size_t i = 0, len = _children.size(); i < len; i++) {
+    clone_entity->_is_active = _is_active;
+    clone_entity->transform->set_local_matrix(transform->get_local_matrix());
+
+    for (size_t i = 0, len = children.size(); i < len; i++) {
         const auto &child = children[i];
-        cloneEntity->addChild(child->clone());
+        clone_entity->add_child(child->clone());
     }
 
-    const auto &components = _components;
-    for (size_t i = 0, n = components.size(); i < n; i++) {
-        const auto &sourceComp = components[i];
-        if (!(dynamic_cast<Transform *>(sourceComp.get()))) {
+    for (const auto &source_comp : components) {
+        if (!(dynamic_cast<Transform *>(source_comp.get()))) {
             // TODO
         }
     }
 
-    return cloneEntity;
+    return clone_entity;
 }
 
-void Entity::destroy() {
-    auto &abilityArray = _components;
-    for (size_t i = 0; i < abilityArray.size(); i++) {
-        abilityArray[i]->destroy();
-    }
-    _components.clear();
-
-    const auto &children = _children;
-    for (size_t i = 0; i < children.size(); i++) {
-        children[i]->destroy();
-    }
-    _children.clear();
-
-    if (_parent != nullptr) {
-        auto &parentChildren = _parent->_children;
-        parentChildren.erase(std::remove_if(parentChildren.begin(), parentChildren.end(),
-                                            [&](const auto &child) {
-                                                return child.get() == this;
-                                            }),
-                             parentChildren.end());
-    }
-    _parent = nullptr;
-}
-
-void Entity::_removeComponent(Component *component) {
-    // ComponentsDependencies._removeCheck(this, component.constructor as any);
-    auto &components = _components;
-    components.erase(std::remove_if(components.begin(),
-                                    components.end(), [&](const std::unique_ptr<Component> &x) {
-                                        return x.get() == component;
-                                    }),
-                     components.end());
-}
-
-void Entity::_addScript(Script *script) {
-    script->_entityCacheIndex = _scripts.size();
-    _scripts.push_back(script);
-}
-
-void Entity::_removeScript(Script *script) {
-    std::remove(_scripts.begin(), _scripts.end(), script);
-    script->_entityCacheIndex = -1;
-}
-
-Entity *Entity::_removeFromParent() {
-    auto oldParent = _parent;
-    if (oldParent != nullptr) {
-        auto &oldParentChildren = oldParent->_children;
-        oldParentChildren.erase(std::remove_if(oldParentChildren.begin(), oldParentChildren.end(),
-                                               [&](const auto &child) {
-                                                   return child.get() == this;
-                                               }),
-                                oldParentChildren.end());
-        _parent = nullptr;
-    }
-    return oldParent;
-}
-
-void Entity::_processActive() {
-    _activeChangedComponents = _scene->_componentsManager.getActiveChangedTempList();
-    _setActiveInHierarchy(_activeChangedComponents);
-    _setActiveComponents(true);
-}
-
-void Entity::_processInActive() {
-    _activeChangedComponents = _scene->_componentsManager.getActiveChangedTempList();
-    _setInActiveInHierarchy(_activeChangedComponents);
-    _setActiveComponents(false);
-}
-
-void Entity::_setActiveComponents(bool isActive) {
-    auto &activeChangedComponents = _activeChangedComponents;
-    for (size_t i = 0, length = activeChangedComponents.size(); i < length; ++i) {
-        activeChangedComponents[i]->_setActive(isActive);
-    }
-    _scene->_componentsManager.putActiveChangedTempList(activeChangedComponents);
-    _activeChangedComponents.clear();
-}
-
-void Entity::_setActiveInHierarchy(std::vector<Component *> &activeChangedComponents) {
-    _isActiveInHierarchy = true;
-    auto &components = _components;
-    for (size_t i = 0; i < components.size(); i++) {
-        activeChangedComponents.push_back(components[i].get());
-    }
-    const auto &children = _children;
-    for (size_t i = 0; i < children.size(); i++) {
-        const auto &child = children[i];
-        if (child->isActive()) {
-            child->_setActiveInHierarchy(activeChangedComponents);
-        }
-    }
-}
-
-void Entity::_setInActiveInHierarchy(std::vector<Component *> &activeChangedComponents) {
-    _isActiveInHierarchy = false;
-    auto &components = _components;
-    for (size_t i = 0; i < components.size(); i++) {
-        activeChangedComponents.push_back(components[i].get());
-    }
-    auto &children = _children;
-    for (size_t i = 0; i < children.size(); i++) {
-        const auto &child = children[i];
-        if (child->isActive()) {
-            child->_setInActiveInHierarchy(activeChangedComponents);
-        }
-    }
-}
-
-void Entity::_setTransformDirty() {
-    if (transform) {
-        transform->_parentChange();
+void Entity::add_script(vox::Script *script) {
+    auto iter = std::find(scripts.begin(), scripts.end(), script);
+    if (iter == scripts.end()) {
+        scripts.push_back(script);
     } else {
-        for (size_t i = 0, len = _children.size(); i < len; i++) {
-            _children[i]->_setTransformDirty();
+        LOGE("Script already attached.")
+    }
+}
+
+void Entity::remove_script(vox::Script *script) {
+    auto iter = std::find(scripts.begin(), scripts.end(), script);
+    if (iter != scripts.end()) {
+        scripts.erase(iter);
+    }
+}
+
+std::unique_ptr<Entity> Entity::remove_from_parent() {
+    std::unique_ptr<Entity> mem{nullptr};
+    if (parent != nullptr) {
+        auto &old_parent_children = parent->children;
+        auto iter = std::find_if(old_parent_children.begin(), old_parent_children.end(),
+                                 [&](const auto &child) { return child.get() == this; });
+        mem = std::move(*iter);
+        parent = nullptr;
+    }
+    return mem;
+}
+
+void Entity::process_active() {
+    active_changed_components = ComponentsManager::get_singleton().get_active_changed_temp_list();
+    set_active_in_hierarchy(active_changed_components);
+    set_active_components(true);
+}
+
+void Entity::process_inactive() {
+    active_changed_components = ComponentsManager::get_singleton().get_active_changed_temp_list();
+    set_inactive_in_hierarchy(active_changed_components);
+    set_active_components(false);
+}
+
+void Entity::set_active_components(bool is_active) {
+    for (size_t i = 0, length = active_changed_components.size(); i < length; ++i) {
+        active_changed_components[i]->set_active(is_active);
+    }
+    ComponentsManager::get_singleton().put_active_changed_temp_list(active_changed_components);
+    active_changed_components.clear();
+}
+
+void Entity::set_active_in_hierarchy(std::vector<Component *> &active_changed_components) {
+    _is_active_in_hierarchy = true;
+    for (auto &component : components) {
+        active_changed_components.push_back(component.get());
+    }
+    for (const auto &child : children) {
+        if (child->is_active()) {
+            child->set_active_in_hierarchy(active_changed_components);
         }
     }
 }
 
-std::vector<Script *> Entity::scripts() {
-    return _scripts;
+void Entity::set_inactive_in_hierarchy(std::vector<Component *> &active_changed_components) {
+    _is_active_in_hierarchy = false;
+    for (auto &component : components) {
+        active_changed_components.push_back(component.get());
+    }
+    for (auto &child : children) {
+        if (child->is_active()) {
+            child->set_inactive_in_hierarchy(active_changed_components);
+        }
+    }
 }
+
+void Entity::set_transform_dirty() {
+    if (transform) {
+        transform->parent_change();
+    } else {
+        for (auto &i : children) {
+            i->set_transform_dirty();
+        }
+    }
+}
+
+std::vector<Script *> Entity::get_scripts() { return scripts; }
 
 }// namespace vox

@@ -8,13 +8,13 @@
 
 #include <string>
 
-#include "input_events.h"
+#include "platform/input_events.h"
 #include "framework/common/timer.h"
 
 namespace vox {
 class Window;
 
-class Engine;
+class Platform;
 
 class Application {
 public:
@@ -26,7 +26,7 @@ public:
      * @brief Prepares the application for execution
      * @param engine The engine the application is being run on
      */
-    virtual bool prepare(Engine &engine);
+    virtual bool prepare(Platform &engine);
 
     /**
      * @brief Updates the application
@@ -68,7 +68,7 @@ protected:
 
     uint32_t _lastFrameCount{0};
 
-    Engine *_engine{nullptr};
+    Platform *_engine{nullptr};
 
 private:
     std::string _name{};

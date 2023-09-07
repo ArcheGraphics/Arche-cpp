@@ -1,4 +1,4 @@
-//  Copyright (c) 2022 Feng Yang
+//  Copyright (c) 2023 Feng Yang
 //
 //  I am making my contributions/submissions to this project solely in my
 //  personal capacity and am not conveying any rights to any intellectual
@@ -15,21 +15,20 @@ class Platform;
 enum class EventSource {
     Keyboard,
     Mouse,
+    Touchscreen,
     Scroll,
-    Touchscreen
 };
 
 class InputEvent {
 public:
-    InputEvent(EventSource source);
+    explicit InputEvent(EventSource source);
 
-    EventSource source() const;
+    [[nodiscard]] EventSource get_source() const;
 
 private:
-    EventSource _source;
+    EventSource source;
 };
 
-//MARK: - Key Event
 enum class KeyCode {
     Unknown,
     Space,
@@ -148,17 +147,16 @@ class KeyInputEvent : public InputEvent {
 public:
     KeyInputEvent(KeyCode code, KeyAction action);
 
-    KeyCode code() const;
+    [[nodiscard]] KeyCode get_code() const;
 
-    KeyAction action() const;
+    [[nodiscard]] KeyAction get_action() const;
 
 private:
-    KeyCode _code;
+    KeyCode code;
 
-    KeyAction _action;
+    KeyAction action;
 };
 
-//MARK: - Mouse Event
 enum class MouseButton {
     Left,
     Right,
@@ -179,40 +177,39 @@ class MouseButtonInputEvent : public InputEvent {
 public:
     MouseButtonInputEvent(MouseButton button, MouseAction action, float pos_x, float pos_y);
 
-    MouseButton button() const;
+    [[nodiscard]] MouseButton get_button() const;
 
-    MouseAction action() const;
+    [[nodiscard]] MouseAction get_action() const;
 
-    float pos_x() const;
+    [[nodiscard]] float get_pos_x() const;
 
-    float pos_y() const;
+    [[nodiscard]] float get_pos_y() const;
 
 private:
-    MouseButton _button;
+    MouseButton button;
 
-    MouseAction _action;
+    MouseAction action;
 
-    float _pos_x;
+    float pos_x;
 
-    float _pos_y;
+    float pos_y;
 };
 
-//MARK: - Scroll Event
+// MARK: - Scroll Event
 class ScrollInputEvent : public InputEvent {
 public:
     ScrollInputEvent(float offset_x, float offset_y);
 
-    float offset_x() const;
+    [[nodiscard]] float get_offset_x() const;
 
-    float offset_y() const;
+    [[nodiscard]] float get_offset_y() const;
 
 private:
-    float _offset_x;
+    float offset_x_;
 
-    float _offset_y;
+    float offset_y_;
 };
 
-//MARK: - Touch Event
 enum class TouchAction {
     Down,
     Up,
@@ -227,25 +224,25 @@ class TouchInputEvent : public InputEvent {
 public:
     TouchInputEvent(int32_t pointer_id, size_t pointer_count, TouchAction action, float pos_x, float pos_y);
 
-    TouchAction action() const;
+    [[nodiscard]] TouchAction get_action() const;
 
-    int32_t pointer_id() const;
+    [[nodiscard]] int32_t get_pointer_id() const;
 
-    size_t touch_points() const;
+    [[nodiscard]] size_t get_touch_points() const;
 
-    float pos_x() const;
+    [[nodiscard]] float get_pos_x() const;
 
-    float pos_y() const;
+    [[nodiscard]] float get_pos_y() const;
 
 private:
-    TouchAction _action;
+    TouchAction action;
 
-    int32_t _pointer_id;
+    int32_t pointer_id;
 
-    size_t _touch_points;
+    size_t touch_points;
 
-    float _pos_x;
+    float pos_x;
 
-    float _pos_y;
+    float pos_y;
 };
 }// namespace vox

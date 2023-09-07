@@ -6,16 +6,18 @@
 
 #pragma once
 
+namespace vox {
 /**
  * Render queue type.
  */
 struct RenderQueueType {
     enum Enum {
         /** Opaque queue. */
-        Opaque = 1000,
+        OPAQUE = 1000,
         /** Opaque queue, alpha cutoff. */
-        AlphaTest = 2000,
+        ALPHA_TEST = 2000,
         /** Transparent queue, rendering from back to front to ensure correct rendering of transparent objects. */
-        Transparent = 3000
+        TRANSPARENT = 3000
     };
 };
+}// namespace vox

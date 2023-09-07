@@ -6,80 +6,92 @@
 
 #pragma once
 
-#include "math/matrix4x4.h"
-#include "math/bounding_frustum.h"
-#include "input_events.h"
-#include "rendering/render_element.h"
-#include <typeindex>
 #include <unordered_map>
 #include <vector>
 
+#include "base/singleton.h"
+#include "math/bounding_frustum.h"
+#include "math/matrix4x4.h"
+#include "platform/input_events.h"
+#include "rendering/render_element.h"
+
 namespace vox {
+class Script;
+class Camera;
+class Component;
+class Renderer;
+
 /**
  * The manager of the components.
  */
-class ComponentsManager {
+class ComponentsManager : public Singleton<ComponentsManager> {
 public:
-    void addOnStartScript(Script *script);
+    static ComponentsManager &get_singleton();
 
-    void removeOnStartScript(Script *script);
+    static ComponentsManager *get_singleton_ptr();
 
-    void addOnUpdateScript(Script *script);
+    void add_on_start_script(Script *script);
 
-    void removeOnUpdateScript(Script *script);
+    void remove_on_start_script(Script *script);
 
-    void addDestroyComponent(Script *component);
+    void add_on_update_script(Script *script);
 
-    void callScriptOnStart();
+    void remove_on_update_script(Script *script);
 
-    void callScriptOnUpdate(float deltaTime);
+    void add_destroy_component(Script *component);
 
-    void callScriptOnLateUpdate(float deltaTime);
+    void call_script_on_start();
 
-    void callScriptInputEvent(const InputEvent &inputEvent);
+    void call_script_on_update(float delta_time);
 
-    void callScriptResize(uint32_t win_width, uint32_t win_height,
-                          uint32_t fb_width, uint32_t fb_height);
+    void call_script_on_late_update(float delta_time);
 
-    void callComponentDestroy();
+    void call_script_input_event(const InputEvent &input_event);
 
-public:
-    void addRenderer(Renderer *renderer);
+    void call_script_resize(uint32_t win_width, uint32_t win_height, uint32_t fb_width, uint32_t fb_height);
 
-    void removeRenderer(Renderer *renderer);
-
-    void callRendererOnUpdate(float deltaTime);
-
-    void callRender(Camera *camera,
-                    std::vector<RenderElement> &opaqueQueue,
-                    std::vector<RenderElement> &alphaTestQueue,
-                    std::vector<RenderElement> &transparentQueue);
-
-    void callRender(const BoundingFrustum &frustrum,
-                    std::vector<RenderElement> &opaqueQueue,
-                    std::vector<RenderElement> &alphaTestQueue,
-                    std::vector<RenderElement> &transparentQueue);
+    void call_component_destroy();
 
 public:
-    void callCameraOnBeginRender(Camera *camera);
+    void add_renderer(Renderer *renderer);
 
-    void callCameraOnEndRender(Camera *camera);
+    void remove_renderer(Renderer *renderer);
 
-    std::vector<Component *> getActiveChangedTempList();
+    void call_renderer_on_update(float delta_time);
 
-    void putActiveChangedTempList(std::vector<Component *> &componentContainer);
+    void call_render(Camera *camera,
+                     std::vector<RenderElement> &opaque_queue,
+                     std::vector<RenderElement> &alpha_test_queue,
+                     std::vector<RenderElement> &transparent_queue);
+
+    void call_render(const BoundingFrustum &frustum,
+                     std::vector<RenderElement> &opaque_queue,
+                     std::vector<RenderElement> &alpha_test_queue,
+                     std::vector<RenderElement> &transparent_queue);
+
+public:
+    static void call_camera_on_begin_render(Camera *camera);
+
+    static void call_camera_on_end_render(Camera *camera);
+
+    std::vector<Component *> get_active_changed_temp_list();
+
+    void put_active_changed_temp_list(std::vector<Component *> &component_container);
 
 private:
     // Script
-    std::vector<Script *> _onStartScripts;
-    std::vector<Script *> _onUpdateScripts;
-    std::vector<Script *> _destroyComponents;
+    std::vector<Script *> on_start_scripts_;
+    std::vector<Script *> on_update_scripts_;
+    std::vector<Script *> destroy_components_;
 
     // Render
-    std::vector<Renderer *> _renderers;
+    std::vector<Renderer *> renderers_;
 
     // Delay dispose active/inActive Pool
-    std::vector<std::vector<Component *>> _componentsContainerPool;
+    std::vector<std::vector<Component *>> components_container_pool_;
 };
+
+template<>
+inline ComponentsManager *Singleton<ComponentsManager>::ms_singleton{nullptr};
 
 }// namespace vox

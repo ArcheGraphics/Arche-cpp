@@ -8,30 +8,28 @@
 
 #include "math/vector3.h"
 
-namespace vox {
-namespace control {
+namespace vox::control {
 // Spherical.
 class Spherical {
 public:
-    Spherical(float radius = 1.0, float phi = 0, float theta = 0);
+    explicit Spherical(float radius = 1.0, float phi = 0, float theta = 0);
 
-    void set(float radius, float phi, float theta);
+    void Set(float radius, float phi, float theta);
 
-    void makeSafe();
+    void MakeSafe();
 
-    void setFromVec3(const Vector3F &v3);
+    void SetFromVec3(const Vector3F &v_3);
 
-    void setToVec3(Vector3F &v3);
+    void SetToVec3(Vector3F &v_3) const;
 
 private:
     friend class OrbitControl;
 
     friend class FreeControl;
 
-    float _radius;
-    float _phi;
-    float _theta;
+    float radius_;
+    float phi_;
+    float theta_;
 };
 
-}
 }// namespace vox::control

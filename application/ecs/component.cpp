@@ -4,81 +4,61 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "component.h"
-
-#include <algorithm>
-
-#include "entity.h"
+#include "ecs/component.h"
+#include "ecs/entity.h"
 
 namespace vox {
-Component::Component(Entity *entity) : _entity(entity) {
+Component::Component(vox::Entity *entity) : entity_(entity) {}
+
+Component::~Component() {
+    if (entity_->is_active_in_hierarchy()) {
+        if (enabled_) {
+            on_disable();
+        }
+        on_inactive();
+    }
 }
 
-bool Component::enabled() {
-    return _enabled;
-}
+bool Component::is_enabled() const { return enabled_; }
 
-void Component::setEnabled(bool value) {
-    if (value == _enabled) {
+void Component::set_enabled(bool value) {
+    if (value == enabled_) {
         return;
     }
-    _enabled = value;
+    enabled_ = value;
     if (value) {
-        if (_entity->isActiveInHierarchy()) {
-            _onEnable();
+        if (entity_->is_active_in_hierarchy()) {
+            on_enable();
         }
     } else {
-        if (_entity->isActiveInHierarchy()) {
-            _onDisable();
+        if (entity_->is_active_in_hierarchy()) {
+            on_disable();
         }
     }
 }
 
-bool Component::destroyed() {
-    return _destroyed;
-}
+Entity *Component::get_entity() const { return entity_; }
 
-Entity *Component::entity() const {
-    return _entity;
-}
+Scene *Component::get_scene() { return entity_->get_scene(); }
 
-Scene *Component::scene() {
-    return _entity->scene();
-}
-
-void Component::destroy() {
-    if (_destroyed) {
-        return;
-    }
-    _entity->_removeComponent(this);
-    if (_entity->isActiveInHierarchy()) {
-        if (_enabled) {
-            _onDisable();
-        }
-        _onInActive();
-    }
-    _destroyed = true;
-    _onDestroy();
-}
-
-void Component::_setActive(bool value) {
+void Component::set_active(bool value) {
     if (value) {
-        if (!_awoken) {
-            _awoken = true;
-            _onAwake();
+        if (!awoken_) {
+            awoken_ = true;
+            on_awake();
         }
-        // You can do isActive = false in onAwake function.
-        if (_entity->_isActiveInHierarchy) {
-            _onActive();
-            if (_enabled) {
-                _onEnable();
+        // You can do is_active = false in onAwake function.
+        if (entity_->_is_active_in_hierarchy) {
+            on_active();
+            if (enabled_) {
+                on_enable();
             }
         }
     } else {
-        if (_enabled) {
-            _onDisable();
+        if (enabled_) {
+            on_disable();
         }
-        _onInActive();
+        on_inactive();
     }
 }
 

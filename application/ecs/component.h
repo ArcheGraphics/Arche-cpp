@@ -12,6 +12,9 @@
 #include <vector>
 
 namespace vox {
+class Entity;
+class Scene;
+
 /**
  * The base class of the components.
  */
@@ -21,65 +24,46 @@ public:
 
     Component(Component &&other) = default;
 
-    virtual ~Component() = default;
+    virtual ~Component();
 
     /**
      * Indicates whether the component is enabled.
      */
-    bool enabled();
+    [[nodiscard]] bool is_enabled() const;
 
-    void setEnabled(bool value);
-
-    /**
-     * Indicates whether the component is destroyed.
-     */
-    bool destroyed();
+    void set_enabled(bool value);
 
     /**
      * The entity which the component belongs to.
      */
-    Entity *entity() const;
+    [[nodiscard]] Entity *get_entity() const;
 
     /**
      * The scene which the component's entity belongs to.
      */
-    Scene *scene();
-
-    /**
-     * Destroy this instance.
-     */
-    void destroy();
+    Scene *get_scene();
 
 public:
-    virtual void _onAwake() {
-    }
+    virtual void on_awake() {}
 
-    virtual void _onEnable() {
-    }
+    virtual void on_enable() {}
 
-    virtual void _onDisable() {
-    }
+    virtual void on_disable() {}
 
-    virtual void _onDestroy() {
-    }
+    virtual void on_active() {}
 
-    virtual void _onActive() {
-    }
-
-    virtual void _onInActive() {
-    }
+    virtual void on_inactive() {}
 
 protected:
     friend class Entity;
 
-    void _setActive(bool value);
+    void set_active(bool value);
 
-    Entity *_entity;
-    bool _destroyed = false;
+    vox::Entity *entity_;
 
 private:
-    bool _enabled = true;
-    bool _awoken = false;
+    bool enabled_ = true;
+    bool awoken_ = false;
 };
 
 }// namespace vox

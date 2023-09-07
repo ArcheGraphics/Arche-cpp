@@ -15,33 +15,33 @@ namespace vox {
 struct Mesh {
 public:
     /** Name. */
-    std::string name = "";
+    std::string name;
     /** The bounding volume of the mesh. */
     BoundingBox3F bounds = BoundingBox3F();
 
     /**
      * Instanced count, disable instanced drawing when set zero.
      */
-    uint32_t instanceCount() const;
+    [[nodiscard]] uint32_t instanceCount() const;
 
     /**
      * First sub-mesh. Rendered using the first material.
      */
-    const SubMesh *subMesh() const;
+    [[nodiscard]] const SubMesh *subMesh() const;
 
     SubMesh *subMesh();
 
     /**
      * A collection of sub-mesh, each sub-mesh can be rendered with an independent material.
      */
-    const std::vector<SubMesh> &subMeshes() const;
+    [[nodiscard]] const std::vector<SubMesh> &subMeshes() const;
 
     /**
      * Add sub-mesh, each sub-mesh can correspond to an independent material.
      * @param subMesh - Start drawing offset, if the index buffer is set,
      * it means the offset in the index buffer, if not set, it means the offset in the vertex buffer
      */
-    void addSubMesh(SubMesh subMesh);
+    void addSubMesh(const SubMesh& subMesh);
 
     /**
      * Add sub-mesh, each sub-mesh can correspond to an independent material.
@@ -67,9 +67,9 @@ public:
     std::unique_ptr<UpdateFlag> registerUpdateFlag();
 
 public:
-    const std::vector<std::shared_ptr<MTL::Buffer>> &vertexBufferBindings() const;
+    [[nodiscard]] const std::vector<std::shared_ptr<MTL::Buffer>> &vertexBufferBindings() const;
 
-    const std::shared_ptr<MTL::VertexDescriptor> &vertexDescriptor() const;
+    [[nodiscard]] const std::shared_ptr<MTL::VertexDescriptor> &vertexDescriptor() const;
 
 protected:
     void _setVertexDescriptor(const std::shared_ptr<MTL::VertexDescriptor> &descriptor);

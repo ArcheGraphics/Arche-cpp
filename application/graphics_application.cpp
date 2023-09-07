@@ -5,11 +5,10 @@
 //  property of any third parties.
 
 #include "graphics_application.h"
-#include "engine.h"
+#include "platform/platform.h"
 #include "shader/shader.h"
 
-#include <glog/logging.h>
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 MetalApplication::MetalApplication() {
@@ -28,7 +27,7 @@ MetalApplication::MetalApplication() {
     Shader::create("experimental", "vertex_experimental", "fragment_experimental");
 }
 
-bool MetalApplication::prepare(Engine &engine) {
+bool MetalApplication::prepare(Platform &engine) {
     if (!Application::prepare(engine)) {
         return false;
     }

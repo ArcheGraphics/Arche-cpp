@@ -1,4 +1,4 @@
-//  Copyright (c) 2022 Feng Yang
+//  Copyright (c) 2023 Feng Yang
 //
 //  I am making my contributions/submissions to this project solely in my
 //  personal capacity and am not conveying any rights to any intellectual
@@ -30,6 +30,7 @@ public:
         Headless,
         Fullscreen,
         FullscreenBorderless,
+        FullscreenStretch,
         Default
     };
 
@@ -48,7 +49,7 @@ public:
     };
 
     struct Properties {
-        std::string title = "";
+        std::string title;
         Mode mode = Mode::Default;
         bool resizable = true;
         Vsync vsync = Vsync::Default;
@@ -56,10 +57,10 @@ public:
     };
 
     /**
-     * @brief Constructs a Window
-     * @param properties The preferred configuration of the window
-     */
-    Window(const Properties &properties);
+	 * @brief Constructs a Window
+	 * @param properties The preferred configuration of the window
+	 */
+    explicit Window(Properties properties);
 
     virtual ~Window() = default;
 
@@ -70,43 +71,47 @@ public:
     virtual std::unique_ptr<RenderContext> createRenderContext(MTL::Device &device) = 0;
 
     /**
-     * @brief Checks if the window should be closed
-     */
-    virtual bool shouldClose() = 0;
+	 * @brief Checks if the window should be closed
+	 */
+    virtual bool should_close() = 0;
 
     /**
-     * @brief Handles the processing of all underlying window events
-     */
-    virtual void processEvents();
+	 * @brief Handles the processing of all underlying window events
+	 */
+    virtual void process_events();
 
     /**
-     * @brief Requests to close the window
-     */
+	 * @brief Requests to close the window
+	 */
     virtual void close() = 0;
 
     /**
-     * @return The dot-per-inch scale factor
-     */
-    virtual float dpiFactor() const = 0;
+	 * @return The dot-per-inch scale factor
+	 */
+    [[nodiscard]] virtual float get_dpi_factor() const = 0;
 
     /**
-     * @return The scale factor for systems with heterogeneous window and pixel coordinates
-     */
-    virtual float contentScaleFactor() const;
+	 * @return The scale factor for systems with heterogeneous window and pixel coordinates
+	 */
+    [[nodiscard]] virtual float get_content_scale_factor() const;
 
     /**
-     * @brief Attempt to resize the window - not gauranteed to change
-     *
-     * @param extent The preferred window extent
-     * @return Extent The new window extent
-     */
+	 * @brief Attempt to resize the window - not guaranteed to change
+	 *
+	 * @param extent The preferred window extent
+	 * @return Extent The new window extent
+	 */
     Extent resize(const Extent &extent);
 
-    const Extent &extent() const;
+    [[nodiscard]] const Extent &get_extent() const;
 
-    Mode windowMode() const;
+    [[nodiscard]] Mode get_window_mode() const;
+
+    [[nodiscard]] inline const Properties &get_properties() const {
+        return properties;
+    }
 
 protected:
-    Properties _properties;
+    Properties properties;
 };
 }// namespace vox

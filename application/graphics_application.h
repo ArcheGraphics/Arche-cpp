@@ -10,8 +10,8 @@
 #include <Metal/Metal.hpp>
 #include "rendering/render_pass.h"
 #include "rendering/render_context.h"
-#include "scene.h"
-#include "gui.h"
+#include "ecs/scene.h"
+#include "gui/gui.h"
 
 namespace vox {
 class MetalApplication : public Application {
@@ -23,7 +23,7 @@ public:
     /**
      * @brief Additional sample initialization
      */
-    bool prepare(Engine &engine) override;
+    bool prepare(Platform &engine) override;
 
     /**
      * @brief Main loop sample events

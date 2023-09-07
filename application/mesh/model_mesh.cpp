@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "model_mesh.h"
-#include "shader_common.h"
+#include "shader/shader_common.h"
 #include "framework/common/metal_helpers.h"
 
 namespace vox {

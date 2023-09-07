@@ -20,21 +20,21 @@ public:
     /**
      * Base color.
      */
-    Color baseColor() const;
+    [[nodiscard]] Color baseColor() const;
 
     void setBaseColor(const Color &newValue);
 
     /**
      * Base texture.
      */
-    SampledTexture2DPtr baseTexture() const;
+    [[nodiscard]] SampledTexture2DPtr baseTexture() const;
 
     void setBaseTexture(const SampledTexture2DPtr &newValue);
 
     /**
      * Tiling and offset of main textures.
      */
-    Vector4F tilingOffset() const;
+    [[nodiscard]] Vector4F tilingOffset() const;
 
     void setTilingOffset(const Vector4F &newValue);
 

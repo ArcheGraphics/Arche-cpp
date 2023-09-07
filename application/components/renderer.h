@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include "ecs/component.h"
-#include "shader/shader_data.h"
-#include "rendering/render_element.h"
 #include "math/bounding_box3.h"
 #include "math/matrix4x4.h"
+#include "ecs/component.h"
+#include "rendering/render_element.h"
+#include "shader/shader_data.h"
 #include "base/update_flag.h"
+#include "material/material.h"
 
 namespace vox {
 /**
@@ -19,137 +20,128 @@ namespace vox {
  */
 class Renderer : public Component {
 public:
+    using MaterialPtr = std::shared_ptr<Material>;
+
+    struct alignas(16) RendererData {
+        Matrix4x4F local_mat;
+        Matrix4x4F model_mat;
+        Matrix4x4F normal_mat;
+    };
+
     /** ShaderData related to renderer. */
-    ShaderData shaderData = ShaderData();
-    // @ignoreClone
+    ShaderData shader_data_;
     /** Whether it is clipped by the frustum, needs to be turned on camera.enableFrustumCulling. */
-    bool isCulled = false;
+    bool is_culled_ = false;
 
     /** Set whether the renderer to receive shadows. */
-    bool receiveShadow = false;
+    bool receive_shadow_ = false;
     /** Set whether the renderer to cast shadows. */
-    bool castShadow = false;
+    bool cast_shadow_ = false;
 
     /**
      * Material count.
      */
-    size_t materialCount();
+    size_t get_material_count();
 
     /**
      * The bounding volume of the renderer.
      */
-    BoundingBox3F bounds();
+    BoundingBox3F get_bounds();
 
     explicit Renderer(Entity *entity);
 
 public:
     /**
      * Get the first instance material by index.
-     * @remarks Calling this function for the first time after the material is set will create an instance material to ensure that it is unique to the renderer.
+     * @remarks Calling this function for the first time after the material is set will create an instance material to
+     * ensure that it is unique to the renderer.
      * @param index - Material index
      * @returns Instance material
      */
-    MaterialPtr getInstanceMaterial(size_t index = 0);
+    MaterialPtr get_instance_material(size_t index = 0);
 
     /**
      * Get the first material by index.
      * @param index - Material index
      * @returns Material
      */
-    MaterialPtr getMaterial(size_t index = 0);
+    MaterialPtr get_material(size_t index = 0);
 
     /**
      * Set the first material.
      * @param material - The first material
      */
-    void setMaterial(MaterialPtr material);
+    void set_material(const MaterialPtr &material);
 
     /**
      * Set material by index.
      * @param index - Material index
      * @param material - The material
      */
-    void setMaterial(size_t index, MaterialPtr material);
+    void set_material(size_t index, const MaterialPtr &material);
 
     /**
      * Get all instance materials.
-     * @remarks Calling this function for the first time after the material is set will create an instance material to ensure that it is unique to the renderer.
+     * @remarks Calling this function for the first time after the material is set will create an instance material to
+     * ensure that it is unique to the renderer.
      * @returns All instance materials
      */
-    std::vector<MaterialPtr> getInstanceMaterials();
+    std::vector<MaterialPtr> get_instance_materials();
 
     /**
      * Get all materials.
      * @returns All materials
      */
-    std::vector<MaterialPtr> getMaterials();
+    std::vector<MaterialPtr> get_materials();
 
     /**
      * Set all materials.
      * @param materials - All materials
      */
-    void setMaterials(const std::vector<MaterialPtr> &materials);
+    void set_materials(const std::vector<MaterialPtr> &materials);
 
-    void pushPrimitive(const RenderElement &element,
-                       std::vector<RenderElement> &opaqueQueue,
-                       std::vector<RenderElement> &alphaTestQueue,
-                       std::vector<RenderElement> &transparentQueue);
+    static void push_primitive(const RenderElement &element,
+                               std::vector<RenderElement> &opaque_queue,
+                               std::vector<RenderElement> &alpha_test_queue,
+                               std::vector<RenderElement> &transparent_queue);
 
-    void setDistanceForSort(float dist);
+    void set_distance_for_sort(float dist);
 
-    float distanceForSort();
+    [[nodiscard]] float get_distance_for_sort() const;
 
-    void updateShaderData(const Matrix4x4F &viewMat,
-                          const Matrix4x4F &projMat);
-
-protected:
-    void _onEnable() override;
-
-    void _onDisable() override;
-
-    void _onDestroy() override;
-
-    virtual void _render(std::vector<RenderElement> &opaqueQueue,
-                         std::vector<RenderElement> &alphaTestQueue,
-                         std::vector<RenderElement> &transparentQueue) = 0;
-
-    virtual void _updateBounds(BoundingBox3F &worldBounds) {
-    }
-
-    virtual void update(float deltaTime) {
-    }
+    void update_shader_data();
 
 protected:
-    MaterialPtr _createInstanceMaterial(const MaterialPtr &material, size_t index);
+    void on_enable() override;
 
-    std::vector<std::shared_ptr<Material>> _materials;
+    void on_disable() override;
+
+    virtual void render(std::vector<RenderElement> &opaque_queue,
+                        std::vector<RenderElement> &alpha_test_queue,
+                        std::vector<RenderElement> &transparent_queue) = 0;
+
+    virtual void update_bounds(BoundingBox3F &world_bounds) {}
+
+    virtual void update(float delta_time) {}
+
+protected:
+    MaterialPtr create_instance_material(const MaterialPtr &material, size_t index);
+
+    std::vector<std::shared_ptr<Material>> materials_;
 
 private:
     friend class ComponentsManager;
 
-    float _distanceForSort = 0;
-    ssize_t _rendererIndex = -1;
+    float distance_for_sort_ = 0;
+    ssize_t renderer_index_ = -1;
 
-    ShaderProperty _localMatrixProperty;
-    ShaderProperty _worldMatrixProperty;
-    ShaderProperty _mvMatrixProperty;
-    ShaderProperty _mvpMatrixProperty;
-    ShaderProperty _mvInvMatrixProperty;
-    ShaderProperty _normalMatrixProperty;
+    RendererData renderer_data_;
+    const std::string renderer_property_;
 
-    std::unique_ptr<UpdateFlag> _transformChangeFlag;
-    // @deepClone
-    BoundingBox3F _bounds = BoundingBox3F();
-    // @ignoreClone
-    Matrix4x4F _mvMatrix = Matrix4x4F();
-    // @ignoreClone
-    Matrix4x4F _mvpMatrix = Matrix4x4F();
-    // @ignoreClone
-    Matrix4x4F _mvInvMatrix = Matrix4x4F();
-    // @ignoreClone
-    Matrix4x4F _normalMatrix = Matrix4x4F();
-    // @ignoreClone
-    std::vector<bool> _materialsInstanced;
+    std::unique_ptr<UpdateFlag> transform_change_flag_;
+    BoundingBox3F bounds_ = BoundingBox3F();
+    Matrix4x4F normal_matrix_ = Matrix4x4F();
+    std::vector<bool> materials_instanced_;
 };
 
 }// namespace vox

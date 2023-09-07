@@ -6,12 +6,14 @@
 
 #pragma once
 
+namespace vox {
 /**
  * Alpha blend mode.
  */
 enum class BlendMode {
     /** SRC ALPHA * SRC + (1 - SRC ALPHA) * DEST */
-    Normal,
+    NORMAL,
     /** SRC ALPHA * SRC + ONE * DEST */
-    Additive
+    ADDITIVE
 };
+}// namespace vox

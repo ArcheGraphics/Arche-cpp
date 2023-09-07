@@ -7,14 +7,10 @@
 #pragma once
 
 #include "ecs/component.h"
-#include "input_events.h"
+#include "platform/input_events.h"
 
 namespace vox {
-namespace physics {
-class ColliderShape;
-
-using ColliderShapePtr = std::shared_ptr<ColliderShape>;
-}// namespace physics
+class Camera;
 
 /**
  * Script class, used for logic writing.
@@ -23,111 +19,74 @@ class Script : public Component {
 public:
     explicit Script(Entity *entity);
 
+    ~Script() override;
+
     /**
      * Called when be enabled first time, only once.
      */
-    virtual void onAwake() {
-    }
+    virtual void on_script_awake() {}
 
     /**
      * Called when be enabled.
      */
-    virtual void onEnable() {
-    }
+    virtual void on_script_enable() {}
 
     /**
      * Called when be disabled.
      */
-    virtual void onDisable() {
-    }
+    virtual void on_script_disable() {}
 
     /**
      * Called at the end of the destroyed frame.
      */
-    virtual void onDestroy() {
-    }
+    virtual void on_destroy() {}
 
 public:
+    void set_is_started(bool value);
+
+    [[nodiscard]] bool is_started() const;
+
     /**
      * Called before the frame-level loop start for the first time, only once.
      */
-    virtual void onStart() {
-    }
+    virtual void on_start() {}
 
     /**
      * The main loop, called frame by frame.
-     * @param deltaTime - The deltaTime when the script update.
+     * @param delta_time - The deltaTime when the script update.
      */
-    virtual void onUpdate(float deltaTime) {
-    }
+    virtual void on_update(float delta_time) {}
 
     /**
-     * Called after the onUpdate finished, called frame by frame.
-     * @param deltaTime - The deltaTime when the script update.
+     * Called after the OnUpdate finished, called frame by frame.
+     * @param delta_time - The deltaTime when the script update.
      */
-    virtual void onLateUpdate(float deltaTime) {
-    }
+    virtual void on_late_update(float delta_time) {}
 
     /**
      * Called before camera rendering, called per camera.
      * @param camera - Current camera.
      */
-    virtual void onBeginRender(Camera *camera) {
-    }
+    virtual void on_begin_render(Camera *camera) {}
 
     /**
      * Called after camera rendering, called per camera.
      * @param camera - Current camera.
      */
-    virtual void onEndRender(Camera *camera) {
-    }
+    virtual void on_end_render(Camera *camera) {}
 
-    /**
-     * Called when the collision enter.
-     * @param other ColliderShape
-     */
-    virtual void onTriggerEnter(physics::ColliderShapePtr other) {
-    }
+    virtual void input_event(const InputEvent &input_event) {}
 
-    /**
-     * Called when the collision stay.
-     * @remarks onTriggerStay is called every frame while the collision stay.
-     * @param other ColliderShape
-     */
-    virtual void onTriggerExit(physics::ColliderShapePtr other) {
-    }
-
-    /**
-     * Called when the collision exit.
-     * @param other ColliderShape
-     */
-    virtual void onTriggerStay(physics::ColliderShapePtr other) {
-    }
-
-    virtual void inputEvent(const InputEvent &inputEvent) {
-    }
-
-    virtual void resize(uint32_t win_width, uint32_t win_height,
-                        uint32_t fb_width, uint32_t fb_height) {
-    }
+    virtual void resize(uint32_t win_width, uint32_t win_height, uint32_t fb_width, uint32_t fb_height) {}
 
 protected:
-    friend class Entity;
+    void on_awake() override;
 
-    friend class ComponentsManager;
+    void on_enable() override;
 
-    void _onAwake() override;
+    void on_disable() override;
 
-    void _onEnable() override;
-
-    void _onDisable() override;
-
-    void _onDestroy() override;
-
-    bool _started = false;
-    ssize_t _onStartIndex = -1;
-    ssize_t _onUpdateIndex = -1;
-    ssize_t _entityCacheIndex = -1;
+    bool started_ = false;
 };
 
 }// namespace vox
