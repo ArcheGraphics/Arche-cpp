@@ -19,3 +19,6 @@
 [submodule "third_party/glfw"]
 	path = third_party/glfw
 	url = https://github.com/glfw/glfw
+[submodule "third_party/openusd"]
+	path = third_party/openusd
+	url = https://github.com/PixarAnimationStudios/OpenUSD.git
