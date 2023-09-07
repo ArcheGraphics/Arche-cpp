@@ -8,7 +8,10 @@ add_executable(apps
         main.cpp
         delegate.cpp
         renderer.mm
+        camera.cpp
 )
+
+target_include_directories(apps PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 
 set(PXR_LIBRARY_NAMES)
 foreach (_item ${PXR_LIBRARIES}) # Iterate over list of absolute paths

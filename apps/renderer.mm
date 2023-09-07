@@ -5,155 +5,459 @@
 //  property of any third parties.
 
 #include "renderer.h"
-#include <simd/simd.h>
+#include "camera.h"
+#include "framework/common/metal_helpers.h"
+#include "framework/common/logging.h"
+#include "framework/common/filesystem.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/camera.h>
-#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/plug/plugin.h>
 #include "pxr/base/plug/registry.h"
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
-#include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usdGeom/bboxCache.h>
 #include "pxr/usd/usdGeom/camera.h"
 #include "pxr/usd/usdGeom/metrics.h"
+#include <pxr/imaging/hgi/blitCmdsOps.h>
 #include <pxr/imaging/hgiMetal/hgi.h>
 #include <pxr/imaging/hgiMetal/texture.h>
-#include <pxr/imaging/hdx/types.h>
-#include <pxr/imaging/hgi/blitCmdsOps.h>
-#include <pxr/usdImaging/usdImagingGL/engine.h>
-
-#include <pxr/imaging/hdx/tokens.h>
 
 #import <CoreImage/CIContext.h>
-#import <MetalKit/MetalKit.h>
 
 #include <cmath>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
+using namespace pxr;
+
 namespace vox {
+namespace {
+const MTL::PixelFormat AAPLDefaultColorPixelFormat = MTL::PixelFormatBGRA8Unorm;
+const double AAPLDefaultFocalLength = 18.0;
+const uint32_t AAPLMaxBuffersInFlight = 3;
+
+/// Returns the current time in seconds from the system high-resolution clock.
+inline double getCurrentTimeInSeconds() {
+    using Clock = std::chrono::high_resolution_clock;
+    using Ns = std::chrono::nanoseconds;
+    std::chrono::time_point<Clock, Ns> tp = std::chrono::high_resolution_clock::now();
+    return tp.time_since_epoch().count() / 1e9;
+}
+
+/// Returns true if the bounding box has infinite floating point values.
+bool isInfiniteBBox(const GfBBox3d &bbox) {
+    return (isinf(bbox.GetRange().GetMin().GetLength()) ||
+            isinf(bbox.GetRange().GetMax().GetLength()));
+}
+
+/// Creates a light source located at the camera position.
+GlfSimpleLight computeCameraLight(const GfMatrix4d &cameraTransform) {
+    GfVec3f cameraPosition = GfVec3f(cameraTransform.ExtractTranslation());
+
+    GlfSimpleLight light;
+    light.SetPosition(GfVec4f(cameraPosition[0], cameraPosition[1], cameraPosition[2], 1));
+
+    return light;
+}
+
+/// Computes all light sources for the scene.
+GlfSimpleLightVector computeLights(const GfMatrix4d &cameraTransform) {
+    GlfSimpleLightVector lights;
+    lights.push_back(computeCameraLight(cameraTransform));
+
+    return lights;
+}
+
+/// Checks if the USD prim derives from the requested schema type.
+bool primDerivesFromSchemaType(UsdPrim const &prim, TfType const &schemaType) {
+    // Check if the schema `TfType` is defined.
+    if (schemaType.IsUnknown()) {
+        return false;
+    }
+
+    // Get the primitive `TfType` string to query the USD plugin registry instance.
+    const std::string &typeName = prim.GetTypeName().GetString();
+
+    // Return `true` if the prim's schema type is found in the plugin registry.
+    return !typeName.empty() &&
+           PlugRegistry::GetInstance().FindDerivedTypeByName<UsdSchemaBase>(typeName).IsA(schemaType);
+}
+
+/// Queries the USD for all the prims that derive from the requested schema type.
+std::vector<UsdPrim> getAllPrimsOfType(UsdStagePtr const &stage,
+                                       TfType const &schemaType) {
+    std::vector<UsdPrim> result;
+    UsdPrimRange range = stage->Traverse();
+    std::copy_if(range.begin(), range.end(), std::back_inserter(result),
+                 [schemaType](UsdPrim const &prim) {
+                     return primDerivesFromSchemaType(prim, schemaType);
+                 });
+    return result;
+}
+
+/// Computes a frustum from the camera and the current view size.
+GfFrustum computeFrustum(const GfMatrix4d &cameraTransform,
+                         CGSize viewSize,
+                         const CameraParams &cameraParams) {
+    GfCamera camera;
+    camera.SetTransform(cameraTransform);
+    GfFrustum frustum = camera.GetFrustum();
+    camera.SetFocalLength(cameraParams.focalLength);
+
+    if (cameraParams.projection == Projection::Perspective) {
+        double targetAspect = double(viewSize.width) / double(viewSize.height);
+        float filmbackWidthMM = 24.0;
+        double hFOVInRadians = 2.0 * atan(0.5 * filmbackWidthMM / cameraParams.focalLength);
+        double fov = (180.0 * hFOVInRadians) / M_PI;
+        frustum.SetPerspective(fov, targetAspect, 1.0, 100000.0);
+    } else {
+        double left = cameraParams.leftBottomNear[0] * cameraParams.scaleViewport;
+        double right = cameraParams.rightTopFar[0] * cameraParams.scaleViewport;
+        double bottom = cameraParams.leftBottomNear[1] * cameraParams.scaleViewport;
+        double top = cameraParams.rightTopFar[1] * cameraParams.scaleViewport;
+        double nearPlane = cameraParams.leftBottomNear[2];
+        double farPlane = cameraParams.rightTopFar[2];
+
+        frustum.SetOrthographic(left, right, bottom, top, nearPlane, farPlane);
+    }
+
+    return frustum;
+}
+}// namespace
+
+/// Sets an initial material for the scene.
+void Renderer::initializeMaterial() {
+    float kA = 0.2f;
+    float kS = 0.1f;
+    _material.SetAmbient(GfVec4f(kA, kA, kA, 1.0f));
+    _material.SetSpecular(GfVec4f(kS, kS, kS, 1.0f));
+    _material.SetShininess(32.0);
+
+    _sceneAmbient = GfVec4f(0.01f, 0.01f, 0.01f, 1.0f);
+}
+
+/// Prepares the Metal objects for copying to the view.
+void Renderer::loadMetal() {
+    auto raw_source = fs::read_shader("usd_blit.metal");
+    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding))
+                      NS::Error *
+                  error{nullptr};
+    auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
+    auto defaultLibrary = CLONE_METAL_CUSTOM_DELETER(MTL::Library, _device->newLibrary(source.get(), option.get(), &error));
+    if (error != nullptr) {
+        LOGE("Error: could not load Metal shader library: {}",
+             error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
+    }
+
+    auto functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string("vtxBlit", NS::UTF8StringEncoding));
+    auto vertexFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName.get()));
+    functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string("fragBlitLinear", NS::UTF8StringEncoding));
+    auto fragmentFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName.get()));
+
+    // Set up the pipeline state object.
+    auto pipelineStateDescriptor = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineDescriptor, MTL::RenderPipelineDescriptor::alloc()->init())
+                                       pipelineStateDescriptor->setRasterSampleCount(1);
+    pipelineStateDescriptor->setVertexFunction(vertexFunction.get());
+    pipelineStateDescriptor->setFragmentFunction(fragmentFunction.get());
+    pipelineStateDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatInvalid);
+
+    // Configure the color attachment for blending.
+    MTL::RenderPipelineColorAttachmentDescriptor *colorDescriptor = pipelineStateDescriptor->colorAttachments()->object(0);
+    colorDescriptor->setPixelFormat(AAPLDefaultColorPixelFormat);
+    colorDescriptor->setBlendingEnabled(true);
+    colorDescriptor->setRgbBlendOperation(MTL::BlendOperationAdd);
+    colorDescriptor->setAlphaBlendOperation(MTL::BlendOperationAdd);
+    colorDescriptor->setSourceRGBBlendFactor(MTL::BlendFactorOne);
+    colorDescriptor->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
+    colorDescriptor->setDestinationRGBBlendFactor(MTL::BlendFactorOneMinusSourceAlpha);
+    colorDescriptor->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
+
+    error = nullptr;
+    _blitToViewPSO = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineState, _device->newRenderPipelineState(pipelineStateDescriptor.get(), &error));
+    if (!_blitToViewPSO) {
+        LOGE("Failed to created pipeline state, error {}", error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
+    }
+}
+
+void Renderer::blitToView(MTK::View *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture) {
+    MTL::RenderPassDescriptor *renderPassDescriptor = view->currentRenderPassDescriptor();
+    if (!renderPassDescriptor)
+        return;
+
+    // Create a render command encoder to encode copy command.
+    auto renderEncoder = CLONE_METAL_CUSTOM_DELETER(MTL::RenderCommandEncoder, commandBuffer->renderCommandEncoder(renderPassDescriptor));
+    if (!renderEncoder) return;
+
+    // Blit the texture to the view.
+    renderEncoder->pushDebugGroup(NS::String::string("FinalBlit", NS::UTF8StringEncoding));
+    renderEncoder->setFragmentTexture(texture, 0);
+    renderEncoder->setRenderPipelineState(_blitToViewPSO.get());
+    renderEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
+    renderEncoder->popDebugGroup();
+
+    // Finish encoding the copy command.
+    renderEncoder->endEncoding();
+    commandBuffer->presentDrawable(view->currentDrawable());
+}
+
+/// Requests the bounding box cache from Hydra.
+pxr::UsdGeomBBoxCache Renderer::computeBboxCache() {
+    TfTokenVector purposes;
+    purposes.push_back(UsdGeomTokens->default_);
+    purposes.push_back(UsdGeomTokens->proxy);
+
+    // Extent hints are sometimes authored as an optimization to avoid
+    // computing bounds. They are particularly useful for some tests where
+    // there's no bound on the first frame.
+    bool useExtentHints = true;
+    UsdTimeCode timeCode = UsdTimeCode::Default();
+    if (_stage->HasAuthoredTimeCodeRange()) {
+        timeCode = _stage->GetStartTimeCode();
+    }
+    UsdGeomBBoxCache bboxCache(timeCode, purposes, useExtentHints);
+    return bboxCache;
+}
+
+/// Initializes the Storm engine.
+void Renderer::initializeEngine() {
+    _inFlightSemaphore = dispatch_semaphore_create(AAPLMaxBuffersInFlight);
+
+    SdfPathVector excludedPaths;
+    _hgi = Hgi::CreatePlatformDefaultHgi();
+    HdDriver driver{HgiTokens->renderDriver, VtValue(_hgi.get())};
+
+    _engine = std::make_shared<pxr::UsdImagingGLEngine>(_stage->GetPseudoRoot().GetPath(),
+                                                        excludedPaths, SdfPathVector(),
+                                                        SdfPath::AbsoluteRootPath(), driver);
+
+    _engine->SetEnablePresentation(false);
+    _engine->SetRendererAov(HdAovTokens->color);
+}
+
+/// Draws the scene using Hydra.
+pxr::HgiTextureHandle Renderer::drawWithHydra(double timeCode, CGSize viewSize) {
+    // Camera projection setup.
+    GfMatrix4d cameraTransform = _viewCamera->getTransform();
+    CameraParams cameraParams = _viewCamera->getShaderParams();
+    GfFrustum frustum = computeFrustum(cameraTransform, viewSize, cameraParams);
+    GfMatrix4d modelViewMatrix = frustum.ComputeViewMatrix();
+    GfMatrix4d projMatrix = frustum.ComputeProjectionMatrix();
+    _engine->SetCameraState(modelViewMatrix, projMatrix);
+
+    // Viewport setup.
+    GfVec4d viewport(0, 0, viewSize.width, viewSize.height);
+    _engine->SetRenderViewport(viewport);
+    _engine->SetWindowPolicy(CameraUtilMatchVertically);
+
+    // Light and material setup.
+    GlfSimpleLightVector lights = computeLights(cameraTransform);
+    _engine->SetLightingState(lights, _material, _sceneAmbient);
+
+    // Nondefault render parameters.
+    UsdImagingGLRenderParams params;
+    params.clearColor = GfVec4f(0.0f, 0.0f, 0.0f, 0.0f);
+    params.colorCorrectionMode = HdxColorCorrectionTokens->sRGB;
+    params.frame = timeCode;
+
+    // Render the frame.
+    TfErrorMark mark;
+    _engine->Render(_stage->GetPseudoRoot(), params);
+    TF_VERIFY(mark.IsClean(), "Errors occurred while rendering!");
+
+    // Return the color output.
+    return _engine->GetAovTexture(HdAovTokens->color);
+}
+
+/// Draw the scene, and blit the result to the view.
+/// Returns false if the engine wasn't initialized.
+bool Renderer::drawMainView(MTK::View *view, double timeCode) {
+    if (!_engine) {
+        return false;
+    }
+
+    // Start the next frame.
+    dispatch_semaphore_wait(_inFlightSemaphore, DISPATCH_TIME_FOREVER);
+    auto *hgi = static_cast<HgiMetal *>(_hgi.get());
+    hgi->StartFrame();
+
+    // Draw the scene using Hydra, and recast the result to a MTLTexture.
+    CGSize viewSize = view->drawableSize();
+    HgiTextureHandle hgiTexture = drawWithHydra(timeCode, viewSize);
+    auto texture = static_cast<HgiMetalTexture *>(hgiTexture.Get())->GetTextureId();
+
+    // Create a command buffer to blit the texture to the view.
+    id<MTLCommandBuffer> commandBuffer = hgi->GetPrimaryCommandBuffer();
+    __block dispatch_semaphore_t blockSemaphore = _inFlightSemaphore;
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        dispatch_semaphore_signal(blockSemaphore);
+    }];
+
+    // Copy the rendered texture to the view.
+    blitToView(view, static_cast<MTL::CommandBuffer *>(commandBuffer), static_cast<MTL::Texture *>(texture));
+
+    // Tell Hydra to commit the command buffer, and complete the work.
+    hgi->CommitPrimaryCommandBuffer();
+    hgi->EndFrame();
+
+    return true;
+}
+
+/// Loads the scene from the provided URL and prepares the camera.
+void Renderer::setupScene(const std::string &url) {
+    // Load USD stage.
+    if (!loadStage(url)) {
+        // Failed to load stage. Nothing to render.
+        return;
+    }
+
+    // Get scene information.
+    getSceneInformation();
+
+    // Set up the initial scene camera based on the loaded stage.
+    setupCamera();
+
+    _sceneSetup = true;
+}
+
+/// Determine the size of the world so the camera will frame its entire bounding box.
+void Renderer::calculateWorldCenterAndSize() {
+    UsdGeomBBoxCache bboxCache = computeBboxCache();
+
+    GfBBox3d bbox = bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
+
+    // Copy the behavior of usdView.
+    // If the bounding box is empty or infinite, set it to a default size.
+    if (bbox.GetRange().IsEmpty() || isInfiniteBBox(bbox)) {
+        bbox = {{{-10, -10, -10}, {10, 10, 10}}};
+    }
+
+    GfRange3d world = bbox.ComputeAlignedRange();
+
+    _worldCenter = (world.GetMin() + world.GetMax()) / 2.0;
+    _worldSize = world.GetSize().GetLength();
+}
+
+/// Sets a camera up so that it sees the entire scene.
+void Renderer::setupCamera() {
+    calculateWorldCenterAndSize();
+
+    std::vector<UsdPrim> sceneCameras = getAllPrimsOfType(_stage, TfType::Find<UsdGeomCamera>());
+
+    if (sceneCameras.empty()) {
+        _viewCamera = std::make_unique<Camera>(this);
+        _viewCamera->setRotation({0.0, 0.0, 0.0});
+        _viewCamera->setFocus(_worldCenter);
+        _viewCamera->setDistance(_worldSize);
+
+        if (_worldSize <= 16.0) {
+            _viewCamera->setScaleBias(1.0);
+        } else {
+            _viewCamera->setScaleBias(std::log(_worldSize / 16.0 * 1.8) / std::log(1.8));
+        }
+
+        _viewCamera->setFocalLength(AAPLDefaultFocalLength);
+        _viewCamera->setStandardFocalLength(AAPLDefaultFocalLength);
+    } else {
+        UsdPrim sceneCamera = sceneCameras[0];
+        UsdGeomCamera geomCamera = UsdGeomCamera(sceneCamera);
+        GfCamera camera = geomCamera.GetCamera(_startTimeCode);
+        _viewCamera = std::make_unique<Camera>(camera, this);
+    }
+}
+
+/// Gets important information about the scene, such as frames per second and if the z-axis points up.
+void Renderer::getSceneInformation() {
+    _timeCodesPerSecond = _stage->GetFramesPerSecond();
+    if (_stage->HasAuthoredTimeCodeRange()) {
+        _startTimeCode = _stage->GetStartTimeCode();
+        _endTimeCode = _stage->GetEndTimeCode();
+    }
+    _isZUp = (UsdGeomGetStageUpAxis(_stage) == UsdGeomTokens->z);
+}
+
+/// Updates the animation timing variables.
+double Renderer::updateTime() {
+    double currentTimeInSeconds = getCurrentTimeInSeconds();
+
+    // Store the ticks for the first frame.
+    if (_startTimeInSeconds == 0) {
+        _startTimeInSeconds = currentTimeInSeconds;
+    }
+
+    // Calculate the elapsed time in seconds from the start.
+    double elapsedTimeInSeconds = currentTimeInSeconds - _startTimeInSeconds;
+
+    // Loop the animation if it is past the end.
+    double timeCode = _startTimeCode + elapsedTimeInSeconds * _timeCodesPerSecond;
+    if (timeCode > _endTimeCode) {
+        timeCode = _startTimeCode;
+        _startTimeInSeconds = currentTimeInSeconds;
+    }
+
+    return timeCode;
+}
+
+void Renderer::draw(MTK::View *view) {
+    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
+
+    // There's nothing to render until the scene is set up.
+    if (!_sceneSetup) {
+        return;
+    }
+
+    // There's nothing to render if there isn't a frame requested or the stage isn't animated.
+    if (_requestedFrames == 0 && _startTimeCode == _endTimeCode) {
+        return;
+    }
+
+    // Set up the engine the first time you attempt to render the stage.
+    if (!_engine) {
+        // Initialize the Storm render engine.
+        initializeEngine();
+    }
+
+    double timeCode = updateTime();
+
+    bool drawSucceeded = drawMainView(view, timeCode);
+
+    if (drawSucceeded) {
+        _requestedFrames--;
+    }
+
+    pPool->release();
+}
+
+/// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
+void Renderer::requestFrame() {
+    _requestedFrames++;
+}
+
+/// Uses Hydra to load the USD or USDZ file.
+bool Renderer::loadStage(const std::string &filePath) {
+    _stage = UsdStage::Open(filePath);
+    if (!_stage) {
+        LOGE("Failed to load stage at {}", filePath)
+        return false;
+    }
+    return true;
+}
+
 Renderer::Renderer(MTL::Device *pDevice)
-    : _pDevice(pDevice->retain()) {
-    _pCommandQueue = _pDevice->newCommandQueue();
-    buildShaders();
-    buildBuffers();
+    : _device(pDevice->retain()) {
+    _requestedFrames = 1;
+    _startTimeInSeconds = 0;
+    _sceneSetup = false;
+
+    loadMetal();
+    initializeMaterial();
 }
 
 Renderer::~Renderer() {
-    _pVertexPositionsBuffer->release();
-    _pVertexColorsBuffer->release();
-    _pPSO->release();
-    _pCommandQueue->release();
-    _pDevice->release();
-}
-
-void Renderer::buildShaders() {
-    using NS::StringEncoding::UTF8StringEncoding;
-
-    const char *shaderSrc = R"(
-       #include <metal_stdlib>
-       using namespace metal;
-
-       struct v2f
-       {
-           float4 position [[position]];
-           half3 color;
-       };
-
-       v2f vertex vertexMain( uint vertexId [[vertex_id]],
-                              device const float3* positions [[buffer(0)]],
-                              device const float3* colors [[buffer(1)]] )
-       {
-           v2f o;
-           o.position = float4( positions[ vertexId ], 1.0 );
-           o.color = half3 ( colors[ vertexId ] );
-           return o;
-       }
-
-       half4 fragment fragmentMain( v2f in [[stage_in]] )
-       {
-           return half4( in.color, 1.0 );
-       }
-   )";
-
-    NS::Error *pError = nullptr;
-    MTL::Library *pLibrary = _pDevice->newLibrary(NS::String::string(shaderSrc, UTF8StringEncoding), nullptr, &pError);
-    if (!pLibrary) {
-        __builtin_printf("%s", pError->localizedDescription()->utf8String());
-        assert(false);
-    }
-
-    MTL::Function *pVertexFn = pLibrary->newFunction(NS::String::string("vertexMain", UTF8StringEncoding));
-    MTL::Function *pFragFn = pLibrary->newFunction(NS::String::string("fragmentMain", UTF8StringEncoding));
-
-    MTL::RenderPipelineDescriptor *pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
-    pDesc->setVertexFunction(pVertexFn);
-    pDesc->setFragmentFunction(pFragFn);
-    pDesc->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
-
-    _pPSO = _pDevice->newRenderPipelineState(pDesc, &pError);
-    if (!_pPSO) {
-        __builtin_printf("%s", pError->localizedDescription()->utf8String());
-        assert(false);
-    }
-
-    pVertexFn->release();
-    pFragFn->release();
-    pDesc->release();
-    pLibrary->release();
-}
-
-void Renderer::buildBuffers() {
-    const size_t NumVertices = 3;
-
-    simd::float3 positions[NumVertices] =
-        {
-            {-0.8f, 0.8f, 0.0f},
-            {0.0f, -0.8f, 0.0f},
-            {+0.8f, 0.8f, 0.0f}};
-
-    simd::float3 colors[NumVertices] =
-        {
-            {1.0, 0.3f, 0.2f},
-            {0.8f, 1.0, 0.0f},
-            {0.8f, 0.0f, 1.0}};
-
-    const size_t positionsDataSize = NumVertices * sizeof(simd::float3);
-    const size_t colorDataSize = NumVertices * sizeof(simd::float3);
-
-    MTL::Buffer *pVertexPositionsBuffer = _pDevice->newBuffer(positionsDataSize, MTL::ResourceStorageModeManaged);
-    MTL::Buffer *pVertexColorsBuffer = _pDevice->newBuffer(colorDataSize, MTL::ResourceStorageModeManaged);
-
-    _pVertexPositionsBuffer = pVertexPositionsBuffer;
-    _pVertexColorsBuffer = pVertexColorsBuffer;
-
-    memcpy(_pVertexPositionsBuffer->contents(), positions, positionsDataSize);
-    memcpy(_pVertexColorsBuffer->contents(), colors, colorDataSize);
-
-    _pVertexPositionsBuffer->didModifyRange(NS::Range::Make(0, _pVertexPositionsBuffer->length()));
-    _pVertexColorsBuffer->didModifyRange(NS::Range::Make(0, _pVertexColorsBuffer->length()));
-}
-
-void Renderer::draw(MTK::View *pView) {
-    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
-
-    MTL::CommandBuffer *pCmd = _pCommandQueue->commandBuffer();
-    MTL::RenderPassDescriptor *pRpd = pView->currentRenderPassDescriptor();
-    MTL::RenderCommandEncoder *pEnc = pCmd->renderCommandEncoder(pRpd);
-
-    pEnc->setRenderPipelineState(_pPSO);
-    pEnc->setVertexBuffer(_pVertexPositionsBuffer, 0, 0);
-    pEnc->setVertexBuffer(_pVertexColorsBuffer, 0, 1);
-    pEnc->drawPrimitives(MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
-
-    pEnc->endEncoding();
-    pCmd->presentDrawable(pView->currentDrawable());
-    pCmd->commit();
-
-    pPool->release();
+    _device->release();
+    _engine.reset();
+    _stage.Reset();
 }
 
 }// namespace vox
