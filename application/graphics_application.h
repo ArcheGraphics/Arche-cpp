@@ -16,9 +16,9 @@
 namespace vox {
 class MetalApplication : public Application {
 public:
-    MetalApplication();
+    MetalApplication() = default;
 
-    virtual ~MetalApplication() = default;
+    ~MetalApplication() override;
 
     /**
      * @brief Additional sample initialization
@@ -33,7 +33,7 @@ public:
     bool resize(uint32_t win_width, uint32_t win_height,
                 uint32_t fb_width, uint32_t fb_height) override;
 
-    void inputEvent(const InputEvent &inputEvent) override;
+    void input_event(const InputEvent &inputEvent) override;
 
     void finish() override;
 
@@ -60,6 +60,12 @@ protected:
      * @brief context used for rendering, it is responsible for managing the frames and their underlying images
      */
     std::unique_ptr<RenderContext> _renderContext{nullptr};
+
+    /**
+     * @brief Pipeline used for rendering, it should be set up by the concrete sample
+     */
+    std::unique_ptr<RenderPass> _renderPass{nullptr};
+    std::shared_ptr<MTL::RenderPassDescriptor> _renderPassDescriptor{nullptr};
 
     std::unique_ptr<GUI> _gui{nullptr};
 };

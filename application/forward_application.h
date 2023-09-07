@@ -6,15 +6,22 @@
 
 #pragma once
 
+#include "ecs/components_manager.h"
 #include "graphics_application.h"
 #include "light/light_manager.h"
+#include "mesh/mesh_manager.h"
+#include "ecs/scene_manager.h"
+#include "texture/texture_manager.h"
+#include "framework/fg/framegraph.h"
 
 namespace vox {
 class ForwardApplication : public MetalApplication {
 public:
+    fg::Framegraph framegraph;
+
     ForwardApplication() = default;
 
-    virtual ~ForwardApplication();
+    ~ForwardApplication() override;
 
     /**
      * @brief Additional sample initialization
@@ -29,11 +36,15 @@ public:
     bool resize(uint32_t win_width, uint32_t win_height,
                 uint32_t fb_width, uint32_t fb_height) override;
 
-    void inputEvent(const InputEvent &inputEvent) override;
+    void input_event(const InputEvent &inputEvent) override;
 
-    virtual void loadScene() = 0;
+    virtual void before_prepare() {}
 
-    virtual void updateGPUTask(MTL::CommandBuffer &commandBuffer);
+    virtual void after_prepare() {}
+
+    virtual Camera *load_scene() = 0;
+
+    virtual void after_load_scene() {}
 
 protected:
     Camera *_mainCamera{nullptr};
@@ -41,16 +52,12 @@ protected:
     /**
      * @brief Holds all scene information
      */
-    std::unique_ptr<Scene> _scene{nullptr};
+    std::unique_ptr<TextureManager> texture_manager_{nullptr};
+    std::unique_ptr<MeshManager> mesh_manager_{nullptr};
 
-    std::shared_ptr<MTL::RenderPassDescriptor> _renderPassDescriptor{nullptr};
-
-    /**
-     * @brief Pipeline used for rendering, it should be set up by the concrete sample
-     */
-    std::unique_ptr<RenderPass> _renderPass{nullptr};
-
-    std::unique_ptr<LightManager> _lightManager{nullptr};
+    std::unique_ptr<ComponentsManager> components_manager_{nullptr};
+    std::unique_ptr<SceneManager> scene_manager_{nullptr};
+    std::unique_ptr<LightManager> light_manager_{nullptr};
 };
 
 }// namespace vox
