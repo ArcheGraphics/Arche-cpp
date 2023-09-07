@@ -82,6 +82,10 @@ static void throughput(::benchmark::State &state,
     NS::Error *error{nullptr};
     auto pso = CLONE_METAL_CUSTOM_DELETER(MTL::ComputePipelineState, device->newComputePipelineState(function.get(), &error));
     auto w = pso->threadExecutionWidth();
+    if (error != nullptr) {
+        LOGE("Error: could not create pso: {}",
+             error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
+    }
 
     {
         auto commandBuffer = CLONE_METAL_CUSTOM_DELETER(MTL::CommandBuffer, queue->commandBuffer());
@@ -174,6 +178,10 @@ void MADThroughPut::register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queu
     NS::Error *error{nullptr};
     auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
     _library = CLONE_METAL_CUSTOM_DELETER(MTL::Library, queue->device()->newLibrary(source.get(), option.get(), &error));
+    if (error != nullptr) {
+        LOGE("Error: could not load Metal shader library: {}",
+             error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
+    }
 
     const size_t num_element = 1024 * 1024;
     const int min_loop_count = 100000;
@@ -181,12 +189,19 @@ void MADThroughPut::register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queu
 
     for (int loop_count = min_loop_count; loop_count <= max_loop_count;
          loop_count += min_loop_count) {
+        error->release();
+        error = nullptr;
+
         std::string test_name = fmt::format("{}/{}/{}/{}", gpu_name, "mad_throughput", num_element, loop_count);
 
         auto constantValue = CLONE_METAL_CUSTOM_DELETER(MTL::FunctionConstantValues, MTL::FunctionConstantValues::alloc()->init());
         constantValue->setConstantValue(&loop_count, MTL::DataTypeInt, NS::UInteger(0));
         auto functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::alloc()->string("mad_throughput", NS::UTF8StringEncoding));
-        auto function = CLONE_METAL_CUSTOM_DELETER(MTL::Function, _library->newFunction(functionName.get()));
+        auto function = CLONE_METAL_CUSTOM_DELETER(MTL::Function, _library->newFunction(functionName.get(), constantValue.get(), &error));
+        if (error != nullptr) {
+            LOGE("Error: could not create function: {}",
+                 error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
+        }
 
         ::benchmark::RegisterBenchmark(test_name, throughput, queue, function,
                                        num_element, loop_count, compute::DataType::fp32)
