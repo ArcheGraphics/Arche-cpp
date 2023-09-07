@@ -6,6 +6,8 @@
 
 add_executable(apps
         main.cpp
+        delegate.cpp
+        renderer.cpp
 )
 
 target_link_libraries(apps
