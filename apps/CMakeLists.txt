@@ -6,11 +6,9 @@
 
 add_executable(apps
         main.cpp
-        primitive_app.cpp
 )
 
 target_link_libraries(apps
         metal-cpp
         framework
-        application
 )
