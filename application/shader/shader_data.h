@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include "shader_data_group.h"
 #include "shader_macro_collection.h"
-#include "shader_property.h"
-#include "texture/sampled_texture.h"
-#include <any>
+#include "framework/common/metal_helpers.h"
 #include <unordered_map>
+#include <string>
 
 namespace vox {
 /**
@@ -19,25 +17,46 @@ namespace vox {
  */
 class ShaderData {
 public:
-    std::optional<std::any> getData(const std::string &property_name) const;
-
-    std::optional<std::any> getData(const ShaderProperty &property) const;
-
-    std::optional<std::any> getData(uint32_t uniqueID) const;
+    explicit ShaderData(MTL::Device &device);
 
     void setBufferFunctor(const std::string &property_name,
                           std::function<std::shared_ptr<MTL::Buffer>()> functor);
 
-    void setBufferFunctor(ShaderProperty property,
-                          std::function<std::shared_ptr<MTL::Buffer>()> functor);
+    template<typename T>
+    void set_data(const std::string &property_name, T &value) {
+        auto iter = shader_buffers_.find(property_name);
+        if (iter == shader_buffers_.end()) {
+            auto buffer = CLONE_METAL_CUSTOM_DELETER(MTL::Buffer, device_.newBuffer(&value, sizeof(T),
+                                                                                    MTL::ResourceStorageModeShared));
+            shader_buffers_.insert(std::make_pair(property_name, buffer));
+        }
+        iter = shader_buffers_.find(property_name);
+        memcpy(iter->second->contents(), &value, sizeof(T));
+    }
 
-    void setData(const std::string &property, std::any value);
+    template<typename T>
+    void set_data(const std::string &property_name, std::vector<T> &value) {
+        auto iter = shader_buffers_.find(property_name);
+        if (iter == shader_buffers_.end()) {
+            auto buffer = CLONE_METAL_CUSTOM_DELETER(MTL::Buffer, device_.newBuffer(&value, sizeof(T) * value.size(),
+                                                                                    MTL::ResourceStorageModeShared));
+            shader_buffers_.insert(std::make_pair(property_name, buffer));
+        }
+        iter = shader_buffers_.find(property_name);
+        memcpy(iter->second->contents(), &value, sizeof(T) * value.size());
+    }
 
-    void setData(ShaderProperty property, std::any value);
-
-    void setSampledTexure(const std::string &property, const SampledTexturePtr &value);
-
-    void setSampledTexure(ShaderProperty property, const SampledTexturePtr &value);
+    template<typename T, size_t N>
+    void set_data(const std::string &property_name, std::array<T, N> &value) {
+        auto iter = shader_buffers_.find(property_name);
+        if (iter == shader_buffers_.end()) {
+            auto buffer = CLONE_METAL_CUSTOM_DELETER(MTL::Buffer, device_.newBuffer(&value, sizeof(T) * N,
+                                                                                    MTL::ResourceStorageModeShared));
+            shader_buffers_.insert(std::make_pair(property_name, buffer));
+        }
+        iter = shader_buffers_.find(property_name);
+        memcpy(iter->second->contents(), &value, sizeof(T) * N);
+    }
 
 public:
     /**
@@ -64,8 +83,11 @@ public:
                     ShaderMacroCollection &result) const;
 
 private:
-    std::unordered_map<int, std::any> _properties{};
+    MTL::Device &device_;
+
     std::unordered_map<uint32_t, std::function<std::shared_ptr<MTL::Buffer>()>> _shaderBufferFunctors{};
+    std::unordered_map<std::string, std::shared_ptr<MTL::Buffer>> shader_buffers_{};
+
     ShaderMacroCollection _macroCollection;
 };
 

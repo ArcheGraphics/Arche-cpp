@@ -8,32 +8,7 @@
 #include "shader.h"
 
 namespace vox {
-std::optional<std::any> ShaderData::getData(const std::string &property_name) const {
-    auto property = Shader::getPropertyByName(property_name);
-    if (property.has_value()) {
-        return getData(property.value());
-    } else {
-        return std::nullopt;
-    }
-}
-
-std::optional<std::any> ShaderData::getData(const ShaderProperty &property) const {
-    return getData(property.uniqueId);
-}
-
-std::optional<std::any> ShaderData::getData(uint32_t uniqueID) const {
-    auto iter = _properties.find(uniqueID);
-    if (iter != _properties.end()) {
-        return iter->second;
-    }
-
-    auto functorIter = _shaderBufferFunctors.find(uniqueID);
-    if (functorIter != _shaderBufferFunctors.end()) {
-        return functorIter->second();
-    }
-
-    return std::nullopt;
-}
+ShaderData::ShaderData(MTL::Device &device) : device_(device) {}
 
 void ShaderData::setBufferFunctor(const std::string &property_name,
                                   std::function<std::shared_ptr<MTL::Buffer>()> functor) {
@@ -43,32 +18,6 @@ void ShaderData::setBufferFunctor(const std::string &property_name,
     } else {
         assert(false && "can't find property");
     }
-}
-
-void ShaderData::setBufferFunctor(ShaderProperty property,
-                                  std::function<std::shared_ptr<MTL::Buffer>()> functor) {
-    _shaderBufferFunctors.insert(std::make_pair(property.uniqueId, functor));
-}
-
-void ShaderData::setData(const std::string &property_name, std::any value) {
-    auto property = Shader::getPropertyByName(property_name);
-    if (property.has_value()) {
-        setData(property.value(), value);
-    } else {
-        assert(false && "can't find property");
-    }
-}
-
-void ShaderData::setData(ShaderProperty property, std::any value) {
-    _properties[property.uniqueId] = value;
-}
-
-void ShaderData::setSampledTexure(const std::string &property, const SampledTexturePtr &value) {
-    setData(property, value);
-}
-
-void ShaderData::setSampledTexure(ShaderProperty property, const SampledTexturePtr &value) {
-    setData(property, value);
 }
 
 //MARK: - Macro
