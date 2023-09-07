@@ -7,10 +7,17 @@
 add_executable(apps
         main.cpp
         delegate.cpp
-        renderer.cpp
+        renderer.mm
 )
+
+set(PXR_LIBRARY_NAMES)
+foreach (_item ${PXR_LIBRARIES}) # Iterate over list of absolute paths
+    get_filename_component(_t ${_item} NAME)
+    list(APPEND PXR_LIBRARY_NAMES ${_t})
+endforeach()
 
 target_link_libraries(apps
         metal-cpp
         framework
+        ${PXR_LIBRARY_NAMES}
 )

@@ -27,10 +27,15 @@ project(arche-cpp)
 
 # Add path for local cmake scripts
 list(APPEND CMAKE_MODULE_PATH
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/USDInstall)
 
 include(global_options)
 include(check_atomic)
+
+# usd
+include(pxrConfig)
+include_directories(${PXR_INCLUDE_DIRS})
 
 # Add third party libraries
 add_subdirectory(third_party)

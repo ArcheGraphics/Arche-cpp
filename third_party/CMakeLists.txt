@@ -61,6 +61,3 @@ option(GLFW_INSTALL OFF)
 option(BUILD_SHARED_LIBS ON)
 add_subdirectory(glfw)
 set_property(TARGET glfw PROPERTY FOLDER "ThirdParty")
-
-# usd
-find_package(pxr REQUIRED PATHS "./USDInstall")

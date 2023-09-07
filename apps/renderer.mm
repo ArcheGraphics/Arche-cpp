@@ -7,6 +7,33 @@
 #include "renderer.h"
 #include <simd/simd.h>
 
+#include <pxr/pxr.h>
+#include <pxr/base/gf/camera.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/plug/plugin.h>
+#include "pxr/base/plug/registry.h"
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/primRange.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/bboxCache.h>
+#include "pxr/usd/usdGeom/camera.h"
+#include "pxr/usd/usdGeom/metrics.h"
+#include <pxr/imaging/hgiMetal/hgi.h>
+#include <pxr/imaging/hgiMetal/texture.h>
+#include <pxr/imaging/hdx/types.h>
+#include <pxr/imaging/hgi/blitCmdsOps.h>
+#include <pxr/usdImaging/usdImagingGL/engine.h>
+
+#include <pxr/imaging/hdx/tokens.h>
+
+#import <CoreImage/CIContext.h>
+#import <MetalKit/MetalKit.h>
+
+#include <cmath>
+#include <mutex>
+#include <string>
+#include <vector>
+
 namespace vox {
 Renderer::Renderer(MTL::Device *pDevice)
     : _pDevice(pDevice->retain()) {
