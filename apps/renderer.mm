@@ -141,23 +141,23 @@ void Renderer::initializeMaterial() {
 /// Prepares the Metal objects for copying to the view.
 void Renderer::loadMetal() {
     auto raw_source = fs::read_shader("usd_blit.metal");
-    auto source = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding));
-    NS::Error * error{nullptr};
+    auto source = NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding);
+    NS::Error *error{nullptr};
     auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
-    auto defaultLibrary = CLONE_METAL_CUSTOM_DELETER(MTL::Library, _device->newLibrary(source.get(), option.get(), &error));
+    auto defaultLibrary = CLONE_METAL_CUSTOM_DELETER(MTL::Library, _device->newLibrary(source, option.get(), &error));
     if (error != nullptr) {
         LOGE("Error: could not load Metal shader library: {}",
              error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
     }
 
-    auto functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string("vtxBlit", NS::UTF8StringEncoding));
-    auto vertexFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName.get()));
-    functionName = CLONE_METAL_CUSTOM_DELETER(NS::String, NS::String::string("fragBlitLinear", NS::UTF8StringEncoding));
-    auto fragmentFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName.get()));
+    auto functionName = NS::String::string("vtxBlit", NS::UTF8StringEncoding);
+    auto vertexFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName));
+    functionName = NS::String::string("fragBlitLinear", NS::UTF8StringEncoding);
+    auto fragmentFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName));
 
     // Set up the pipeline state object.
-    auto pipelineStateDescriptor = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineDescriptor, MTL::RenderPipelineDescriptor::alloc()->init())
-                                       pipelineStateDescriptor->setRasterSampleCount(1);
+    auto pipelineStateDescriptor = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineDescriptor, MTL::RenderPipelineDescriptor::alloc()->init());
+    pipelineStateDescriptor->setRasterSampleCount(1);
     pipelineStateDescriptor->setVertexFunction(vertexFunction.get());
     pipelineStateDescriptor->setFragmentFunction(fragmentFunction.get());
     pipelineStateDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatInvalid);
@@ -446,13 +446,13 @@ Renderer::Renderer(MTL::Device *pDevice)
     _sceneSetup = false;
 
     loadMetal();
-    initializeMaterial();
+    //    initializeMaterial();
 }
 
 Renderer::~Renderer() {
     _device->release();
-    _engine.reset();
-    _stage.Reset();
+    //    _engine.reset();
+    //    _stage.Reset();
 }
 
 void Renderer::drawableSizeWillChange(MTK::View *pView, CGSize size) {

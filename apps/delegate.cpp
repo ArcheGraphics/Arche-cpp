@@ -83,7 +83,7 @@ void MyAppDelegate::applicationDidFinishLaunching(NS::Notification *pNotificatio
     _pMtkView->setDelegate(_pViewDelegate);
 
     _pWindow->setContentView(_pMtkView);
-    _pWindow->setTitle(NS::String::string("01 - Primitive", NS::StringEncoding::UTF8StringEncoding));
+    _pWindow->setTitle(NS::String::string("USD APP", NS::StringEncoding::UTF8StringEncoding));
 
     _pWindow->makeKeyAndOrderFront(nullptr);
 
