@@ -34,13 +34,13 @@ void ForwardSubpass::draw(MTL::RenderCommandEncoder &commandEncoder) {
 
 void ForwardSubpass::_drawMeshes(MTL::RenderCommandEncoder &renderEncoder) {
     auto compileMacros = ShaderMacroCollection();
-    _scene->shaderData.mergeMacro(compileMacros, compileMacros);
-    _camera->shaderData.mergeMacro(compileMacros, compileMacros);
+    _scene->shader_data.merge_macro(compileMacros, compileMacros);
+    _camera->shaderData.merge_macro(compileMacros, compileMacros);
 
     std::vector<RenderElement> opaqueQueue;
     std::vector<RenderElement> alphaTestQueue;
     std::vector<RenderElement> transparentQueue;
-    _scene->_componentsManager.callRender(_camera, opaqueQueue, alphaTestQueue, transparentQueue);
+    //    _scene->_componentsManager.callRender(_camera, opaqueQueue, alphaTestQueue, transparentQueue);
     std::sort(opaqueQueue.begin(), opaqueQueue.end(), _compareFromNearToFar);
     std::sort(alphaTestQueue.begin(), alphaTestQueue.end(), _compareFromNearToFar);
     std::sort(transparentQueue.begin(), transparentQueue.end(), _compareFromFarToNear);
@@ -57,14 +57,14 @@ void ForwardSubpass::_drawElement(MTL::RenderCommandEncoder &renderEncoder,
         auto macros = compileMacros;
         auto renderer = element.renderer;
 
-        renderer->updateShaderData(_camera->viewMatrix(), _camera->projectionMatrix());
-        renderer->shaderData.mergeMacro(macros, macros);
+        renderer->update_shader_data();
+        renderer->shader_data_.merge_macro(macros, macros);
 
         auto material = element.material;
-        material->shaderData.mergeMacro(macros, macros);
+        material->shader_data.merge_macro(macros, macros);
 
-        auto vertexFunction = _pass->resourceCache().requestFunction(_pass->library(), material->shader->vertexSource(), macros);
-        auto fragmentFunction = _pass->resourceCache().requestFunction(_pass->library(), material->shader->fragmentSource(), macros);
+        auto vertexFunction = _pass->resourceCache().requestFunction(_pass->library(), material->vertex_source, macros);
+        auto fragmentFunction = _pass->resourceCache().requestFunction(_pass->library(), material->fragment_source, macros);
         _forwardPipelineDescriptor->setVertexFunction(vertexFunction);
         _forwardPipelineDescriptor->setFragmentFunction(fragmentFunction);
 
@@ -77,10 +77,10 @@ void ForwardSubpass::_drawElement(MTL::RenderCommandEncoder &renderEncoder,
 
         auto _forwardDepthStencilState = _pass->resourceCache().requestDepthStencilState(*depthStencilDesc);
         auto _forwardPipelineState = _pass->resourceCache().requestPipelineState(*_forwardPipelineDescriptor);
-        uploadUniforms(renderEncoder, _forwardPipelineState->materialUniformBlock, material->shaderData);
-        uploadUniforms(renderEncoder, _forwardPipelineState->rendererUniformBlock, renderer->shaderData);
-        uploadUniforms(renderEncoder, _forwardPipelineState->sceneUniformBlock, _scene->shaderData);
-        uploadUniforms(renderEncoder, _forwardPipelineState->cameraUniformBlock, _camera->shaderData);
+        //        uploadUniforms(renderEncoder, _forwardPipelineState->uniformBlock, material->shader_data);
+        //        uploadUniforms(renderEncoder, _forwardPipelineState->uniformBlock, renderer->shader_data_);
+        //        uploadUniforms(renderEncoder, _forwardPipelineState->uniformBlock, _scene->shader_data);
+        //        uploadUniforms(renderEncoder, _forwardPipelineState->uniformBlock, _camera->shaderData);
         renderEncoder.setRenderPipelineState(&_forwardPipelineState->handle());
         renderEncoder.setDepthStencilState(_forwardDepthStencilState);
 
@@ -89,7 +89,7 @@ void ForwardSubpass::_drawElement(MTL::RenderCommandEncoder &renderEncoder,
             renderEncoder.setVertexBuffer(meshBuffer.get(),
                                           0, index++);
         }
-        auto &submesh = element.subMesh;
+        auto &submesh = element.sub_mesh;
 
         if (submesh->indexBuffer()) {
             renderEncoder.drawIndexedPrimitives(submesh->primitiveType(),

@@ -10,7 +10,7 @@
 #include "light/direct_light.h"
 #include "light/point_light.h"
 #include "light/spot_light.h"
-#include "framework/shader/shader_data.h"
+#include "shader/shader_data.h"
 
 namespace vox {
 class Scene;

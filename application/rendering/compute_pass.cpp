@@ -64,14 +64,14 @@ void ComputePass::detachShaderData(ShaderData *data) {
 void ComputePass::compute(MTL::ComputeCommandEncoder &commandEncoder) {
     auto compileMacros = ShaderMacroCollection();
     for (auto &shaderData : _data) {
-        shaderData->mergeMacro(compileMacros, compileMacros);
+        shaderData->merge_macro(compileMacros, compileMacros);
     }
 
     auto function = _resourceCache.requestFunction(_library, _kernel, compileMacros);
     _pipelineDescriptor->setComputeFunction(function);
     auto pipelineState = _resourceCache.requestPipelineState(*_pipelineDescriptor);
     for (auto &shaderData : _data) {
-        uploadUniforms(commandEncoder, pipelineState->uniformBlock, *shaderData);
+        //        uploadUniforms(commandEncoder, pipelineState->uniformBlock, *shaderData);
     }
     commandEncoder.setComputePipelineState(&pipelineState->handle());
 
@@ -79,29 +79,6 @@ void ComputePass::compute(MTL::ComputeCommandEncoder &commandEncoder) {
     auto nHeight = std::min(_threadsPerGridY, static_cast<uint32_t>(pipelineState->handle().maxTotalThreadsPerThreadgroup() / nWidth));
     commandEncoder.dispatchThreads(MTL::Size(_threadsPerGridX, _threadsPerGridY, _threadsPerGridZ),
                                    MTL::Size(nWidth, nHeight, 1));
-}
-
-void ComputePass::uploadUniforms(MTL::ComputeCommandEncoder &commandEncoder,
-                                 const std::vector<ShaderUniform> &uniformBlock,
-                                 const ShaderData &shaderData) {
-    for (size_t i = 0; i < uniformBlock.size(); i++) {
-        const auto &uniform = uniformBlock[i];
-        auto data = shaderData.getData(uniform.propertyId);
-        if (data) {
-            process(uniform, data.value(), commandEncoder);
-        }
-    }
-}
-
-void ComputePass::process(const ShaderUniform &uniform, const std::any &a,
-                          MTL::ComputeCommandEncoder &encoder) {
-//    const auto &any_uploader = _scene->computeUploader();
-//
-//    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
-//        it->second(a, uniform.location, encoder);
-//    } else {
-//        LOGI("Unregistered type {}", std::quoted(a.type().name()));
-//    }
 }
 
 }// namespace vox

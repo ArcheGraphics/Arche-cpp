@@ -7,35 +7,16 @@
 #include "light/ambient_light.h"
 
 #include "ecs/scene.h"
-#include "shader/internal_variant_name.h"
 
 namespace vox {
 AmbientLight::AmbientLight()
     : env_map_property_("envMapLight"),
       diffuse_sh_property_("envSH"),
-      specular_texture_property_("env_specularTexture"),
-      sampler_create_info_{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO} {}
+      specular_texture_property_("env_specularTexture") {}
 
 void AmbientLight::set_scene(Scene *value) {
     scene_ = value;
     if (!value) return;
-
-    // Create a default sampler
-    sampler_create_info_.magFilter = VK_FILTER_LINEAR;
-    sampler_create_info_.minFilter = VK_FILTER_LINEAR;
-    sampler_create_info_.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    sampler_create_info_.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_create_info_.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_create_info_.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_create_info_.mipLodBias = 0.0f;
-    sampler_create_info_.compareOp = VK_COMPARE_OP_NEVER;
-    sampler_create_info_.minLod = 0.0f;
-    // Max level-of-detail should match mip level count
-    sampler_create_info_.maxLod = std::numeric_limits<float>::max();
-    sampler_create_info_.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    sampler_create_info_.maxAnisotropy = 1;
-    sampler_create_info_.unnormalizedCoordinates = false;
-    sampler_ = std::make_unique<core::Sampler>(scene_->get_device(), sampler_create_info_);
 
     env_map_light_.diffuse = Vector3F(0.212, 0.227, 0.259);
     env_map_light_.diffuse_intensity = 1.0;
@@ -51,13 +32,13 @@ void AmbientLight::set_diffuse_mode(DiffuseMode value) {
 
     switch (value) {
         case DiffuseMode::SPHERICAL_HARMONICS:
-            scene_->shader_data.remove_define(HAS_DIFFUSE_ENV);
-            scene_->shader_data.add_define(HAS_SH);
+            scene_->shader_data.disable_macro(HAS_DIFFUSE_ENV);
+            scene_->shader_data.enable_macro(HAS_SH);
             break;
 
         case DiffuseMode::TEXTURE:
-            scene_->shader_data.remove_define(HAS_SH);
-            scene_->shader_data.add_define(HAS_DIFFUSE_ENV);
+            scene_->shader_data.disable_macro(HAS_SH);
+            scene_->shader_data.enable_macro(HAS_DIFFUSE_ENV);
             break;
 
         default:
@@ -107,13 +88,13 @@ void AmbientLight::set_specular_texture(const std::shared_ptr<Texture> &value) {
     auto &shader_data = scene_->shader_data;
 
     if (value) {
-        shader_data.set_sampled_texture(specular_texture_property_,
-                                        specular_reflection_->get_vk_image_view(VK_IMAGE_VIEW_TYPE_CUBE), sampler_.get());
+        //        shader_data.set_sampled_texture(specular_texture_property_,
+        //                                        specular_reflection_->get_vk_image_view(VK_IMAGE_VIEW_TYPE_CUBE), sampler_.get());
         env_map_light_.mip_map_level = static_cast<uint32_t>(value->get_mipmaps().size() - 1);
         scene_->shader_data.set_data(env_map_property_, env_map_light_);
-        shader_data.add_define(HAS_SPECULAR_ENV);
+        shader_data.enable_macro(HAS_SPECULAR_ENV);
     } else {
-        shader_data.remove_define(HAS_SPECULAR_ENV);
+        shader_data.disable_macro(HAS_SPECULAR_ENV);
     }
 }
 

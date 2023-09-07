@@ -27,7 +27,7 @@ public:
     /** The name of entity. */
     std::string name;
     /** The layer the entity belongs to. */
-    int layer = Layer::Layer0;
+    int layer = Layer::LAYER_0;
     /** Transform component. */
     Transform *transform;
 

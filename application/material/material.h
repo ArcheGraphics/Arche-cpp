@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "shader/shader.h"
 #include "shader/shader_data.h"
 #include "shader/state/render_state.h"
 #include "enums/render_queue_type.h"

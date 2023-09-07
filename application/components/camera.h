@@ -15,6 +15,8 @@
 #include "base/update_flag.h"
 
 namespace vox {
+class Transform;
+
 /**
  * Camera clear flags enumeration.
  */
@@ -32,8 +34,17 @@ enum class CameraClearFlags {
  */
 class Camera : public Component {
 public:
+    struct alignas(16) CameraData {
+        Matrix4x4F view_mat;
+        Matrix4x4F proj_mat;
+        Matrix4x4F vp_mat;
+        Matrix4x4F view_inv_mat;
+        Matrix4x4F proj_inv_mat;
+        Point3F camera_pos;
+    };
+
     /** Shader data. */
-    ShaderData shaderData = ShaderData();
+    ShaderData shaderData;
 
     /** Rendering priority - A Camera with higher priority will be rendered on top of a camera with lower priority. */
     int priority = 0;
@@ -51,32 +62,34 @@ public:
      * Culling mask - which layers the camera renders.
      * @remarks Support bit manipulation, corresponding to Entity's layer.
      */
-    Layer cullingMask = Layer::Everything;
+    Layer cullingMask = Layer::EVERYTHING;
 
     /**
      * Create the Camera component.
      * @param entity - Entity
      */
-    Camera(Entity *entity);
+    explicit Camera(Entity *entity);
+
+    [[nodiscard]] const BoundingFrustum &get_frustum() const;
 
     /**
      * Near clip plane - the closest point to the camera when rendering occurs.
      */
-    float nearClipPlane() const;
+    [[nodiscard]] float nearClipPlane() const;
 
     void setNearClipPlane(float value);
 
     /**
      * Far clip plane - the furthest point to the camera when rendering occurs.
      */
-    float farClipPlane() const;
+    [[nodiscard]] float farClipPlane() const;
 
     void setFarClipPlane(float value);
 
     /**
      * The camera's view angle. activating when camera use perspective projection.
      */
-    float fieldOfView() const;
+    [[nodiscard]] float fieldOfView() const;
 
     void setFieldOfView(float value);
 
@@ -84,7 +97,7 @@ public:
      * Aspect ratio. The default is automatically calculated by the viewport's aspect ratio. If it is manually set,
      * the manual value will be kept. Call resetAspectRatio() to restore it.
      */
-    float aspectRatio() const;
+    [[nodiscard]] float aspectRatio() const;
 
     void setAspectRatio(float value);
 
@@ -92,21 +105,21 @@ public:
      * Viewport, normalized expression, the upper left corner is (0, 0), and the lower right corner is (1, 1).
      * @remarks Re-assignment is required after modification to ensure that the modification takes effect.
      */
-    Vector4F viewport() const;
+    [[nodiscard]] Vector4F viewport() const;
 
     void setViewport(const Vector4F &value);
 
     /**
      * Whether it is orthogonal, the default is false. True will use orthographic projection, false will use perspective projection.
      */
-    bool isOrthographic() const;
+    [[nodiscard]] bool isOrthographic() const;
 
     void setIsOrthographic(bool value);
 
     /**
      * Half the size of the camera in orthographic mode.
      */
-    float orthographicSize() const;
+    [[nodiscard]] float orthographicSize() const;
 
     void setOrthographicSize(float value);
 
@@ -209,22 +222,20 @@ public:
     void resize(uint32_t win_width, uint32_t win_height,
                 uint32_t fb_width, uint32_t fb_height);
 
-    uint32_t width() const;
+    [[nodiscard]] uint32_t width() const;
 
-    uint32_t height() const;
+    [[nodiscard]] uint32_t height() const;
 
-    uint32_t framebufferWidth() const;
+    [[nodiscard]] uint32_t framebufferWidth() const;
 
-    uint32_t framebufferHeight() const;
+    [[nodiscard]] uint32_t framebufferHeight() const;
 
     void update();
 
 public:
-    void _onActive() override;
+    void on_active() override;
 
-    void _onInActive() override;
-
-    void _onDestroy() override;
+    void on_inactive() override;
 
 private:
     friend class ComponentsManager;
@@ -243,12 +254,8 @@ private:
      */
     Matrix4x4F inverseProjectionMatrix();
 
-    ShaderProperty _viewMatrixProperty;
-    ShaderProperty _projectionMatrixProperty;
-    ShaderProperty _vpMatrixProperty;
-    ShaderProperty _inverseViewMatrixProperty;
-    ShaderProperty _inverseProjectionMatrixProperty;
-    ShaderProperty _cameraPositionProperty;
+    CameraData _cameraData;
+    std::string _cameraProperty = "u_camera";
 
     BoundingFrustum _frustum = BoundingFrustum();
 

@@ -8,7 +8,6 @@
 
 #include "math/matrix4x4.h"
 #include "math/spherical_harmonics3.h"
-#include "framework/core/sampler.h"
 #include "texture/texture.h"
 
 namespace vox {
@@ -104,9 +103,6 @@ public:
 
 private:
     static std::array<float, 27> pre_compute_sh(const SphericalHarmonics3 &sh);
-
-    VkSamplerCreateInfo sampler_create_info_;
-    std::unique_ptr<core::Sampler> sampler_{nullptr};
 
     EnvMapLight env_map_light_;
     const std::string env_map_property_;

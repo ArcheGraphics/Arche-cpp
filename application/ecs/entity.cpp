@@ -12,6 +12,7 @@
 #include "ecs/components_manager.h"
 #include "ecs/scene.h"
 #include "components/script.h"
+#include "framework/common/logging.h"
 
 namespace vox {
 Entity *Entity::find_child_by_name(vox::Entity *root, const std::string &name) {

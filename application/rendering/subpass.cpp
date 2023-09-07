@@ -32,29 +32,4 @@ void Subpass::setRenderPass(RenderPass *pass) {
     prepare();
 }
 
-void Subpass::uploadUniforms(MTL::RenderCommandEncoder &commandEncoder,
-                             const std::vector<ShaderUniform> &uniformBlock,
-                             const ShaderData &shaderData) {
-    for (size_t i = 0; i < uniformBlock.size(); i++) {
-        const auto &uniform = uniformBlock[i];
-        auto data = shaderData.getData(uniform.propertyId);
-        if (data) {
-            process(uniform, data.value(), commandEncoder);
-        }
-    }
-}
-
-void Subpass::process(const ShaderUniform &uniform, const std::any &a,
-                      MTL::RenderCommandEncoder &encoder) {
-//    const auto &any_uploader = uniform.type == MTL::FunctionTypeVertex ?
-//                                   _scene->vertexUploader() :
-//                                   _scene->fragmentUploader();
-//
-//    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
-//        it->second(a, uniform.location, encoder);
-//    } else {
-//        LOG(INFO) << "Unregistered type " << std::quoted(a.type().name());
-//    }
-}
-
 }// namespace vox

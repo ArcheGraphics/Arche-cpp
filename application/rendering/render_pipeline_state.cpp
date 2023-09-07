@@ -7,7 +7,6 @@
 #include "render_pipeline_state.h"
 #include "framework/common/metal_helpers.h"
 #include "framework/common/logging.h"
-#include "shader/shader.h"
 
 namespace vox {
 RenderPipelineState::RenderPipelineState(MTL::Device *device, const MTL::RenderPipelineDescriptor &descriptor) : _device(device) {
@@ -20,7 +19,7 @@ RenderPipelineState::RenderPipelineState(MTL::Device *device, const MTL::RenderP
 
     if (error != nullptr) {
         LOGE("Error: failed to create Metal pipeline state: {}",
-                   error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
+             error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
     }
 
     _recordVertexLocation(_reflection);
@@ -33,14 +32,12 @@ void RenderPipelineState::_recordVertexLocation(MTL::RenderPipelineReflection *r
             const MTL::Argument *aug = static_cast<MTL::Argument *>(reflection->vertexArguments()->object(i));
             const auto name = aug->name()->cString(NS::StringEncoding::UTF8StringEncoding);
             const auto location = aug->index();
-            const auto group = Shader::getShaderPropertyGroup(name);
 
             ShaderUniform shaderUniform;
             shaderUniform.name = name;
-            shaderUniform.propertyId = Shader::getPropertyByName(name)->uniqueId;
             shaderUniform.location = location;
             shaderUniform.type = MTL::FunctionTypeVertex;
-            _groupingUniform(shaderUniform, group);
+            uniformBlock.push_back(shaderUniform);
         }
     }
 
@@ -50,39 +47,13 @@ void RenderPipelineState::_recordVertexLocation(MTL::RenderPipelineReflection *r
             const MTL::Argument *aug = static_cast<MTL::Argument *>(reflection->fragmentArguments()->object(i));
             const auto name = aug->name()->cString(NS::StringEncoding::UTF8StringEncoding);
             const auto location = aug->index();
-            const auto group = Shader::getShaderPropertyGroup(name);
 
             ShaderUniform shaderUniform;
             shaderUniform.name = name;
-            shaderUniform.propertyId = Shader::getPropertyByName(name)->uniqueId;
             shaderUniform.location = location;
             shaderUniform.type = MTL::FunctionTypeFragment;
-            _groupingUniform(shaderUniform, group);
+            uniformBlock.push_back(shaderUniform);
         }
-    }
-}
-
-void RenderPipelineState::_groupingUniform(const ShaderUniform &uniform,
-                                           const std::optional<ShaderDataGroup> &group) {
-    if (group != std::nullopt) {
-        switch (group.value()) {
-            case ShaderDataGroup::Scene:
-                sceneUniformBlock.push_back(uniform);
-                break;
-            case ShaderDataGroup::Camera:
-                cameraUniformBlock.push_back(uniform);
-                break;
-            case ShaderDataGroup::Renderer:
-                rendererUniformBlock.push_back(uniform);
-                break;
-            case ShaderDataGroup::Material:
-                materialUniformBlock.push_back(uniform);
-                break;
-            default:
-                break;
-        }
-    } else {
-        // std::cerr << "Unknown uniform group" << std::endl;
     }
 }
 

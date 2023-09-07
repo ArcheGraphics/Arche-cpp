@@ -5,8 +5,6 @@
 //  property of any third parties.
 
 #include "compute_pipeline_state.h"
-#include "shader/shader_data_group.h"
-#include "shader/shader.h"
 #include "framework/common/metal_helpers.h"
 #include "framework/common/logging.h"
 
@@ -22,7 +20,7 @@ ComputePipelineState::ComputePipelineState(MTL::Device *device,
 
     if (error != nullptr) {
         LOGE("Error: failed to create Metal pipeline state: {}",
-                   error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
+             error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
     }
 
     _recordVertexLocation(_reflection);
@@ -38,7 +36,6 @@ void ComputePipelineState::_recordVertexLocation(MTL::ComputePipelineReflection 
 
             ShaderUniform shaderUniform;
             shaderUniform.name = name;
-            shaderUniform.propertyId = Shader::getPropertyByName(name)->uniqueId;
             shaderUniform.location = location;
             shaderUniform.type = MTL::FunctionTypeKernel;
             uniformBlock.push_back(shaderUniform);

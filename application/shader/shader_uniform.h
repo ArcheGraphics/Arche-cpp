@@ -16,7 +16,6 @@ namespace vox {
  */
 struct ShaderUniform {
     std::string name;
-    int propertyId;
     size_t location;
     MTL::FunctionType type;
 };

@@ -11,6 +11,8 @@
 namespace vox {
 class MeshRenderer : public Renderer {
 public:
+    using MeshPtr = std::shared_ptr<Mesh>;
+
     explicit MeshRenderer(Entity *entity);
 
     /**
@@ -21,11 +23,11 @@ public:
     MeshPtr mesh();
 
 private:
-    void _render(std::vector<RenderElement> &opaqueQueue,
-                 std::vector<RenderElement> &alphaTestQueue,
-                 std::vector<RenderElement> &transparentQueue) override;
+    void render(std::vector<RenderElement> &opaqueQueue,
+                std::vector<RenderElement> &alphaTestQueue,
+                std::vector<RenderElement> &transparentQueue) override;
 
-    void _updateBounds(BoundingBox3F &worldBounds) override;
+    void update_bounds(BoundingBox3F &worldBounds) override;
 
 private:
     MeshPtr _mesh;

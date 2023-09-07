@@ -122,7 +122,7 @@ void Renderer::push_primitive(const RenderElement &element,
                               std::vector<RenderElement> &opaque_queue,
                               std::vector<RenderElement> &alpha_test_queue,
                               std::vector<RenderElement> &transparent_queue) {
-    const auto kRenderQueueType = element.material->render_queue_;
+    const auto kRenderQueueType = element.material->renderQueueType;
 
     if (kRenderQueueType > (RenderQueueType::TRANSPARENT + RenderQueueType::ALPHA_TEST) >> 1) {
         transparent_queue.push_back(element);

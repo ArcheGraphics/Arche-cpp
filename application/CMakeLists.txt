@@ -32,8 +32,6 @@ set(TEXTURE_FILES
         texture/texture.h
         texture/stb.cpp
         texture/stb.h
-        texture/sampled_texture.h
-        texture/sampled_texture.cpp
         texture/texture_manager.h
         texture/texture_manager.cpp
 )
@@ -41,8 +39,8 @@ set(TEXTURE_FILES
 set(MESH_FILES
         mesh/sub_mesh.h
         mesh/sub_mesh.cpp
-        #        mesh/mesh_manager.h
-        #        mesh/mesh_manager.cpp
+        mesh/mesh_manager.h
+        mesh/mesh_manager.cpp
         mesh/mesh.h
         mesh/mesh.cpp
         mesh/model_mesh.h
@@ -54,17 +52,10 @@ set(MESH_FILES
 )
 
 set(SHADER_FILES
-        shader/shader.h
-        shader/shader.cpp
         shader/shader_data.h
         shader/shader_data.cpp
-        shader/shader_data_group.h
         shader/shader_macro_collection.h
         shader/shader_macro_collection.cpp
-        shader/shader_pool.h
-        shader/shader_pool.cpp
-        shader/shader_property.cpp
-        shader/shader_property.h
         shader/shader_uniform.h
         shader/state/blend_state.cpp
         shader/state/blend_state.h
@@ -77,8 +68,6 @@ set(SHADER_FILES
         shader/state/renderTarget_blend_state.h
         shader/state/stencil_state.cpp
         shader/state/stencil_state.h
-        #        shader/shader_manager.h
-        #        shader/shader_manager.cpp
 )
 
 set(MATERIAL_FILES

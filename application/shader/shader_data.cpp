@@ -5,7 +5,6 @@
 //  property of any third parties.
 
 #include "shader_data.h"
-#include "shader.h"
 
 namespace vox {
 ShaderData::ShaderData(MTL::Device &device) : device_(device) {}
@@ -27,7 +26,7 @@ void ShaderData::disable_macro(MacroName macroName) {
 }
 
 void ShaderData::merge_macro(const ShaderMacroCollection &macros,
-                            ShaderMacroCollection &result) const {
+                             ShaderMacroCollection &result) const {
     ShaderMacroCollection::unionCollection(macros, _macroCollection, result);
 }
 

@@ -23,8 +23,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "common/error.h"
-
 namespace vox {
 template<typename T>
 inline void read(std::istringstream &is, T &value) {

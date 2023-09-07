@@ -134,12 +134,12 @@ void ComponentsManager::call_render(Camera *camera,
                                     std::vector<RenderElement> &transparent_queue) {
     for (auto &element : renderers_) {
         // filter by camera culling mask.
-        if (!(camera->culling_mask_ & element->entity_->layer)) {
+        if (!(camera->cullingMask & element->entity_->layer)) {
             continue;
         }
 
         // filter by camera frustum.
-        if (camera->enable_frustum_culling_) {
+        if (camera->enableFrustumCulling) {
             element->is_culled_ = !camera->get_frustum().intersectsBox(element->get_bounds());
             if (element->is_culled_) {
                 continue;
@@ -149,7 +149,7 @@ void ComponentsManager::call_render(Camera *camera,
         const auto &transform = camera->get_entity()->transform;
         const auto kPosition = transform->get_world_position();
         auto center = element->get_bounds().midPoint();
-        if (camera->is_orthographic()) {
+        if (camera->isOrthographic()) {
             const auto kForward = transform->get_world_forward();
             const auto kOffset = center - kPosition;
             element->set_distance_for_sort(kOffset.dot(kForward));

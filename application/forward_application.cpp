@@ -19,22 +19,20 @@ bool ForwardApplication::prepare(Platform &engine) {
     MetalApplication::prepare(engine);
 
     _scene = std::make_unique<Scene>(*_device);
-    _lightManager = std::make_unique<LightManager>(*_library, _scene.get());
+    _lightManager = std::make_unique<LightManager>(_scene.get());
     {
         loadScene();
-        auto extent = engine.window().extent();
-        auto factor = engine.window().contentScaleFactor();
-        _scene->updateSize(extent.width, extent.height, factor * extent.width, factor * extent.height);
+        auto extent = engine.get_window().get_extent();
+        auto factor = engine.get_window().get_content_scale_factor();
         _mainCamera->resize(extent.width, extent.height, factor * extent.width, factor * extent.height);
     }
-    _lightManager->setCamera(_mainCamera);
 
     // Create a render pass descriptor for thelighting and composition pass
     // Whatever rendered in the final pass needs to be stored so it can be displayed
     _renderPassDescriptor = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPassDescriptor, MTL::RenderPassDescriptor::alloc()->init());
     _renderPassDescriptor->colorAttachments()->object(0)->setStoreAction(MTL::StoreActionStore);
     _renderPassDescriptor->colorAttachments()->object(0)->setLoadAction(MTL::LoadActionClear);
-    auto &color = _scene->background.solidColor;
+    auto &color = _scene->background.solid_color;
     _renderPassDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(color.r, color.g, color.b, color.a));
     _renderPassDescriptor->depthAttachment()->setLoadAction(MTL::LoadActionClear);
     _renderPassDescriptor->depthAttachment()->setTexture(_renderContext->depthStencilTexture());
@@ -51,7 +49,7 @@ bool ForwardApplication::prepare(Platform &engine) {
 
 void ForwardApplication::update(float delta_time) {
     MetalApplication::update(delta_time);
-    _scene->update(delta_time);
+    //    _scene->update(delta_time);
 
     auto commandBuffer = CLONE_METAL_CUSTOM_DELETER(MTL::CommandBuffer, _commandQueue->commandBuffer());
     updateGPUTask(*commandBuffer);
@@ -72,20 +70,17 @@ void ForwardApplication::update(float delta_time) {
 }
 
 void ForwardApplication::updateGPUTask(MTL::CommandBuffer &commandBuffer) {
-    _lightManager->draw(commandBuffer);
 }
 
 bool ForwardApplication::resize(uint32_t win_width, uint32_t win_height,
                                 uint32_t fb_width, uint32_t fb_height) {
     MetalApplication::resize(win_width, win_height, fb_width, fb_height);
-    _scene->updateSize(win_width, win_height, fb_width, fb_height);
     _mainCamera->resize(win_width, win_height, fb_width, fb_height);
     return true;
 }
 
 void ForwardApplication::inputEvent(const InputEvent &inputEvent) {
     MetalApplication::inputEvent(inputEvent);
-    _scene->updateInputEvent(inputEvent);
 }
 
 }// namespace vox

@@ -8,22 +8,19 @@
 #include "ecs/entity.h"
 #include "ecs/scene.h"
 #include "math/matrix_utils.h"
-#include "shader/shader.h"
+#include "components/transform.h"
 
 namespace vox {
-Camera::Camera(Entity *entity) : Component(entity),
-                                 _viewMatrixProperty(Shader::createProperty("u_viewMat", ShaderDataGroup::Camera)),
-                                 _projectionMatrixProperty(Shader::createProperty("u_projMat", ShaderDataGroup::Camera)),
-                                 _vpMatrixProperty(Shader::createProperty("u_VPMat", ShaderDataGroup::Camera)),
-                                 _inverseViewMatrixProperty(Shader::createProperty("u_viewInvMat", ShaderDataGroup::Camera)),
-                                 _inverseProjectionMatrixProperty(Shader::createProperty("u_projInvMat", ShaderDataGroup::Camera)),
-                                 _cameraPositionProperty(Shader::createProperty("u_cameraPos", ShaderDataGroup::Camera)) {
+Camera::Camera(Entity *entity)
+    : Component(entity), shaderData(entity->get_scene()->get_device()), _cameraProperty("cameraData") {
     auto transform = entity->transform;
     _transform = transform;
-    _isViewMatrixDirty = transform->registerWorldChangeFlag();
-    _isInvViewProjDirty = transform->registerWorldChangeFlag();
-    _frustumViewChangeFlag = transform->registerWorldChangeFlag();
+    _isViewMatrixDirty = transform->register_world_change_flag();
+    _isInvViewProjDirty = transform->register_world_change_flag();
+    _frustumViewChangeFlag = transform->register_world_change_flag();
 }
+
+const BoundingFrustum &Camera::get_frustum() const { return _frustum; }
 
 float Camera::nearClipPlane() const {
     return _nearClipPlane;
@@ -94,9 +91,9 @@ void Camera::setOrthographicSize(float value) {
 
 Matrix4x4F Camera::viewMatrix() {
     // Remove scale
-    if (_isViewMatrixDirty->flag) {
-        _isViewMatrixDirty->flag = false;
-        _viewMatrix = _transform->worldMatrix().inverse();
+    if (_isViewMatrixDirty->flag_) {
+        _isViewMatrixDirty->flag_ = false;
+        _viewMatrix = _transform->get_world_matrix().inverse();
     }
     return _viewMatrix;
 }
@@ -117,10 +114,10 @@ Matrix4x4F Camera::projectionMatrix() {
     _lastAspectSize.x = _width;
     _lastAspectSize.y = _height;
     if (!_isOrthographic) {
-        _projectionMatrix = makepPerspective(degreesToRadians(_fieldOfView),
-                                             aspectRatio(),
-                                             _nearClipPlane,
-                                             _farClipPlane);
+        _projectionMatrix = makePerspective(degreesToRadians(_fieldOfView),
+                                            aspectRatio(),
+                                            _nearClipPlane,
+                                            _farClipPlane);
     } else {
         const auto width = _orthographicSize * aspectRatio();
         const auto height = _orthographicSize;
@@ -224,24 +221,19 @@ Ray3F Camera::screenPointToRay(const Vector2F &point) {
     return viewportPointToRay(viewportPoint);
 }
 
-void Camera::_onActive() {
-    entity()->scene()->attachRenderCamera(this);
+void Camera::on_active() {
+    get_entity()->get_scene()->attach_render_camera(this);
 }
 
-void Camera::_onInActive() {
-    entity()->scene()->detachRenderCamera(this);
-}
-
-void Camera::_onDestroy() {
-    _isInvViewProjDirty->destroy();
-    _isViewMatrixDirty->destroy();
+void Camera::on_inactive() {
+    get_entity()->get_scene()->detach_render_camera(this);
 }
 
 void Camera::_projMatChange() {
     _isFrustumProjectDirty = true;
     _isProjectionDirty = true;
     _isInvProjMatDirty = true;
-    _isInvViewProjDirty->flag = true;
+    _isInvViewProjDirty->flag_ = true;
 }
 
 Point3F Camera::_innerViewportToWorldPoint(const Vector3F &point, const Matrix4x4F &invViewProjMat) {
@@ -256,24 +248,25 @@ Point3F Camera::_innerViewportToWorldPoint(const Vector3F &point, const Matrix4x
 void Camera::update() {
     auto vp = projectionMatrix() * viewMatrix();
 
-    shaderData.setData(Camera::_viewMatrixProperty, viewMatrix());
-    shaderData.setData(Camera::_projectionMatrixProperty, projectionMatrix());
-    shaderData.setData(Camera::_vpMatrixProperty, vp);
-    shaderData.setData(Camera::_inverseViewMatrixProperty, _transform->worldMatrix());
-    shaderData.setData(Camera::_inverseProjectionMatrixProperty, inverseProjectionMatrix());
-    shaderData.setData(Camera::_cameraPositionProperty, _transform->worldPosition());
+    _cameraData.view_mat = viewMatrix();
+    _cameraData.proj_mat = projectionMatrix();
+    _cameraData.vp_mat = projectionMatrix() * viewMatrix();
+    _cameraData.view_inv_mat = _transform->get_world_matrix();
+    _cameraData.proj_inv_mat = inverseProjectionMatrix();
+    _cameraData.camera_pos = _transform->get_world_position();
+    shaderData.set_data(Camera::_cameraProperty, _cameraData);
 
-    if (enableFrustumCulling && (_frustumViewChangeFlag->flag || _isFrustumProjectDirty)) {
+    if (enableFrustumCulling && (_frustumViewChangeFlag->flag_ || _isFrustumProjectDirty)) {
         _frustum.calculateFromMatrix(vp);
-        _frustumViewChangeFlag->flag = false;
+        _frustumViewChangeFlag->flag_ = false;
         _isFrustumProjectDirty = false;
     }
 }
 
 Matrix4x4F Camera::invViewProjMat() {
-    if (_isInvViewProjDirty->flag) {
-        _isInvViewProjDirty->flag = false;
-        _invViewProjMat = _transform->worldMatrix() * inverseProjectionMatrix();
+    if (_isInvViewProjDirty->flag_) {
+        _isInvViewProjDirty->flag_ = false;
+        _invViewProjMat = _transform->get_world_matrix() * inverseProjectionMatrix();
     }
     return _invViewProjMat;
 }

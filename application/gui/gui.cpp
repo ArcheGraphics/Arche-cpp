@@ -5,6 +5,7 @@
 //  property of any third parties.
 
 #include "gui.h"
+#define IMGUI_IMPL_METAL_CPP
 #include "gui/imgui_impl_metal.h"
 
 namespace vox {

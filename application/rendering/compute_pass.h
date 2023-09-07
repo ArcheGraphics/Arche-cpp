@@ -61,17 +61,6 @@ protected:
 
     std::shared_ptr<MTL::ComputePipelineDescriptor> _pipelineDescriptor;
 
-    /**
-     * Upload constant shader data in shader uniform block.
-     * @param uniformBlock - shader Uniform block
-     * @param shaderData - shader data
-     */
-    void uploadUniforms(MTL::ComputeCommandEncoder &commandEncoder,
-                        const std::vector<ShaderUniform> &uniformBlock,
-                        const ShaderData &shaderData);
-
-    void process(const ShaderUniform &uniform, const std::any &a, MTL::ComputeCommandEncoder &encoder);
-
 private:
     ResourceCache _resourceCache;
 };

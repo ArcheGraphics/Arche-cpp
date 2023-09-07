@@ -82,7 +82,7 @@ MTL::Function *ResourceCache::requestFunction(MTL::Library &library,
 
 std::shared_ptr<MTL::FunctionConstantValues>
 ResourceCache::_makeFunctionConstants(const ShaderMacroCollection &macroInfo) {
-    auto functionConstants = ShaderMacroCollection::createDefaultFunction();
+    auto functionConstants = CLONE_METAL_CUSTOM_DELETER(MTL::FunctionConstantValues, MTL::FunctionConstantValues::alloc()->init());
     std::for_each(macroInfo._value.begin(), macroInfo._value.end(),
                   [&](const std::pair<MacroName, std::pair<int, MTL::DataType>> &info) {
                       if (info.second.second == MTL::DataTypeBool) {

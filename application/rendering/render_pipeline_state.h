@@ -7,17 +7,13 @@
 #pragma once
 
 #include "shader/shader_uniform.h"
-#include "shader/shader_data_group.h"
 #include <Metal/Metal.hpp>
 #include <optional>
 
 namespace vox {
 class RenderPipelineState {
 public:
-    std::vector<ShaderUniform> sceneUniformBlock{};
-    std::vector<ShaderUniform> cameraUniformBlock{};
-    std::vector<ShaderUniform> rendererUniformBlock{};
-    std::vector<ShaderUniform> materialUniformBlock{};
+    std::vector<ShaderUniform> uniformBlock{};
 
     RenderPipelineState(MTL::Device *device, const MTL::RenderPipelineDescriptor &descriptor);
 
@@ -30,9 +26,6 @@ private:
      * record the location of uniform/attribute.
      */
     void _recordVertexLocation(MTL::RenderPipelineReflection *reflection);
-
-    void _groupingUniform(const ShaderUniform &uniform,
-                          const std::optional<ShaderDataGroup> &group);
 
     MTL::Device *_device;
     std::shared_ptr<MTL::RenderPipelineState> _handle{nullptr};

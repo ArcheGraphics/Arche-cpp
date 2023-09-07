@@ -18,16 +18,16 @@ std::shared_ptr<Texture> UnlitMaterial::get_base_texture() const { return base_t
 
 void UnlitMaterial::set_base_texture(const std::shared_ptr<Texture> &new_value) {
     if (new_value) {
-//        BaseMaterial::last_sampler_create_info_.maxLod = static_cast<float>(new_value->get_mipmaps().size());
-//        set_base_texture(new_value, BaseMaterial::last_sampler_create_info_);
+        //        BaseMaterial::last_sampler_create_info_.maxLod = static_cast<float>(new_value->get_mipmaps().size());
+        //        set_base_texture(new_value, BaseMaterial::last_sampler_create_info_);
     }
 }
 
 void UnlitMaterial::set_base_texture(const std::shared_ptr<Texture> &new_value, const MTL::SamplerDescriptor &info) {
     base_texture_ = new_value;
     if (new_value) {
-//        shader_data.set_sampled_texture(base_texture_prop_, new_value->get_vk_image_view(),
-//                                         &device_.get_resource_cache().request_sampler(info));
+        //        shader_data.set_sampled_texture(base_texture_prop_, new_value->get_vk_image_view(),
+        //                                         &device_.get_resource_cache().request_sampler(info));
         shader_data.enable_macro(HAS_BASE_TEXTURE);
     } else {
         shader_data.disable_macro(HAS_BASE_TEXTURE);
