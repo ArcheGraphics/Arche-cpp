@@ -8,6 +8,7 @@
 #include "shader/shader_data_group.h"
 #include "shader/shader.h"
 #include "framework/common/metal_helpers.h"
+#include "framework/common/logging.h"
 
 namespace vox {
 ComputePipelineState::ComputePipelineState(MTL::Device *device,
@@ -20,8 +21,8 @@ ComputePipelineState::ComputePipelineState(MTL::Device *device,
                                                                           &_reflection, &error));
 
     if (error != nullptr) {
-        LOG(ERROR) << "Error: failed to create Metal pipeline state: "
-                   << error->description()->cString(NS::StringEncoding::UTF8StringEncoding);
+        LOGE("Error: failed to create Metal pipeline state: {}",
+                   error->description()->cString(NS::StringEncoding::UTF8StringEncoding));
     }
 
     _recordVertexLocation(_reflection);

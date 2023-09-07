@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "light.h"
 #include "math/color.h"
-#include "shader_common.h"
+#include "light/light.h"
 
 namespace vox {
 /**
@@ -16,30 +15,37 @@ namespace vox {
  */
 class PointLight : public Light {
 public:
-    /** Light color. */
-    Color color = Color(1, 1, 1, 1);
-    /** Light intensity. */
-    float intensity = 1.0;
-    /** Defines a distance cutoff at which the light's intensity must be considered zero. */
-    float distance = 5;
+    struct PointLightData {
+        Vector3F color;
+        float color_pad;// for align
+        Vector3F position;
+        float distance;
+    };
 
-    PointLight(Entity *entity);
+    /** Light color. */
+    Color color_ = Color(1, 1, 1, 1);
+    /** Light intensity. */
+    float intensity_ = 1.0;
+    /** Defines a distance cutoff at which the light's intensity must be considered zero. */
+    float distance_ = 5;
+
+    explicit PointLight(Entity *entity);
 
 public:
-    Matrix4x4F shadowProjectionMatrix() override;
+    Matrix4x4F get_shadow_projection_matrix() override;
 
 private:
     /**
      * Mount to the current Scene.
      */
-    void _onEnable() override;
+    void on_enable() override;
 
     /**
      * Unmount from the current Scene.
      */
-    void _onDisable() override;
+    void on_disable() override;
 
-    void _updateShaderData(PointLightData &shaderData);
+    void update_shader_data(PointLightData &shader_data);
 
 private:
     friend class LightManager;

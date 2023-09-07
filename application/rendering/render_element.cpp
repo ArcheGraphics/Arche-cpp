@@ -4,14 +4,12 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "render_element.h"
+#include "rendering/render_element.h"
+
+#include <utility>
 
 namespace vox {
-RenderElement::RenderElement(Renderer *renderer, MeshPtr mesh,
-                             const SubMesh *subMesh, MaterialPtr material) : renderer(renderer),
-                                                                             mesh(mesh),
-                                                                             subMesh(subMesh),
-                                                                             material(material) {
-}
+RenderElement::RenderElement(Renderer *renderer, MeshPtr mesh, const SubMesh *sub_mesh, MaterialPtr material)
+    : renderer(renderer), mesh(std::move(mesh)), sub_mesh(sub_mesh), material(std::move(material)) {}
 
-}// namespace vox
+}  // namespace vox

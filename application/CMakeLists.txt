@@ -27,26 +27,15 @@ set(BASE_FILES
         base/update_flag_manager.h
         base/update_flag_manager.cpp)
 
-set(IMAGE_FILES
-        image/image.cpp
-        image/image.h
-        image/stb.cpp
-        image/stb.h
-)
-
 set(TEXTURE_FILES
+        texture/texture.cpp
+        texture/texture.h
+        texture/stb.cpp
+        texture/stb.h
         texture/sampled_texture.h
         texture/sampled_texture.cpp
-        texture/sampled_texture2d.h
-        texture/sampled_texture2d.cpp
-        texture/sampled_texture3d.h
-        texture/sampled_texture3d.cpp
-        texture/sampled_texture2d_view.h
-        texture/sampled_texture2d_view.cpp
-        texture/sampled_texturecube.h
-        texture/sampled_texturecube.cpp
-        texture/texture_utils.h
-        texture/texture_utils.cpp
+        texture/texture_manager.h
+        texture/texture_manager.cpp
 )
 
 set(MESH_FILES
@@ -73,7 +62,7 @@ set(SHADER_FILES
         shader/shader_macro_collection.h
         shader/shader_macro_collection.cpp
         shader/shader_pool.h
-        shader/shader_pool.mm
+        shader/shader_pool.cpp
         shader/shader_property.cpp
         shader/shader_property.h
         shader/shader_uniform.h
@@ -178,7 +167,6 @@ source_group("common\\" FILES ${COMMON_FILES})
 set(PROJECT_FILES
         ${COMMON_FILES}
         ${BASE_FILES}
-        ${IMAGE_FILES}
         ${TEXTURE_FILES}
         ${MESH_FILES}
         ${SHADER_FILES}

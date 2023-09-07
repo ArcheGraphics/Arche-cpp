@@ -14,10 +14,12 @@ set(COMMON_FILES
         common/logging.h
         common/timer.h
         common/filesystem.h
+        common/utils.h
         # Source Files
         common/logging.cpp
         common/timer.cpp
         common/filesystem.cpp
+        common/utils.cpp
 )
 
 set(FG_FILES

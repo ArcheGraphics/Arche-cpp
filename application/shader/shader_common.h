@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef shader_common_h
-#define shader_common_h
+#pragma once
 
 #import <simd/simd.h>
 
@@ -111,5 +110,3 @@ struct CubeShadowData {
     
     vector_float3 lightPos;
 };
-
-#endif /* shader_common_h */

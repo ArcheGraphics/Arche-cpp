@@ -37,7 +37,7 @@ void BlendState::platformApply(MTL::RenderPipelineDescriptor &pipelineDescriptor
         pipelineDescriptor.colorAttachments()->object(0)->setAlphaBlendOperation(alphaBlendOperation);
 
         // apply blend color.
-        encoder.setBlendColorRed(blendColor.r, blendColor.g, blendColor.b, blendColor.a);
+        encoder.setBlendColor(blendColor.r, blendColor.g, blendColor.b, blendColor.a);
     }
 
     // apply color mask.

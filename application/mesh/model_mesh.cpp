@@ -17,8 +17,9 @@ size_t ModelMesh::vertexCount() {
     return _vertexCount;
 }
 
-ModelMesh::ModelMesh(MTL::Device &device, const std::string &name) : Mesh(),
-                                                                     _device(device) {
+ModelMesh::ModelMesh(MTL::Device &device, const std::string &name)
+    : Mesh(),
+      _device(device) {
 }
 
 void ModelMesh::setPositions(const std::vector<Vector3F> &positions) {

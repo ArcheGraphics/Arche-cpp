@@ -9,10 +9,11 @@
 #include <Metal/Metal.hpp>
 #include "ecs/scene.h"
 #include "shader/shader_uniform.h"
-#include "render_context.h"
+#include "framework/rendering/render_context.h"
 
 namespace vox {
 class RenderPass;
+class RenderElement;
 
 class Subpass {
 public:

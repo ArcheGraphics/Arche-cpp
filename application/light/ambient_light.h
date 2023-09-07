@@ -6,31 +6,31 @@
 
 #pragma once
 
-#include <Metal/Metal.hpp>
-
+#include "math/matrix4x4.h"
 #include "math/spherical_harmonics3.h"
-#include "shader/shader_property.h"
-#include "shader_common.h"
-#include "texture/sampled_texturecube.h"
+#include "framework/core/sampler.h"
+#include "texture/texture.h"
 
 namespace vox {
+class Scene;
+
 /**
  * Diffuse mode.
  */
 enum class DiffuseMode {
     /** Solid color mode. */
-    SolidColor,
+    SOLID_COLOR,
 
     /** Texture mode. */
-    Texture,
+    TEXTURE,
 
     /**
      * SH mode
      * @remarks
-     * Use SH3 to represent irradiance environment maps efficiently,
-     * allowing for interactive rendering of diffuse objects under distant illumination.
+     * Use SH3 to represent irradiance environment maps efficiently, allowing for interactive rendering of diffuse
+     * objects under distant illumination.
      */
-    SphericalHarmonics
+    SPHERICAL_HARMONICS
 };
 
 /**
@@ -38,101 +38,89 @@ enum class DiffuseMode {
  */
 class AmbientLight {
 public:
-    AmbientLight(Scene *value);
+    struct alignas(16) EnvMapLight {
+        Vector3F diffuse;
+        uint32_t mip_map_level;
+        float diffuse_intensity;
+        float specular_intensity;
+    };
 
-    void registerUploader(Scene *scene);
+    AmbientLight();
+
+    void set_scene(Scene *value);
 
     /**
      * Diffuse mode of ambient light.
      */
-    DiffuseMode diffuseMode() const;
+    DiffuseMode get_diffuse_mode();
 
-    void setDiffuseMode(DiffuseMode value);
+    void set_diffuse_mode(DiffuseMode value);
 
     /**
      * Diffuse reflection solid color.
      * @remarks Effective when diffuse reflection mode is `DiffuseMode.SolidColor`.
      */
-    Color diffuseSolidColor() const;
+    [[nodiscard]] Color get_diffuse_solid_color() const;
 
-    void setDiffuseSolidColor(const Color &value);
+    void set_diffuse_solid_color(const Color &value);
 
     /**
      * Diffuse reflection spherical harmonics 3.
      * @remarks Effective when diffuse reflection mode is `DiffuseMode.SphericalHarmonics`.
      */
-    const SphericalHarmonics3 &diffuseSphericalHarmonics() const;
+    const SphericalHarmonics3 &get_diffuse_spherical_harmonics();
 
-    void setDiffuseSphericalHarmonics(const SphericalHarmonics3 &value);
-
-    /**
-     * Diffuse reflection texture.
-     * @remarks This texture must be baked from MetalLoader::createIrradianceTexture
-     */
-    SampledTextureCubePtr diffuseTexture() const;
-
-    void setDiffuseTexture(const SampledTextureCubePtr &value);
+    void set_diffuse_spherical_harmonics(const SphericalHarmonics3 &value);
 
     /**
      * Diffuse reflection intensity.
      */
-    float diffuseIntensity();
+    [[nodiscard]] float get_diffuse_intensity() const;
 
-    void setDiffuseIntensity(float value);
+    void set_diffuse_intensity(float value);
 
 public:
     /**
-     * Whether to decode from specularTexture with RGBM format.
+     * Whether to decode from SpecularTexture with RGBM format.
      */
-    bool specularTextureDecodeRGBM() const;
+    [[nodiscard]] bool get_specular_texture_decode_rgbm() const;
 
-    void setSpecularTextureDecodeRGBM(bool value);
+    void set_specular_texture_decode_rgbm(bool value);
 
     /**
      * Specular reflection texture.
      * @remarks This texture must be baked from MetalLoader::createSpecularTexture
      */
-    SampledTextureCubePtr specularTexture() const;
+    std::shared_ptr<Texture> get_specular_texture();
 
-    void setSpecularTexture(const SampledTextureCubePtr &value);
+    void set_specular_texture(const std::shared_ptr<Texture> &value);
 
     /**
      * Specular reflection intensity.
      */
-    float specularIntensity() const;
+    [[nodiscard]] float get_specular_intensity() const;
 
-    void setSpecularIntensity(float value);
-
-public:
-    /**
-     * brdf loopup texture.
-     * @remarks This texture must be baked from MetalLoader::createBRDFLookupTable
-     */
-    SampledTexture2DPtr brdfTexture() const;
-
-    void setBRDFTexture(const SampledTexture2DPtr &value);
+    void set_specular_intensity(float value);
 
 private:
-    std::array<float, 27> _preComputeSH(const SphericalHarmonics3 &sh);
+    static std::array<float, 27> pre_compute_sh(const SphericalHarmonics3 &sh);
 
-    ShaderProperty _envMapProperty;
-    ShaderProperty _diffuseSHProperty;
-    ShaderProperty _diffuseTextureProperty;
-    ShaderProperty _specularTextureProperty;
-    ShaderProperty _brdfTextureProperty;
+    VkSamplerCreateInfo sampler_create_info_;
+    std::unique_ptr<core::Sampler> sampler_{nullptr};
 
-    Scene *_scene;
-    EnvMapLight _envMapLight;
+    EnvMapLight env_map_light_;
+    const std::string env_map_property_;
 
-    DiffuseMode _diffuseMode = DiffuseMode::SolidColor;
-    SphericalHarmonics3 _diffuseSphericalHarmonics;
-    std::array<float, 27> _shArray{};
-    SampledTextureCubePtr _diffuseTexture{nullptr};
+    SphericalHarmonics3 diffuse_spherical_harmonics_;
+    std::array<float, 27> sh_array_{};
+    const std::string diffuse_sh_property_;
 
-    bool _specularTextureDecodeRGBM{false};
-    SampledTextureCubePtr _specularReflection{nullptr};
+    bool specular_texture_decode_rgbm_{false};
+    std::shared_ptr<Texture> specular_reflection_{nullptr};
+    const std::string specular_texture_property_;
 
-    SampledTexture2DPtr _brdfLutTexture{nullptr};
+    Scene *scene_{nullptr};
+    DiffuseMode diffuse_mode_ = DiffuseMode::SOLID_COLOR;
 };
 
 }// namespace vox

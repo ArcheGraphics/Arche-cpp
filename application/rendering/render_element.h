@@ -6,21 +6,31 @@
 
 #pragma once
 
+#include <memory>
+
 namespace vox {
+class Renderer;
+class Mesh;
+class SubMesh;
+class Material;
+
 /**
  * Render element.
  */
 struct RenderElement {
+    using MeshPtr = std::shared_ptr<Mesh>;
+    using MaterialPtr = std::shared_ptr<Material>;
+
     /** Render component. */
     Renderer *renderer;
     /** Mesh. */
     MeshPtr mesh;
     /** Sub mesh. */
-    const SubMesh *subMesh;
+    const SubMesh *sub_mesh;
     /** Material. */
     MaterialPtr material;
 
-    RenderElement(Renderer *renderer, MeshPtr mesh, const SubMesh *subMesh, MaterialPtr material);
+    RenderElement(Renderer *renderer, MeshPtr mesh, const SubMesh *sub_mesh, MaterialPtr material);
 };
 
 }// namespace vox

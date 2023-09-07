@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "light.h"
 #include "math/color.h"
-#include "shader_common.h"
+#include "light/light.h"
 
 namespace vox {
 /**
@@ -16,21 +15,34 @@ namespace vox {
  */
 class SpotLight : public Light {
 public:
-    /** Light color. */
-    Color color = Color(1, 1, 1, 1);
-    /** Light intensity. */
-    float intensity = 1.0;
-    /** Defines a distance cutoff at which the light's intensity must be considered zero. */
-    float distance = 5;
-    /** Angle, in radians, from centre of spotlight where falloff begins. */
-    float angle = M_PI / 6;
-    /** Angle, in radians, from falloff begins to ends. */
-    float penumbra = M_PI / 12;
+    struct SpotLightData {
+        Vector3F color;
+        float color_pad;// for align
+        Vector3F position;
+        float position_pad;// for align
+        Vector3F direction;
+        float distance;
+        float angle_cos;
+        float penumbra_cos;
+        float pad; // for align
+        float pad2;// for align
+    };
 
-    SpotLight(Entity *entity);
+    /** Light color. */
+    Color color_ = Color(1, 1, 1, 1);
+    /** Light intensity. */
+    float intensity_ = 1.0;
+    /** Defines a distance cutoff at which the light's intensity must be considered zero. */
+    float distance_ = 5;
+    /** Angle, in radians, from centre of spotlight where falloff begins. */
+    float angle_ = M_PI / 6;
+    /** Angle, in radians, from falloff begins to ends. */
+    float penumbra_ = M_PI / 12;
+
+    explicit SpotLight(Entity *entity);
 
 public:
-    Matrix4x4F shadowProjectionMatrix() override;
+    Matrix4x4F get_shadow_projection_matrix() override;
 
 private:
     friend class LightManager;
@@ -38,14 +50,14 @@ private:
     /**
      * Mount to the current Scene.
      */
-    void _onEnable() override;
+    void on_enable() override;
 
     /**
      * Unmount from the current Scene.
      */
-    void _onDisable() override;
+    void on_disable() override;
 
-    void _updateShaderData(SpotLightData &shaderData);
+    void update_shader_data(SpotLightData &shader_data);
 };
 
 }// namespace vox

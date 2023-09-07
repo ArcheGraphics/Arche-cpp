@@ -10,7 +10,7 @@
 namespace vox {
 void ShaderPool::initialization() {
     Shader::create("unlit", "vertex_unlit", "fragment_unlit");
-    Shader::create("blinn-phong", "vertex_blinn_phong", "fragment_blinn_phong", "deferred_fragment_blinn_phong");
+    Shader::create("blinn-phong", "vertex_blinn_phong", "fragment_blinn_phong");
     Shader::create("particle-shader", "vertex_particle", "fragment_particle");
     Shader::create("pbr", "vertex_blinn_phong", "fragment_pbr");
     Shader::create("pbr-specular", "vertex_blinn_phong", "fragment_pbr");

@@ -6,12 +6,14 @@
 
 #include "render_pass.h"
 #include "framework/common/metal_helpers.h"
+#include "framework/common/logging.h"
 
 namespace vox {
 RenderPass::RenderPass(MTL::Library &library,
-                       MTL::RenderPassDescriptor &desc) : _library(library),
-                                                          _desc(desc),
-                                                          _resourceCache(library.device()) {
+                       MTL::RenderPassDescriptor &desc)
+    : _library(library),
+      _desc(desc),
+      _resourceCache(library.device()) {
 }
 
 const MTL::RenderPassDescriptor &RenderPass::renderPassDescriptor() const {
@@ -73,7 +75,7 @@ void RenderPass::addParentPass(const std::string &name, RenderPass *pass) {
     if (iter == _parentPass.end()) {
         _parentPass[name] = pass;
     } else {
-        LOG(WARNING) << "already exists\n";
+        LOGW("already exists")
     }
 }
 
@@ -84,7 +86,7 @@ RenderPass *RenderPass::removeParentPass(const std::string &name) {
         _parentPass.erase(iter);
         return pass;
     } else {
-        LOG(WARNING) << "can't find pass\n";
+        LOGW("can't find pass")
         return nullptr;
     }
 }

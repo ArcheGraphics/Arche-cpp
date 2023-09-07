@@ -4,33 +4,27 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "point_light.h"
-#include "ecs/scene.h"
+#include "light/point_light.h"
+
 #include "math/matrix_utils.h"
-#include "light_manager.h"
+#include "ecs/entity.h"
+#include "light/light_manager.h"
 
 namespace vox {
-PointLight::PointLight(Entity *entity) : Light(entity) {
+PointLight::PointLight(Entity *entity) : Light(entity) {}
+
+void PointLight::on_enable() { LightManager::get_singleton().attach_point_light(this); }
+
+void PointLight::on_disable() { LightManager::get_singleton().detach_point_light(this); }
+
+void PointLight::update_shader_data(PointLight::PointLightData &shader_data) {
+    shader_data.color = Vector3F(color_.r * intensity_, color_.g * intensity_, color_.b * intensity_);
+    auto position = get_entity()->transform->get_world_position();
+    shader_data.position = Vector3F(position.x, position.y, position.z);
+    shader_data.distance = distance_;
 }
 
-void PointLight::_onEnable() {
-    LightManager::getSingleton().attachPointLight(this);
-}
-
-void PointLight::_onDisable() {
-    LightManager::getSingleton().detachPointLight(this);
-}
-
-void PointLight::_updateShaderData(PointLightData &shaderData) {
-    shaderData.color = simd_make_float3(color.r * intensity, color.g * intensity, color.b * intensity);
-    auto position = entity()->transform->worldPosition();
-    shaderData.position = simd_make_float3(position.x, position.y, position.z);
-    shaderData.distance = distance;
-}
-
-//MARK: - Shadow
-Matrix4x4F PointLight::shadowProjectionMatrix() {
-    return makepPerspective<float>(degreesToRadians(120), 1, 0.1, 100);
-}
+// MARK: - Shadow
+Matrix4x4F PointLight::get_shadow_projection_matrix() { return makePerspective<float>(degreesToRadians(120.f), 1, 0.1, 100); }
 
 }// namespace vox

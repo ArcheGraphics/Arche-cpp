@@ -5,6 +5,7 @@
 //  property of any third parties.
 
 #include "shader.h"
+#include "framework/common/logging.h"
 
 namespace vox {
 std::unordered_map<std::string, std::unique_ptr<Shader>> Shader::_shaderMap = {};
@@ -31,7 +32,7 @@ Shader *Shader::create(const std::string &name,
     auto iter = Shader::_shaderMap.find(name);
 
     if (iter != Shader::_shaderMap.end()) {
-        LOG(ERROR) << ("Shader named" + name + "already exists.") << std::endl;
+        LOGE("Shader named {} already exists.", name);
     }
     auto shader = std::make_unique<Shader>(name, vertexSource, fragmentSource);
     auto shaderPtr = shader.get();

@@ -11,19 +11,20 @@
 namespace vox {
 bool Subpass::_compareFromNearToFar(const RenderElement &a, const RenderElement &b) {
     return (a.material->renderQueueType < b.material->renderQueueType) ||
-           (a.renderer->distanceForSort() < b.renderer->distanceForSort());
+           (a.renderer->get_distance_for_sort() < b.renderer->get_distance_for_sort());
 }
 
 bool Subpass::_compareFromFarToNear(const RenderElement &a, const RenderElement &b) {
     return (a.material->renderQueueType < b.material->renderQueueType) ||
-           (b.renderer->distanceForSort() < a.renderer->distanceForSort());
+           (b.renderer->get_distance_for_sort() < a.renderer->get_distance_for_sort());
 }
 
 Subpass::Subpass(RenderContext *context,
                  Scene *scene,
-                 Camera *camera) : _context(context),
-                                   _scene(scene),
-                                   _camera(camera) {
+                 Camera *camera)
+    : _context(context),
+      _scene(scene),
+      _camera(camera) {
 }
 
 void Subpass::setRenderPass(RenderPass *pass) {
@@ -45,15 +46,15 @@ void Subpass::uploadUniforms(MTL::RenderCommandEncoder &commandEncoder,
 
 void Subpass::process(const ShaderUniform &uniform, const std::any &a,
                       MTL::RenderCommandEncoder &encoder) {
-    const auto &any_uploader = uniform.type == MTL::FunctionTypeVertex ?
-                                   _scene->vertexUploader() :
-                                   _scene->fragmentUploader();
-
-    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
-        it->second(a, uniform.location, encoder);
-    } else {
-        LOG(INFO) << "Unregistered type " << std::quoted(a.type().name());
-    }
+//    const auto &any_uploader = uniform.type == MTL::FunctionTypeVertex ?
+//                                   _scene->vertexUploader() :
+//                                   _scene->fragmentUploader();
+//
+//    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
+//        it->second(a, uniform.location, encoder);
+//    } else {
+//        LOG(INFO) << "Unregistered type " << std::quoted(a.type().name());
+//    }
 }
 
 }// namespace vox

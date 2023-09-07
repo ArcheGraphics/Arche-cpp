@@ -4,56 +4,60 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "ambient_light.h"
-#include "shader/shader.h"
+#include "light/ambient_light.h"
+
 #include "ecs/scene.h"
+#include "shader/internal_variant_name.h"
 
 namespace vox {
-AmbientLight::AmbientLight(Scene *value) : _envMapProperty(Shader::createProperty("u_envMapLight", ShaderDataGroup::Scene)),
-                                           _diffuseSHProperty(Shader::createProperty("u_env_sh", ShaderDataGroup::Scene)),
-                                           _diffuseTextureProperty(Shader::createProperty("u_env_diffuseTexture", ShaderDataGroup::Scene)),
-                                           _specularTextureProperty(Shader::createProperty("u_env_specularTexture", ShaderDataGroup::Scene)),
-                                           _brdfTextureProperty(Shader::createProperty("u_env_brdfTexture", ShaderDataGroup::Scene)) {
-    _scene = value;
+AmbientLight::AmbientLight()
+    : env_map_property_("envMapLight"),
+      diffuse_sh_property_("envSH"),
+      specular_texture_property_("env_specularTexture"),
+      sampler_create_info_{VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO} {}
+
+void AmbientLight::set_scene(Scene *value) {
+    scene_ = value;
     if (!value) return;
 
-    _envMapLight.diffuse = simd_make_float3(0.212, 0.227, 0.259);
-    _envMapLight.diffuseIntensity = 1.0;
-    _envMapLight.specularIntensity = 1.0;
-    _scene->shaderData.setData(AmbientLight::_envMapProperty, _envMapLight);
-    // _scene->shaderData.setSampledTexure(AmbientLight::_brdfTextureProperty,
-    //                           value->engine()->resourceLoader()->createBRDFLookupTable());
+    // Create a default sampler
+    sampler_create_info_.magFilter = VK_FILTER_LINEAR;
+    sampler_create_info_.minFilter = VK_FILTER_LINEAR;
+    sampler_create_info_.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sampler_create_info_.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info_.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info_.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info_.mipLodBias = 0.0f;
+    sampler_create_info_.compareOp = VK_COMPARE_OP_NEVER;
+    sampler_create_info_.minLod = 0.0f;
+    // Max level-of-detail should match mip level count
+    sampler_create_info_.maxLod = std::numeric_limits<float>::max();
+    sampler_create_info_.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    sampler_create_info_.maxAnisotropy = 1;
+    sampler_create_info_.unnormalizedCoordinates = false;
+    sampler_ = std::make_unique<core::Sampler>(scene_->get_device(), sampler_create_info_);
+
+    env_map_light_.diffuse = Vector3F(0.212, 0.227, 0.259);
+    env_map_light_.diffuse_intensity = 1.0;
+    env_map_light_.specular_intensity = 1.0;
+    scene_->shader_data.set_data(env_map_property_, env_map_light_);
 }
 
-void AmbientLight::registerUploader(Scene *scene) {
-    _scene->registerFragmentUploader<EnvMapLight>([](const EnvMapLight &x, size_t location,
-                                                     MTL::RenderCommandEncoder &encoder) {
-        encoder.setFragmentBytes(&x, sizeof(EnvMapLight), location);
-    });
+DiffuseMode AmbientLight::get_diffuse_mode() { return diffuse_mode_; }
 
-    _scene->registerFragmentUploader<std::array<float, 27>>([](const std::array<float, 27> &x, size_t location,
-                                                               MTL::RenderCommandEncoder &encoder) {
-        encoder.setFragmentBytes(&x, sizeof(std::array<float, 27>), location);
-    });
-}
-
-DiffuseMode AmbientLight::diffuseMode() const {
-    return _diffuseMode;
-}
-
-void AmbientLight::setDiffuseMode(DiffuseMode value) {
-    _diffuseMode = value;
-    if (!_scene) return;
+void AmbientLight::set_diffuse_mode(DiffuseMode value) {
+    diffuse_mode_ = value;
+    if (!scene_) return;
 
     switch (value) {
-        case DiffuseMode::SphericalHarmonics:
-            _scene->shaderData.disableMacro(HAS_DIFFUSE_ENV);
-            _scene->shaderData.enableMacro(HAS_SH);
+        case DiffuseMode::SPHERICAL_HARMONICS:
+            scene_->shader_data.remove_define(HAS_DIFFUSE_ENV);
+            scene_->shader_data.add_define(HAS_SH);
             break;
 
-        case DiffuseMode::Texture:
-            _scene->shaderData.disableMacro(HAS_SH);
-            _scene->shaderData.enableMacro(HAS_DIFFUSE_ENV);
+        case DiffuseMode::TEXTURE:
+            scene_->shader_data.remove_define(HAS_SH);
+            scene_->shader_data.add_define(HAS_DIFFUSE_ENV);
             break;
 
         default:
@@ -61,103 +65,68 @@ void AmbientLight::setDiffuseMode(DiffuseMode value) {
     }
 }
 
-Color AmbientLight::diffuseSolidColor() const {
-    return Color(_envMapLight.diffuse.x, _envMapLight.diffuse.y, _envMapLight.diffuse.z);
+Color AmbientLight::get_diffuse_solid_color() const {
+    return {env_map_light_.diffuse.x, env_map_light_.diffuse.y, env_map_light_.diffuse.z};
 }
 
-void AmbientLight::setDiffuseSolidColor(const Color &value) {
-    _envMapLight.diffuse = simd_make_float3(value.r, value.g, value.b);
-    _scene->shaderData.setData(AmbientLight::_envMapProperty, _envMapLight);
+void AmbientLight::set_diffuse_solid_color(const Color &value) {
+    env_map_light_.diffuse = Vector3F(value.r, value.g, value.b);
+    scene_->shader_data.set_data(env_map_property_, env_map_light_);
 }
 
-const SphericalHarmonics3 &AmbientLight::diffuseSphericalHarmonics() const {
-    return _diffuseSphericalHarmonics;
+const SphericalHarmonics3 &AmbientLight::get_diffuse_spherical_harmonics() { return diffuse_spherical_harmonics_; }
+
+void AmbientLight::set_diffuse_spherical_harmonics(const SphericalHarmonics3 &value) {
+    diffuse_spherical_harmonics_ = value;
+    if (!scene_) return;
+
+    auto sh = pre_compute_sh(value);
+    scene_->shader_data.set_data(diffuse_sh_property_, sh);
 }
 
-void AmbientLight::setDiffuseSphericalHarmonics(const SphericalHarmonics3 &value) {
-    _diffuseSphericalHarmonics = value;
-    if (!_scene) return;
+float AmbientLight::get_diffuse_intensity() const { return env_map_light_.diffuse_intensity; }
 
-    _scene->shaderData.setData(AmbientLight::_diffuseSHProperty, _preComputeSH(value));
+void AmbientLight::set_diffuse_intensity(float value) {
+    env_map_light_.diffuse_intensity = value;
+    if (!scene_) return;
+
+    scene_->shader_data.set_data(env_map_property_, env_map_light_);
 }
 
-SampledTextureCubePtr AmbientLight::diffuseTexture() const {
-    return _diffuseTexture;
-}
+// MARK: - Specular
+bool AmbientLight::get_specular_texture_decode_rgbm() const { return specular_texture_decode_rgbm_; }
 
-void AmbientLight::setDiffuseTexture(const SampledTextureCubePtr &value) {
-    _diffuseTexture = value;
-    if (!_scene) return;
+void AmbientLight::set_specular_texture_decode_rgbm(bool value) {}
 
-    auto &shaderData = _scene->shaderData;
+std::shared_ptr<Texture> AmbientLight::get_specular_texture() { return specular_reflection_; }
+
+void AmbientLight::set_specular_texture(const std::shared_ptr<Texture> &value) {
+    specular_reflection_ = value;
+    if (!scene_) return;
+
+    auto &shader_data = scene_->shader_data;
 
     if (value) {
-        shaderData.setSampledTexure(AmbientLight::_diffuseTextureProperty, _diffuseTexture);
-        shaderData.enableMacro(HAS_DIFFUSE_ENV);
+        shader_data.set_sampled_texture(specular_texture_property_,
+                                        specular_reflection_->get_vk_image_view(VK_IMAGE_VIEW_TYPE_CUBE), sampler_.get());
+        env_map_light_.mip_map_level = static_cast<uint32_t>(value->get_mipmaps().size() - 1);
+        scene_->shader_data.set_data(env_map_property_, env_map_light_);
+        shader_data.add_define(HAS_SPECULAR_ENV);
     } else {
-        shaderData.disableMacro(HAS_DIFFUSE_ENV);
+        shader_data.remove_define(HAS_SPECULAR_ENV);
     }
 }
 
-float AmbientLight::diffuseIntensity() {
-    return _envMapLight.diffuseIntensity;
+float AmbientLight::get_specular_intensity() const { return env_map_light_.specular_intensity; }
+
+void AmbientLight::set_specular_intensity(float value) {
+    env_map_light_.specular_intensity = value;
+    if (!scene_) return;
+
+    scene_->shader_data.set_data(env_map_property_, env_map_light_);
 }
 
-void AmbientLight::setDiffuseIntensity(float value) {
-    _envMapLight.diffuseIntensity = value;
-    if (!_scene) return;
-
-    _scene->shaderData.setData(AmbientLight::_envMapProperty, _envMapLight);
-}
-
-//MARK: - Specular
-bool AmbientLight::specularTextureDecodeRGBM() const {
-    return _specularTextureDecodeRGBM;
-}
-
-void AmbientLight::setSpecularTextureDecodeRGBM(bool value) {
-}
-
-SampledTextureCubePtr AmbientLight::specularTexture() const {
-    return _specularReflection;
-}
-
-void AmbientLight::setSpecularTexture(const SampledTextureCubePtr &value) {
-    _specularReflection = value;
-    if (!_scene) return;
-
-    auto &shaderData = _scene->shaderData;
-
-    if (value) {
-        shaderData.setSampledTexure(AmbientLight::_specularTextureProperty, _specularReflection);
-        _envMapLight.mipMapLevel = static_cast<int>(value->mipmapCount() - 1);
-        _scene->shaderData.setData(AmbientLight::_envMapProperty, _envMapLight);
-        shaderData.enableMacro(HAS_SPECULAR_ENV);
-    } else {
-        shaderData.disableMacro(HAS_SPECULAR_ENV);
-    }
-}
-
-float AmbientLight::specularIntensity() const {
-    return _envMapLight.specularIntensity;
-}
-
-void AmbientLight::setSpecularIntensity(float value) {
-    _envMapLight.specularIntensity = value;
-    if (!_scene) return;
-
-    _scene->shaderData.setData(AmbientLight::_envMapProperty, _envMapLight);
-}
-
-//MARK: - BRDF Texture
-SampledTexture2DPtr AmbientLight::brdfTexture() const {
-    return _brdfLutTexture;
-}
-
-void AmbientLight::setBRDFTexture(const SampledTexture2DPtr &value) {
-}
-
-std::array<float, 27> AmbientLight::_preComputeSH(const SphericalHarmonics3 &sh) {
+std::array<float, 27> AmbientLight::pre_compute_sh(const SphericalHarmonics3 &sh) {
     /**
      * Basis constants
      *
@@ -183,39 +152,39 @@ std::array<float, 27> AmbientLight::_preComputeSH(const SphericalHarmonics3 &sh)
      */
 
     const auto &src = sh.coefficients();
-    std::array<float, 27> out;
+    std::array<float, 27> out{};
     // l0
-    out[0] = src[0] * 0.886227;// kernel0 * basis0 = 0.886227
-    out[1] = src[1] * 0.886227;
-    out[2] = src[2] * 0.886227;
+    out[0] = src[0] * 0.886227f;// kernel0 * basis0 = 0.886227
+    out[1] = src[1] * 0.886227f;
+    out[2] = src[2] * 0.886227f;
 
     // l1
-    out[3] = src[3] * -1.023327;// kernel1 * basis1 = -1.023327;
-    out[4] = src[4] * -1.023327;
-    out[5] = src[5] * -1.023327;
-    out[6] = src[6] * 1.023327;// kernel1 * basis2 = 1.023327
-    out[7] = src[7] * 1.023327;
-    out[8] = src[8] * 1.023327;
-    out[9] = src[9] * -1.023327;// kernel1 * basis3 = -1.023327
-    out[10] = src[10] * -1.023327;
-    out[11] = src[11] * -1.023327;
+    out[3] = src[3] * -1.023327f;// kernel1 * basis1 = -1.023327;
+    out[4] = src[4] * -1.023327f;
+    out[5] = src[5] * -1.023327f;
+    out[6] = src[6] * 1.023327f;// kernel1 * basis2 = 1.023327
+    out[7] = src[7] * 1.023327f;
+    out[8] = src[8] * 1.023327f;
+    out[9] = src[9] * -1.023327f;// kernel1 * basis3 = -1.023327
+    out[10] = src[10] * -1.023327f;
+    out[11] = src[11] * -1.023327f;
 
     // l2
-    out[12] = src[12] * 0.858086;// kernel2 * basis4 = 0.858086
-    out[13] = src[13] * 0.858086;
-    out[14] = src[14] * 0.858086;
-    out[15] = src[15] * -0.858086;// kernel2 * basis5 = -0.858086
-    out[16] = src[16] * -0.858086;
-    out[17] = src[17] * -0.858086;
-    out[18] = src[18] * 0.247708;// kernel2 * basis6 = 0.247708
-    out[19] = src[19] * 0.247708;
-    out[20] = src[20] * 0.247708;
-    out[21] = src[21] * -0.858086;// kernel2 * basis7 = -0.858086
-    out[22] = src[22] * -0.858086;
-    out[23] = src[23] * -0.858086;
-    out[24] = src[24] * 0.429042;// kernel2 * basis8 = 0.429042
-    out[25] = src[25] * 0.429042;
-    out[26] = src[26] * 0.429042;
+    out[12] = src[12] * 0.858086f;// kernel2 * basis4 = 0.858086
+    out[13] = src[13] * 0.858086f;
+    out[14] = src[14] * 0.858086f;
+    out[15] = src[15] * -0.858086f;// kernel2 * basis5 = -0.858086
+    out[16] = src[16] * -0.858086f;
+    out[17] = src[17] * -0.858086f;
+    out[18] = src[18] * 0.247708f;// kernel2 * basis6 = 0.247708
+    out[19] = src[19] * 0.247708f;
+    out[20] = src[20] * 0.247708f;
+    out[21] = src[21] * -0.858086f;// kernel2 * basis7 = -0.858086
+    out[22] = src[22] * -0.858086f;
+    out[23] = src[23] * -0.858086f;
+    out[24] = src[24] * 0.429042f;// kernel2 * basis8 = 0.429042
+    out[25] = src[25] * 0.429042f;
+    out[26] = src[26] * 0.429042f;
 
     return out;
 }

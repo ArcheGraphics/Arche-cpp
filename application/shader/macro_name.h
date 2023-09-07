@@ -4,8 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#ifndef macro_name_h
-#define macro_name_h
+#pragma once
 
 // int have no verb, other will use:
 // HAS_ : Resouce
@@ -18,17 +17,17 @@ enum MacroName {
     HAS_NORMAL,
     HAS_TANGENT,
     HAS_VERTEXCOLOR,
-    
+
     // Blend Shape
     HAS_BLENDSHAPE,
     HAS_BLENDSHAPE_NORMAL,
     HAS_BLENDSHAPE_TANGENT,
-    
+
     // Skin
     HAS_SKIN,
     HAS_JOINT_TEXTURE,
     JOINTS_COUNT,
-    
+
     // Material
     NEED_ALPHA_CUTOFF,
     NEED_WORLDPOS,
@@ -45,24 +44,24 @@ enum MacroName {
     HAS_SPECULARGLOSSINESSMAP,
     HAS_METALROUGHNESSMAP,
     IS_METALLIC_WORKFLOW,
-    
+
     // Light
     DIRECT_LIGHT_COUNT,
     POINT_LIGHT_COUNT,
     SPOT_LIGHT_COUNT,
     NEED_FORWARD_PLUS,
-    
+
     // Enviroment
     HAS_SH,
     HAS_SPECULAR_ENV,
     HAS_DIFFUSE_ENV,
-    
+
     // Particle Render
     NEED_PARTICLE_SCATTERING,
     NEED_PARTICLE_VECTOR_FIELD,
     NEED_PARTICLE_CURL_NOISE,
     NEED_PARTICLE_VELOCITY_CONTROL,
-    
+
     HAS_PARTICLE_TEXTURE,
     NEED_ROTATE_TO_VELOCITY,
     NEED_USE_ORIGIN_COLOR,
@@ -70,12 +69,10 @@ enum MacroName {
     NEED_FADE_IN,
     NEED_FADE_OUT,
     IS_2D,
-    
+
     // Shadow
     SHADOW_MAP_COUNT,
     CUBE_SHADOW_MAP_COUNT,
-    
+
     TOTAL_COUNT,
 };
-
-#endif /* macro_name_h */

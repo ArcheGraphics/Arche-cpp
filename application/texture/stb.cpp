@@ -12,7 +12,7 @@
 #include "framework/common/helpers.h"
 
 namespace vox {
-Stb::Stb(const std::vector<uint8_t> &data, bool flipY) : Image{} {
+Stb::Stb(const std::vector<uint8_t> &data, bool flipY) : Texture{} {
     int width;
     int height;
     int comp;
@@ -30,13 +30,13 @@ Stb::Stb(const std::vector<uint8_t> &data, bool flipY) : Image{} {
         throw std::runtime_error{std::string("Failed to load: ") + stbi_failure_reason()};
     }
 
-    setData(raw_data, width * height * req_comp);
+    set_data(raw_data, width * height * req_comp);
     stbi_image_free(raw_data);
 
-    setFormat(MTL::PixelFormatRGBA8Unorm);
-    setWidth(to_u32(width));
-    setHeight(to_u32(height));
-    setDepth(1u);
+    set_format(MTL::PixelFormatRGBA8Unorm);
+    set_width(to_u32(width));
+    set_height(to_u32(height));
+    set_depth(1u);
 }
 
 }// namespace vox

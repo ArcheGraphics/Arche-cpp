@@ -6,6 +6,7 @@
 
 #include "compute_pass.h"
 #include "framework/common/metal_helpers.h"
+#include "framework/common/logging.h"
 
 namespace vox {
 ComputePass::ComputePass(MTL::Library &library, Scene *scene, const std::string &kernel) : _library(library),
@@ -49,8 +50,7 @@ void ComputePass::attachShaderData(ShaderData *data) {
     if (iter == _data.end()) {
         _data.push_back(data);
     } else {
-        LOG(ERROR) << "ShaderData already attached." << std::endl;
-        ;
+        LOGE("ShaderData already attached.")
     }
 }
 
@@ -95,13 +95,13 @@ void ComputePass::uploadUniforms(MTL::ComputeCommandEncoder &commandEncoder,
 
 void ComputePass::process(const ShaderUniform &uniform, const std::any &a,
                           MTL::ComputeCommandEncoder &encoder) {
-    const auto &any_uploader = _scene->computeUploader();
-
-    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
-        it->second(a, uniform.location, encoder);
-    } else {
-        LOG(INFO) << "Unregistered type " << std::quoted(a.type().name());
-    }
+//    const auto &any_uploader = _scene->computeUploader();
+//
+//    if (const auto it = any_uploader.find(std::type_index(a.type())); it != any_uploader.cend()) {
+//        it->second(a, uniform.location, encoder);
+//    } else {
+//        LOGI("Unregistered type {}", std::quoted(a.type().name()));
+//    }
 }
 
 }// namespace vox

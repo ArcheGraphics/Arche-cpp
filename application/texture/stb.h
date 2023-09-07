@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "image.h"
+#include "texture/texture.h"
 
 namespace vox {
-class Stb : public Image {
+class Stb : public Texture {
 public:
     Stb(const std::vector<uint8_t> &data, bool flipY);
 
