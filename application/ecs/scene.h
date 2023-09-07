@@ -14,12 +14,10 @@
 #include <iomanip>
 #include <Metal/Metal.hpp>
 
-#include "scene_forward.h"
 #include "components_manager.h"
-#include "physics/physics_manager.h"
-#include "lighting/ambient_light.h"
+#include "light/ambient_light.h"
 #include "shader/shader_data.h"
-#include "background.h"
+#include "base/background.h"
 
 namespace vox {
 /// @brief A collection of entities organized in a tree structure.
@@ -30,7 +28,6 @@ public:
     std::string name;
 
     ComponentsManager _componentsManager;
-    physics::PhysicsManager _physicsManager;
 
     /** The background of the scene. */
     Background background = Background();

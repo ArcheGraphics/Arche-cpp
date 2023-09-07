@@ -6,29 +6,29 @@
 
 #include "light_manager.h"
 #include "shader/shader.h"
-#include "scene.h"
-#include "camera.h"
-#include "metal_helpers.h"
-#include <glog/logging.h>
+#include "ecs/scene.h"
+#include "components/camera.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
-LightManager *LightManager::getSingletonPtr(void) {
+LightManager *LightManager::getSingletonPtr() {
     return msSingleton;
 }
 
-LightManager &LightManager::getSingleton(void) {
+LightManager &LightManager::getSingleton() {
     assert(msSingleton);
     return (*msSingleton);
 }
 
-LightManager::LightManager(MTL::Library &library, Scene *scene) : _library(library),
-                                                                  _scene(scene),
-                                                                  _pointLightProperty(Shader::createProperty("u_pointLight", ShaderDataGroup::Scene)),
-                                                                  _spotLightProperty(Shader::createProperty("u_spotLight", ShaderDataGroup::Scene)),
-                                                                  _directLightProperty(Shader::createProperty("u_directLight", ShaderDataGroup::Scene)),
-                                                                  _forwardPlusProp(Shader::createProperty("u_cluster_uniform", ShaderDataGroup::Scene)),
-                                                                  _clustersProp(Shader::createProperty("u_clusters", ShaderDataGroup::Compute)),
-                                                                  _clusterLightsProp(Shader::createProperty("u_clusterLights", ShaderDataGroup::Scene)) {
+LightManager::LightManager(MTL::Library &library, Scene *scene)
+    : _library(library),
+      _scene(scene),
+      _pointLightProperty(Shader::createProperty("u_pointLight", ShaderDataGroup::Scene)),
+      _spotLightProperty(Shader::createProperty("u_spotLight", ShaderDataGroup::Scene)),
+      _directLightProperty(Shader::createProperty("u_directLight", ShaderDataGroup::Scene)),
+      _forwardPlusProp(Shader::createProperty("u_cluster_uniform", ShaderDataGroup::Scene)),
+      _clustersProp(Shader::createProperty("u_clusters", ShaderDataGroup::Compute)),
+      _clusterLightsProp(Shader::createProperty("u_clusterLights", ShaderDataGroup::Scene)) {
     Shader::create("cluster_debug", "vertex_unlit", "fragment_cluster_debug");
 
     auto &device = _scene->device();

@@ -7,8 +7,7 @@
 #include "compute_pipeline_state.h"
 #include "shader/shader_data_group.h"
 #include "shader/shader.h"
-#include "metal_helpers.h"
-#include <glog/logging.h>
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 ComputePipelineState::ComputePipelineState(MTL::Device *device,

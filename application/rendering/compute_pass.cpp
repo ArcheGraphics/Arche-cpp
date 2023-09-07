@@ -5,8 +5,7 @@
 //  property of any third parties.
 
 #include "compute_pass.h"
-#include <glog/logging.h>
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 ComputePass::ComputePass(MTL::Library &library, Scene *scene, const std::string &kernel) : _library(library),

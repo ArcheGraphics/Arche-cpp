@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "component.h"
-#include "matrix4x4.h"
+#include "ecs/component.h"
+#include "math/matrix4x4.h"
 
 namespace vox {
 /**

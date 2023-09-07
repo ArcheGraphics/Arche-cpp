@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "component.h"
+#include "ecs/component.h"
 #include "shader/shader_data.h"
 #include "rendering/render_element.h"
-#include "bounding_box3.h"
-#include "matrix4x4.h"
-#include "update_flag.h"
+#include "math/bounding_box3.h"
+#include "math/matrix4x4.h"
+#include "base/update_flag.h"
 
 namespace vox {
 /**

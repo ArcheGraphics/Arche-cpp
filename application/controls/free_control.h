@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "../script.h"
+#include "components/script.h"
 #include "spherical.h"
-#include "vector3.h"
+#include "math/vector3.h"
 #include <array>
 
 namespace vox {

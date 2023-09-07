@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "sampled_texturecube.h"
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 #include <array>
 
 namespace vox {

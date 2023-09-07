@@ -7,7 +7,7 @@
 #pragma once
 
 #include "model_mesh.h"
-#include "vector3.h"
+#include "math/vector3.h"
 
 namespace vox {
 /**

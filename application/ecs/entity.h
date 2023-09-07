@@ -11,8 +11,8 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "layer.h"
-#include "transform.h"
+#include "base/layer.h"
+#include "components/transform.h"
 
 //#include "scene_graph/components/transform.h"
 

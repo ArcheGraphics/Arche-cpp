@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "shader_macro_collection.h"
-#include "std_helpers.h"
-#include "metal_helpers.h"
+#include "framework/common/helpers.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 std::unordered_map<MacroName, std::pair<int, MTL::DataType>> ShaderMacroCollection::defaultValue = {

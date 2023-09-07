@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "graphics/mesh.h"
-#include "vector2.h"
-#include "vector3.h"
-#include "vector4.h"
-#include "color.h"
+#include "mesh/mesh.h"
+#include "math/vector2.h"
+#include "math/vector3.h"
+#include "math/vector4.h"
+#include "math/color.h"
 
 namespace vox {
 struct ValueChanged {

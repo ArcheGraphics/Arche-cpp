@@ -8,8 +8,7 @@
 #include "scene.h"
 
 #include "component.h"
-#include "script.h"
-//#include "components/transform.h"
+#include "components/script.h"
 
 namespace vox {
 EntityPtr Entity::_findChildByName(Entity *root, const std::string &name) {

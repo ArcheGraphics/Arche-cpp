@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "renderer.h"
-#include "entity.h"
-#include "scene.h"
+#include "ecs/entity.h"
+#include "ecs/scene.h"
 #include "shader/shader.h"
 #include "material/material.h"
 

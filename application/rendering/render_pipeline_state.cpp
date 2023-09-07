@@ -5,9 +5,8 @@
 //  property of any third parties.
 
 #include "render_pipeline_state.h"
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 #include "shader/shader.h"
-#include <glog/logging.h>
 
 namespace vox {
 RenderPipelineState::RenderPipelineState(MTL::Device *device, const MTL::RenderPipelineDescriptor &descriptor) : _device(device) {

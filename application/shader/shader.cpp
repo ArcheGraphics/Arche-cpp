@@ -5,7 +5,6 @@
 //  property of any third parties.
 
 #include "shader.h"
-#include <glog/logging.h>
 
 namespace vox {
 std::unordered_map<std::string, std::unique_ptr<Shader>> Shader::_shaderMap = {};

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "sub_mesh.h"
-#include "bounding_box3.h"
-#include "update_flag_manager.h"
+#include "math/bounding_box3.h"
+#include "base/update_flag_manager.h"
 #include <string>
 
 namespace vox {

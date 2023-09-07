@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "scene_forward.h"
 #include <memory>
 #include <string>
 #include <typeindex>

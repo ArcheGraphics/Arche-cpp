@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "scene_forward.h"
-
 namespace vox {
 /**
  * Render element.

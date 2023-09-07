@@ -6,8 +6,8 @@
 
 #include "resource_cache.h"
 #include <Metal/Metal.hpp>
-#include "std_helpers.h"
-#include "metal_helpers.h"
+#include "framework/common/helpers.h"
+#include "framework/common/metal_helpers.h"
 
 //MARK: - ResourceCache
 namespace vox {

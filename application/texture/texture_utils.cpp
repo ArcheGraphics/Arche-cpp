@@ -5,8 +5,7 @@
 //  property of any third parties.
 
 #include "texture_utils.h"
-#include "metal_helpers.h"
-#include <glog/logging.h>
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 void TextureUtils::buildTextureArray(const std::vector<std::shared_ptr<MTL::Texture>>::iterator &texturesBegin,

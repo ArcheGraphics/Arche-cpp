@@ -5,12 +5,10 @@
 //  property of any third parties.
 
 #include "components_manager.h"
-#include "script.h"
-#include "renderer.h"
+#include "components/script.h"
+#include "components/renderer.h"
 #include "entity.h"
-#include "camera.h"
-#include "animator.h"
-#include "scene_animator.h"
+#include "components/camera.h"
 
 namespace vox {
 void ComponentsManager::addOnStartScript(Script *script) {
@@ -191,41 +189,6 @@ std::vector<Component *> ComponentsManager::getActiveChangedTempList() {
 void ComponentsManager::putActiveChangedTempList(std::vector<Component *> &componentContainer) {
     componentContainer.clear();
     _componentsContainerPool.push_back(componentContainer);
-}
-
-//MARK: -
-void ComponentsManager::addOnUpdateAnimators(Animator *animator) {
-    animator->_onUpdateIndex = _onUpdateAnimators.size();
-    _onUpdateAnimators.push_back(animator);
-}
-
-void ComponentsManager::removeOnUpdateAnimators(Animator *animator) {
-    _onUpdateAnimators.erase(_onUpdateAnimators.begin() + animator->_onUpdateIndex);
-    animator->_onUpdateIndex = -1;
-}
-
-void ComponentsManager::callAnimatorUpdate(float deltaTime) {
-    const auto &elements = _onUpdateAnimators;
-    for (size_t i = 0; i < _onUpdateAnimators.size(); i++) {
-        elements[i]->update(deltaTime);
-    }
-}
-
-void ComponentsManager::addOnUpdateSceneAnimators(SceneAnimator *animator) {
-    animator->_onUpdateIndex = _onUpdateSceneAnimators.size();
-    _onUpdateSceneAnimators.push_back(animator);
-}
-
-void ComponentsManager::removeOnUpdateSceneAnimators(SceneAnimator *animator) {
-    _onUpdateSceneAnimators.erase(_onUpdateSceneAnimators.begin() + animator->_onUpdateIndex);
-    animator->_onUpdateIndex = -1;
-}
-
-void ComponentsManager::callSceneAnimatorUpdate(float deltaTime) {
-    const auto &elements = _onUpdateSceneAnimators;
-    for (size_t i = 0; i < _onUpdateSceneAnimators.size(); i++) {
-        elements[i]->update(deltaTime);
-    }
 }
 
 }// namespace vox

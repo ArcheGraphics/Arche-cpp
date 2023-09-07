@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "graphics/mesh.h"
+#include "mesh/mesh.h"
 
 namespace vox {
 class BufferMesh : public Mesh {

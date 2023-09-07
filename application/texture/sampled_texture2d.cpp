@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "sampled_texture2d.h"
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 SampledTexture2D::SampledTexture2D(MTL::Device &device,

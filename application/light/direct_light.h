@@ -7,7 +7,7 @@
 #pragma once
 
 #include "light.h"
-#include "color.h"
+#include "math/color.h"
 #include "shader_common.h"
 
 namespace vox {

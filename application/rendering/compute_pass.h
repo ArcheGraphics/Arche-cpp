@@ -7,7 +7,7 @@
 #pragma once
 
 #include "resource_cache.h"
-#include "scene.h"
+#include "ecs/scene.h"
 
 namespace vox {
 class ComputePass {

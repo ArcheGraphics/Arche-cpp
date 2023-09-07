@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "color.h"
+#include "math/color.h"
 
 namespace vox {
 /**

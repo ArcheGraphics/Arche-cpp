@@ -8,7 +8,7 @@
 
 #include "subpass.h"
 #include "resource_cache.h"
-#include "gui.h"
+#include "gui/gui.h"
 #include <vector>
 
 namespace vox {

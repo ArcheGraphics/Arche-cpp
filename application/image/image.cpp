@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "image.h"
-#include "std_helpers.h"
+#include "framework/common/helpers.h"
 #include "filesystem.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
@@ -13,8 +13,6 @@
 #include <stb_image_resize.h>
 
 #include "image/stb.h"
-#include "image/astc.h"
-#include "image/ktx_image.h"
 
 #include "texture/sampled_texture2d.h"
 
@@ -160,12 +158,6 @@ std::unique_ptr<Image> Image::load(const std::string &uri, bool flipY) {
     auto extension = fs::extraExtension(uri);
     if (extension == "png" || extension == "jpg") {
         image = std::make_unique<Stb>(data, flipY);
-    } else if (extension == "astc") {
-        image = std::make_unique<Astc>(data, flipY);
-    } else if (extension == "ktx") {
-        image = std::make_unique<Ktx>(data, flipY);
-    } else if (extension == "ktx2") {
-        image = std::make_unique<Ktx>(data, flipY);
     }
     return image;
 }

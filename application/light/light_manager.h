@@ -12,7 +12,7 @@
 #include "shader/shader_data.h"
 #include "rendering/compute_pass.h"
 #include <Metal/Metal.hpp>
-#include "singleton.h"
+#include "base/singleton.h"
 
 namespace vox {
 /**

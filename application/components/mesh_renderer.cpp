@@ -5,9 +5,9 @@
 //  property of any third parties.
 
 #include "mesh_renderer.h"
-#include "graphics/mesh.h"
-#include "entity.h"
-#include "shader_common.h"
+#include "mesh/mesh.h"
+#include "ecs/entity.h"
+#include "shader/shader_common.h"
 
 namespace vox {
 MeshRenderer::MeshRenderer(Entity *entity) : Renderer(entity) {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "vector3.h"
+#include "math/vector3.h"
 
 namespace vox {
 namespace control {

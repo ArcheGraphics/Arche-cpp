@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Metal/Metal.hpp>
-#include "scene.h"
+#include "ecs/scene.h"
 #include "shader/shader_uniform.h"
 #include "render_context.h"
 

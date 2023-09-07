@@ -5,9 +5,9 @@
 //  property of any third parties.
 
 #include "camera.h"
-#include "entity.h"
-#include "scene.h"
-#include "matrix_utils.h"
+#include "ecs/entity.h"
+#include "ecs/scene.h"
+#include "math/matrix_utils.h"
 #include "shader/shader.h"
 
 namespace vox {

@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "point_light.h"
-#include "scene.h"
-#include "matrix_utils.h"
+#include "ecs/scene.h"
+#include "math/matrix_utils.h"
 #include "light_manager.h"
 
 namespace vox {

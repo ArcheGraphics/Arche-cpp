@@ -6,8 +6,7 @@
 
 #include "subpass.h"
 #include "material/material.h"
-#include "renderer.h"
-#include <glog/logging.h>
+#include "components/renderer.h"
 
 namespace vox {
 bool Subpass::_compareFromNearToFar(const RenderElement &a, const RenderElement &b) {

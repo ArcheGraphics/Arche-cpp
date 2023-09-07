@@ -9,7 +9,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stb_image.h>
-#include "std_helpers.h"
+#include "framework/common/helpers.h"
 
 namespace vox {
 Stb::Stb(const std::vector<uint8_t> &data, bool flipY) : Image{} {

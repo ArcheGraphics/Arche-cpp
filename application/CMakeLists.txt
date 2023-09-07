@@ -50,8 +50,8 @@ set(TEXTURE_FILES
 set(MESH_FILES
         mesh/sub_mesh.h
         mesh/sub_mesh.cpp
-#        mesh/mesh_manager.h
-#        mesh/mesh_manager.cpp
+        #        mesh/mesh_manager.h
+        #        mesh/mesh_manager.cpp
         mesh/mesh.h
         mesh/mesh.cpp
         mesh/model_mesh.h
@@ -86,8 +86,8 @@ set(SHADER_FILES
         shader/state/renderTarget_blend_state.h
         shader/state/stencil_state.cpp
         shader/state/stencil_state.h
-#        shader/shader_manager.h
-#        shader/shader_manager.cpp
+        #        shader/shader_manager.h
+        #        shader/shader_manager.cpp
 )
 
 set(MATERIAL_FILES
@@ -119,8 +119,8 @@ set(ECS_FILES
         ecs/entity.cpp
         ecs/scene.h
         ecs/scene.cpp
-#        ecs/scene_manager.h
-#        ecs/scene_manager.cpp
+        #        ecs/scene_manager.h
+        #        ecs/scene_manager.cpp
 )
 
 set(LIGHT_FILES
@@ -167,7 +167,7 @@ set(RENDERING_FILES
 )
 
 set(GUI_FILES
-        gui/imgui_impl_osx.mm
+        gui/imgui_impl_glfw.cpp
         gui/imgui_impl_metal.mm
         gui/gui.cpp
 )
@@ -217,6 +217,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         stb
         imgui
+        glfw
 )
 
 if (${NEED_LINK_ATOMIC})

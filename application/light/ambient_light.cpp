@@ -6,7 +6,7 @@
 
 #include "ambient_light.h"
 #include "shader/shader.h"
-#include "scene.h"
+#include "ecs/scene.h"
 
 namespace vox {
 AmbientLight::AmbientLight(Scene *value) : _envMapProperty(Shader::createProperty("u_envMapLight", ShaderDataGroup::Scene)),

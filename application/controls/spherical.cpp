@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "spherical.h"
-#include "constants.h"
+#include "math/constants.h"
 
 namespace vox {
 namespace control {

@@ -6,7 +6,7 @@
 
 #include "model_mesh.h"
 #include "shader_common.h"
-#include "metal_helpers.h"
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 bool ModelMesh::accessible() {

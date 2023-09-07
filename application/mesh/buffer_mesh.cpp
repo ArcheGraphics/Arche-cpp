@@ -5,7 +5,6 @@
 //  property of any third parties.
 
 #include "buffer_mesh.h"
-#include <glog/logging.h>
 
 namespace vox {
 void BufferMesh::setInstanceCount(uint32_t newValue) {

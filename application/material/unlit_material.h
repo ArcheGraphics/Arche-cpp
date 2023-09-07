@@ -7,8 +7,8 @@
 #pragma once
 
 #include "base_material.h"
-#include "color.h"
-#include "vector4.h"
+#include "math/color.h"
+#include "math/vector4.h"
 #include "texture/sampled_texture2d.h"
 
 namespace vox {

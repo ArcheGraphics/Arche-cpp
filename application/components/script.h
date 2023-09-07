@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "component.h"
+#include "ecs/component.h"
 #include "input_events.h"
 
 namespace vox {

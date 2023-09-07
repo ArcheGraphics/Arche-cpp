@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "script.h"
-#include "entity.h"
-#include "scene.h"
+#include "ecs/entity.h"
+#include "ecs/scene.h"
 
 namespace vox {
 Script::Script(Entity *entity) : Component(entity) {

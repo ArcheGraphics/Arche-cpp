@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "free_control.h"
-#include "../entity.h"
-#include "math_utils.h"
+#include "ecs/entity.h"
+#include "math/math_utils.h"
 
 namespace vox {
 namespace control {

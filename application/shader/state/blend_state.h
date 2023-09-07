@@ -7,7 +7,7 @@
 #pragma once
 
 #include "renderTarget_blend_state.h"
-#include "color.h"
+#include "math/color.h"
 #include <Metal/Metal.hpp>
 
 namespace vox {

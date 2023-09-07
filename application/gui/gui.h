@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "gui/imgui.h"
+#include <imgui.h>
 #include <Metal/Metal.hpp>
 
 namespace vox {

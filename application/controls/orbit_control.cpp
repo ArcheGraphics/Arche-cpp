@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "orbit_control.h"
-#include "../entity.h"
+#include "ecs/entity.h"
 
 namespace vox {
 namespace control {

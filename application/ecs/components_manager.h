@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include "matrix4x4.h"
-#include "bounding_frustum.h"
+#include "math/matrix4x4.h"
+#include "math/bounding_frustum.h"
 #include "input_events.h"
-#include "scene_forward.h"
 #include "rendering/render_element.h"
 #include <typeindex>
 #include <unordered_map>
@@ -62,19 +61,6 @@ public:
                     std::vector<RenderElement> &transparentQueue);
 
 public:
-    void addOnUpdateAnimators(Animator *animator);
-
-    void removeOnUpdateAnimators(Animator *animator);
-
-    void callAnimatorUpdate(float deltaTime);
-
-    void addOnUpdateSceneAnimators(SceneAnimator *animator);
-
-    void removeOnUpdateSceneAnimators(SceneAnimator *animator);
-
-    void callSceneAnimatorUpdate(float deltaTime);
-
-public:
     void callCameraOnBeginRender(Camera *camera);
 
     void callCameraOnEndRender(Camera *camera);
@@ -94,10 +80,6 @@ private:
 
     // Delay dispose active/inActive Pool
     std::vector<std::vector<Component *>> _componentsContainerPool;
-
-    // Animatior
-    std::vector<Animator *> _onUpdateAnimators;
-    std::vector<SceneAnimator *> _onUpdateSceneAnimators;
 };
 
 }// namespace vox

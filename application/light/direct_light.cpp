@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "direct_light.h"
-#include "scene.h"
+#include "ecs/scene.h"
 #include "light_manager.h"
 
 namespace vox {

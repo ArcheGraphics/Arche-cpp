@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include "scene_forward.h"
 #include <Metal/Metal.hpp>
 
-#include "spherical_harmonics3.h"
+#include "math/spherical_harmonics3.h"
 #include "shader/shader_property.h"
 #include "shader_common.h"
 #include "texture/sampled_texturecube.h"

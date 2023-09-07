@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "../script.h"
-#include "vector3.h"
-#include "vector2.h"
-#include "matrix4x4.h"
+#include "components/script.h"
+#include "math/vector3.h"
+#include "math/vector2.h"
+#include "math/matrix4x4.h"
 #include "spherical.h"
 
 namespace vox {

@@ -5,8 +5,7 @@
 //  property of any third parties.
 
 #include "render_pass.h"
-#include "metal_helpers.h"
-#include <glog/logging.h>
+#include "framework/common/metal_helpers.h"
 
 namespace vox {
 RenderPass::RenderPass(MTL::Library &library,
