@@ -14,32 +14,17 @@ class Renderer;
 
 class MyMTKViewDelegate : public MTK::ViewDelegate {
 public:
-    explicit MyMTKViewDelegate(MTL::Device *pDevice);
+    explicit MyMTKViewDelegate(MTK::View *view);
     ~MyMTKViewDelegate() override;
 
     void drawInMTKView(MTK::View *pView) override;
 
     void drawableSizeWillChange(MTK::View *pView, CGSize size) override;
 
+    Renderer *get_app() { return _pRenderer.get(); }
+
 private:
     std::unique_ptr<Renderer> _pRenderer;
-};
-
-class MyAppDelegate : public NS::ApplicationDelegate {
-public:
-    ~MyAppDelegate() override;
-
-    NS::Menu *createMenuBar();
-
-    void applicationWillFinishLaunching(NS::Notification *pNotification) override;
-    void applicationDidFinishLaunching(NS::Notification *pNotification) override;
-    bool applicationShouldTerminateAfterLastWindowClosed(NS::Application *pSender) override;
-
-private:
-    NS::Window *_pWindow;
-    MTK::View *_pMtkView;
-    MTL::Device *_pDevice;
-    MyMTKViewDelegate *_pViewDelegate = nullptr;
 };
 
 }// namespace vox

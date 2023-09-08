@@ -21,7 +21,7 @@ namespace vox {
 class Camera;
 class Renderer {
 public:
-    explicit Renderer(MTL::Device *pDevice);
+    explicit Renderer(MTK::View *view);
     ~Renderer();
 
     void draw(MTK::View *pView);
@@ -35,6 +35,8 @@ public:
     void setupScene(const std::string &url);
 
     [[nodiscard]] bool isZUp() const { return _isZUp; }
+
+    Camera *viewCamera() { return _viewCamera.get(); }
 
 private:
     /// Sets an initial material for the scene.
@@ -74,7 +76,7 @@ private:
     double updateTime();
 
 private:
-    MTL::Device *_device;
+    std::shared_ptr<MTL::Device> _device{};
     std::shared_ptr<MTL::RenderPipelineState> _blitToViewPSO{};
     dispatch_semaphore_t _inFlightSemaphore{};
 

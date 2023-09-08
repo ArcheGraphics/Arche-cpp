@@ -14,7 +14,9 @@ set(HYD_PUBLIC_HEADERS
 )
 
 add_executable(${PROJECT_NAME} MACOSX_BUNDLE
-        main.cpp
+        main.mm
+        app_delegate.mm
+        view_controller.mm
         delegate.cpp
         renderer.mm
         camera.cpp

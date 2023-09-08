@@ -439,20 +439,24 @@ bool Renderer::loadStage(const std::string &filePath) {
     return true;
 }
 
-Renderer::Renderer(MTL::Device *pDevice)
-    : _device(pDevice->retain()) {
+Renderer::Renderer(MTK::View *view) {
+    _device = CLONE_METAL_CUSTOM_DELETER(MTL::Device, MTL::CreateSystemDefaultDevice());
+    view->setDevice(_device.get());
+    view->setColorPixelFormat(AAPLDefaultColorPixelFormat);
+    view->setSampleCount(1);
+
     _requestedFrames = 1;
     _startTimeInSeconds = 0;
     _sceneSetup = false;
 
     loadMetal();
-    //    initializeMaterial();
+    initializeMaterial();
 }
 
 Renderer::~Renderer() {
-    _device->release();
-    //    _engine.reset();
-    //    _stage.Reset();
+    _device.reset();
+    _engine.reset();
+    _stage.Reset();
 }
 
 void Renderer::drawableSizeWillChange(MTK::View *pView, CGSize size) {
