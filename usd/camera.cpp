@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "camera.h"
-#include "renderer.h"
+//#include "renderer.h"
 #include <pxr/base/gf/frustum.h>
 
 using namespace pxr;
@@ -29,10 +29,10 @@ Camera::Camera(const pxr::GfCamera &sceneCamera, Renderer *renderer) {
     GfMatrix4d cameraTransform(1.0);
     cameraTransform = sceneCamera.GetTransform();
 
-    if (renderer->isZUp()) {
-        cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
-                                                GfRotation(GfVec3d::XAxis(), -90.0));
-    }
+//    if (renderer->isZUp()) {
+//        cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
+//                                                GfRotation(GfVec3d::XAxis(), -90.0));
+//    }
 
     GfVec3d rotation = cameraTransform.DecomposeRotation(
         GfVec3d::YAxis(),
@@ -73,13 +73,13 @@ void Camera::panByDelta(pxr::GfVec2d delta) {
 
     _focus += scale * (delta[0] * xAxis + delta[1] * yAxis);
 
-    _renderer->requestFrame();
+//    _renderer->requestFrame();
 }
 
 /// Adjusts the x- and y-rotations and requests a new frame to render.
 void Camera::rotateByDelta(pxr::GfVec2d delta) {
     _rotation += {delta[1], delta[0], 0.0f};
-    _renderer->requestFrame();
+//    _renderer->requestFrame();
 }
 /// Adjusts the current zoom and requests a new frame to render.
 void Camera::zoomByDelta(double delta) {
@@ -90,13 +90,13 @@ void Camera::zoomByDelta(double delta) {
         _distance += delta * _scaleBias;
     }
 
-    _renderer->requestFrame();
+//    _renderer->requestFrame();
 }
 
 /// Sets the new zoom and requests a new frame to render.
 void Camera::setZoomFactor(double zoomFactor) {
     _focalLength = _standardFocalLength * zoomFactor;
-    _renderer->requestFrame();
+//    _renderer->requestFrame();
 }
 /// Gets the zoom factor based on the focal length.
 double Camera::getZoomFactor() const {
@@ -109,9 +109,9 @@ pxr::GfRotation Camera::getRotation() {
                             GfRotation(GfVec3d::XAxis(), _rotation[0]) *
                             GfRotation(GfVec3d::YAxis(), _rotation[1]);
 
-    if (_renderer->isZUp()) {
-        gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
-    }
+//    if (_renderer->isZUp()) {
+//        gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
+//    }
 
     return gfRotation;
 }

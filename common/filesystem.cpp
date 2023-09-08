@@ -4,6 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
+#include <cassert>
 #include "common/filesystem.h"
 
 namespace vox::fs {

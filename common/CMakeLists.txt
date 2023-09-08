@@ -6,54 +6,26 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(framework LANGUAGES C CXX)
+project(common LANGUAGES C CXX)
 
 set(COMMON_FILES
         # Header Files
-        common/helpers.h
-        common/logging.h
-        common/timer.h
-        common/filesystem.h
-        common/utils.h
+        helpers.h
+        logging.h
+        timer.h
+        filesystem.h
+        utils.h
         # Source Files
-        common/logging.cpp
-        common/timer.cpp
-        common/filesystem.cpp
-        common/utils.cpp
+        logging.cpp
+        timer.cpp
+        filesystem.cpp
+        utils.cpp
 )
 
-set(FG_FILES
-        fg/framegraph.h
-        fg/realize.h
-        fg/render_task.h
-        fg/render_task_base.h
-        fg/render_task_builder.h
-        fg/resource.h
-        fg/resource_base.h
-        # Source Files
-        fg/framegraph.cpp
-)
-
-set(COMPUTE_FILES
-        compute/data_type_util.h
-        compute/data_type_util.cpp
-        compute/status_util.h
-        compute/status_util.cpp
-        compute/buffer_utils.h
-        compute/buffer_utils.cpp
-        compute/image_utils.h
-        compute/image_utils.cpp
-)
-
-source_group("\\" FILES ${FRAMEWORK_FILES})
 source_group("common\\" FILES ${COMMON_FILES})
-source_group("compute\\" FILES ${COMPUTE_FILES})
-source_group("framegraph\\" FILES ${FG_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
-        ${FG_FILES}
-        ${COMPUTE_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
@@ -73,12 +45,11 @@ if (METAL_WARNINGS_AS_ERRORS)
     endif ()
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
-        metal-cpp
 )
 
 if (${NEED_LINK_ATOMIC})

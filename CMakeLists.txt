@@ -37,13 +37,38 @@ include(check_atomic)
 include(pxrConfig)
 include_directories(${PXR_INCLUDE_DIRS})
 
+# CUDA
+option(USE_CUDA "Use CUDA features" ON)
+if (USE_CUDA)
+    find_package(CUDA)
+
+    if (CUDA_FOUND)
+        find_package(CUDAToolkit)
+        set(CMAKE_CUDA_ARCHITECTURES 86)
+        set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+        enable_language(CUDA)
+        include_directories(${CUDA_INCLUDE_DIRS})
+        list(APPEND CUDA_NVCC_FLAGS --std=c++20)
+    else ()
+        set(USE_CUDA OFF)
+    endif ()
+endif ()
+
 # Add third party libraries
 add_subdirectory(third_party)
 
 add_subdirectory(math)
 add_subdirectory(test.math)
 
-add_subdirectory(framework)
+add_subdirectory(common)
+add_subdirectory(usd)
 
-add_subdirectory(apps)
-add_subdirectory(benchmark)
+if (APPLE)
+    add_subdirectory(metal)
+    add_subdirectory(apps)
+    add_subdirectory(benchmark)
+endif ()
+
+if (CUDA_FOUND)
+    add_subdirectory(cuda)
+endif ()
