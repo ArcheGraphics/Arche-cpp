@@ -21,7 +21,7 @@
 #include <pxr/imaging/hgi/blitCmdsOps.h>
 #include <pxr/imaging/hgiMetal/hgi.h>
 #include <pxr/imaging/hgiMetal/texture.h>
-
+#include <MetalKit/MetalKit.h>
 #import <CoreImage/CIContext.h>
 
 #include <cmath>
@@ -180,8 +180,9 @@ void Renderer::loadMetal() {
     }
 }
 
-void Renderer::blitToView(MTK::View *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture) {
-    MTL::RenderPassDescriptor *renderPassDescriptor = view->currentRenderPassDescriptor();
+void Renderer::blitToView(void *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture) {
+    auto *mtk_view = (__bridge MTKView *)(view);
+    auto *renderPassDescriptor = (__bridge MTL::RenderPassDescriptor *)mtk_view.currentRenderPassDescriptor;
     if (!renderPassDescriptor)
         return;
 
@@ -198,7 +199,7 @@ void Renderer::blitToView(MTK::View *view, MTL::CommandBuffer *commandBuffer, MT
 
     // Finish encoding the copy command.
     renderEncoder->endEncoding();
-    commandBuffer->presentDrawable(view->currentDrawable());
+    commandBuffer->presentDrawable((__bridge MTL::Drawable *)mtk_view.currentDrawable);
 }
 
 /// Requests the bounding box cache from Hydra.
@@ -271,7 +272,7 @@ pxr::HgiTextureHandle Renderer::drawWithHydra(double timeCode, CGSize viewSize) 
 
 /// Draw the scene, and blit the result to the view.
 /// Returns false if the engine wasn't initialized.
-bool Renderer::drawMainView(MTK::View *view, double timeCode) {
+bool Renderer::drawMainView(void *view, double timeCode) {
     if (!_engine) {
         return false;
     }
@@ -282,7 +283,8 @@ bool Renderer::drawMainView(MTK::View *view, double timeCode) {
     hgi->StartFrame();
 
     // Draw the scene using Hydra, and recast the result to a MTLTexture.
-    CGSize viewSize = view->drawableSize();
+    auto *mtk_view = (__bridge MTKView *)(view);
+    CGSize viewSize = mtk_view.drawableSize;
     HgiTextureHandle hgiTexture = drawWithHydra(timeCode, viewSize);
     auto texture = static_cast<HgiMetalTexture *>(hgiTexture.Get())->GetTextureId();
 
@@ -398,8 +400,8 @@ double Renderer::updateTime() {
     return timeCode;
 }
 
-void Renderer::draw(MTK::View *view) {
-    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
+void Renderer::draw(void *view) {
+//    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
 
     // There's nothing to render until the scene is set up.
     if (!_sceneSetup) {
@@ -424,7 +426,7 @@ void Renderer::draw(MTK::View *view) {
     if (drawSucceeded) {
         _requestedFrames--;
     }
-    pPool->release();
+//    pPool->release();
 }
 
 /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
@@ -442,11 +444,12 @@ bool Renderer::loadStage(const std::string &filePath) {
     return true;
 }
 
-Renderer::Renderer(MTK::View *view) {
+Renderer::Renderer(void *view) {
     _device = CLONE_METAL_CUSTOM_DELETER(MTL::Device, MTL::CreateSystemDefaultDevice());
-    view->setDevice(_device.get());
-    view->setColorPixelFormat(AAPLDefaultColorPixelFormat);
-    view->setSampleCount(1);
+    auto *mtk_view = (__bridge MTKView *)(view);
+    mtk_view.device = (__bridge id<MTLDevice>)_device.get();
+    mtk_view.colorPixelFormat = (MTLPixelFormat)AAPLDefaultColorPixelFormat;
+    mtk_view.sampleCount = 1;
 
     _requestedFrames = 1;
     _startTimeInSeconds = 0;
@@ -462,7 +465,7 @@ Renderer::~Renderer() {
     _stage.Reset();
 }
 
-void Renderer::drawableSizeWillChange(MTK::View *pView, CGSize size) {
+void Renderer::drawableSizeWillChange(void *pView, CGSize size) {
     requestFrame();
 }
 

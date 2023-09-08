@@ -11,7 +11,6 @@ add_library(metal-cpp
 
 target_include_directories(metal-cpp PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/metal-cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/metal-cpp-extensions"
         )
 
 target_link_libraries(metal-cpp

@@ -20,7 +20,7 @@ using namespace vox;
 /// Initializes the view.
 - (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view {
     if (self = [super init]) {
-        _pRenderer = std::make_unique<Renderer>((MTK::View *)view);
+        _pRenderer = std::make_unique<Renderer>((__bridge void*)view);
 
         // setup logger
         std::vector<spdlog::sink_ptr> sinks;
@@ -46,15 +46,14 @@ using namespace vox;
 - (void)dealloc {
     _pRenderer.reset();
     spdlog::drop_all();
-    [super dealloc];
 }
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size {
-    _pRenderer->drawableSizeWillChange((MTK::View *)view, size);
+    _pRenderer->drawableSizeWillChange((__bridge void*)view, size);
 }
 
 - (void)drawInMTKView:(nonnull MTKView *)view {
-    _pRenderer->draw((MTK::View *)view);
+    _pRenderer->draw((__bridge void*)view);
 }
 
 - (nonnull Renderer *)get_app {

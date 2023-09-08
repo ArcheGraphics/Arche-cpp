@@ -7,7 +7,6 @@
 #pragma once
 
 #include <Metal/Metal.hpp>
-#include <MetalKit/MetalKit.hpp>
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/usd/usd/stage.h>
@@ -21,12 +20,12 @@ namespace vox {
 class Camera;
 class Renderer {
 public:
-    explicit Renderer(MTK::View *view);
+    explicit Renderer(void *view);
     ~Renderer();
 
-    void draw(MTK::View *pView);
+    void draw(void *pView);
 
-    void drawableSizeWillChange(MTK::View *pView, CGSize size);
+    void drawableSizeWillChange(void *pView, CGSize size);
 
     /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
     void requestFrame();
@@ -45,7 +44,7 @@ private:
     /// Prepares the Metal objects for copying to the view.
     void loadMetal();
 
-    void blitToView(MTK::View *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture);
+    void blitToView(void *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture);
 
     /// Requests the bounding box cache from Hydra.
     pxr::UsdGeomBBoxCache computeBboxCache();
@@ -58,7 +57,7 @@ private:
 
     /// Draw the scene, and blit the result to the view.
     /// Returns false if the engine wasn't initialized.
-    bool drawMainView(MTK::View *view, double timeCode);
+    bool drawMainView(void *view, double timeCode);
 
     /// Uses Hydra to load the USD or USDZ file.
     bool loadStage(const std::string &filePath);
