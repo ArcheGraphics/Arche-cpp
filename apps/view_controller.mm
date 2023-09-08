@@ -21,7 +21,7 @@ using namespace vox;
 
 @implementation AAPLViewController {
     MTKView *_view;
-    ViewDelegate* _renderer;
+    ViewDelegate *_renderer;
     CGPoint _mouseCoord;
 }
 
@@ -51,11 +51,12 @@ using namespace vox;
     double dX = newCoord.x - _mouseCoord.x;
     double dY = newCoord.y - _mouseCoord.y;
 
+    auto renderer = [_renderer get_app];
     if (event.modifierFlags & NSEventModifierFlagOption) {
         double magnification = event.modifierFlags & NSEventModifierFlagShift ? 2.0 : 0.5;
-//        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, -dY * magnification});
+        renderer->viewCamera()->panByDelta({-dX * magnification, -dY * magnification});
     } else {
-//        _renderer->get_app()->viewCamera()->panByDelta({-dX * 0.5, dY * 0.5});
+        renderer->viewCamera()->panByDelta({-dX * 0.5, dY * 0.5});
     }
 
     _mouseCoord = newCoord;
@@ -66,22 +67,22 @@ using namespace vox;
     double delta = -event.magnification;
     double magnification = event.modifierFlags & NSEventModifierFlagShift ? 160 : 16;
 
-//    _renderer->get_app()->viewCamera()->zoomByDelta(delta * magnification);
+    auto renderer = [_renderer get_app];
+    renderer->viewCamera()->zoomByDelta(delta * magnification);
 }
 
 /// Adjusts the zoom of the camera if the user holds down a modifier key; otherwise, pans the camera.
 - (void)scrollWheel:(NSEvent *)event {
+    auto renderer = [_renderer get_app];
     if (event.modifierFlags & NSEventModifierFlagOption) {
         double delta = 5.0 * event.deltaY;
-
-//        _renderer->get_app()->viewCamera()->zoomByDelta(delta);
+        renderer->viewCamera()->zoomByDelta(delta);
     } else {
         double dX = event.deltaX;
         double dY = event.deltaY;
 
         double magnification = event.modifierFlags & NSEventModifierFlagShift ? 5.0 : 1.0;
-
-//        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, dY * magnification});
+        renderer->viewCamera()->panByDelta({-dX * magnification, dY * magnification});
     }
 }
 

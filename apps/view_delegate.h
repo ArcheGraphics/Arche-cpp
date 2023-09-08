@@ -8,13 +8,19 @@
 
 #import <MetalKit/MTKView.h>
 
+namespace vox {
+class Renderer;
+}// namespace vox
+
 @interface ViewDelegate : NSObject<MTKViewDelegate>
 
 /// Initializes the view.
-- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView*)view;
+- (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view;
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size;
 
 - (void)drawInMTKView:(nonnull MTKView *)view;
+
+- (nonnull vox::Renderer *)get_app;
 
 @end

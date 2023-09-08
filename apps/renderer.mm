@@ -399,6 +399,8 @@ double Renderer::updateTime() {
 }
 
 void Renderer::draw(MTK::View *view) {
+    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
+
     // There's nothing to render until the scene is set up.
     if (!_sceneSetup) {
         return;
@@ -422,6 +424,7 @@ void Renderer::draw(MTK::View *view) {
     if (drawSucceeded) {
         _requestedFrames--;
     }
+    pPool->release();
 }
 
 /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.

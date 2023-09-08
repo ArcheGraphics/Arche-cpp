@@ -57,4 +57,8 @@ using namespace vox;
     _pRenderer->draw((MTK::View *)view);
 }
 
+- (nonnull Renderer *)get_app {
+    return _pRenderer.get();
+}
+
 @end
