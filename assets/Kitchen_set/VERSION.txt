@@ -1,0 +1,11 @@
+7/28/17
+- Initial version of Kitchen_set
+
+11/25/19
+- Added version of Kitchen_set with USD native instancing
+  as Kitchen_set_instanced.usd.
+- Updated all .usd crate binary files to version 0.7.0.
+
+7/21/22
+- Replaced use of deprecated "add" list operations with "prepend".
+- Fixed "identifier" field in assetInfo to use unanchored paths.

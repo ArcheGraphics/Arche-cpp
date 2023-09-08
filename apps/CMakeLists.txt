@@ -9,18 +9,28 @@ project(apps)
 
 set(HYD_PUBLIC_HEADERS
         camera.h
-        delegate.h
+        view_delegate.h
+        app_delegate.h
+        view_controller.h
         renderer.h
 )
+
+set(RESOURCES
+        Base.lproj/Main.storyboard
+        Assets.xcassets)
 
 add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         main.mm
         app_delegate.mm
         view_controller.mm
-        delegate.cpp
+        view_delegate.mm
         renderer.mm
         camera.cpp
+        ${RESOURCES}
 )
+
+add_definitions(-DMACOS)
+add_definitions(-DPXR_METAL_SUPPORT_ENABLED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 
@@ -120,6 +130,8 @@ elseif (DEFINED ENV{XCODE_ATTRIBUTE_CODE_SIGN_ID} AND NOT "$ENV{XCODE_ATTRIBUTE_
 else()
     set(CODE_SIGN_IDENTITY "-")
 endif()
+
+set(RESOURCE "${RESOURCES}")
 
 foreach (_item ${EMBEDDED_BINARIES_LIB})
     add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD COMMAND codesign --remove-signature $<TARGET_FILE_DIR:${PROJECT_NAME}>/lib/${_item})

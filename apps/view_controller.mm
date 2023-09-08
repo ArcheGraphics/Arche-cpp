@@ -7,7 +7,7 @@
 #import "view_controller.h"
 #import "camera.h"
 #import "renderer.h"
-#import "delegate.h"
+#import "view_delegate.h"
 #import <CoreImage/CoreImage.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
@@ -21,7 +21,7 @@ using namespace vox;
 
 @implementation AAPLViewController {
     MTKView *_view;
-    std::unique_ptr<MyMTKViewDelegate> _renderer;
+    ViewDelegate* _renderer;
     CGPoint _mouseCoord;
 }
 
@@ -32,11 +32,11 @@ using namespace vox;
     _view = (MTKView *)self.view;
     _view.layer.backgroundColor = NSColor.clearColor.CGColor;
 
-    _renderer = std::make_unique<MyMTKViewDelegate>(static_cast<MTK::View *>(_view));
+    _renderer = [[ViewDelegate alloc] initWithMetalKitView:_view];
 
-    _view.delegate = static_cast<id<MTKViewDelegate>>(_renderer.get());
+    _view.delegate = _renderer;
 
-    _renderer->drawableSizeWillChange(static_cast<MTK::View *>(_view), _view.bounds.size);
+    [_renderer mtkView:_view drawableSizeWillChange:_view.bounds.size];
 }
 
 /// On a mouse button down, record the starting point for a drag.
@@ -53,9 +53,9 @@ using namespace vox;
 
     if (event.modifierFlags & NSEventModifierFlagOption) {
         double magnification = event.modifierFlags & NSEventModifierFlagShift ? 2.0 : 0.5;
-        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, -dY * magnification});
+//        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, -dY * magnification});
     } else {
-        _renderer->get_app()->viewCamera()->panByDelta({-dX * 0.5, dY * 0.5});
+//        _renderer->get_app()->viewCamera()->panByDelta({-dX * 0.5, dY * 0.5});
     }
 
     _mouseCoord = newCoord;
@@ -66,7 +66,7 @@ using namespace vox;
     double delta = -event.magnification;
     double magnification = event.modifierFlags & NSEventModifierFlagShift ? 160 : 16;
 
-    _renderer->get_app()->viewCamera()->zoomByDelta(delta * magnification);
+//    _renderer->get_app()->viewCamera()->zoomByDelta(delta * magnification);
 }
 
 /// Adjusts the zoom of the camera if the user holds down a modifier key; otherwise, pans the camera.
@@ -74,14 +74,14 @@ using namespace vox;
     if (event.modifierFlags & NSEventModifierFlagOption) {
         double delta = 5.0 * event.deltaY;
 
-        _renderer->get_app()->viewCamera()->zoomByDelta(delta);
+//        _renderer->get_app()->viewCamera()->zoomByDelta(delta);
     } else {
         double dX = event.deltaX;
         double dY = event.deltaY;
 
         double magnification = event.modifierFlags & NSEventModifierFlagShift ? 5.0 : 1.0;
 
-        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, dY * magnification});
+//        _renderer->get_app()->viewCamera()->panByDelta({-dX * magnification, dY * magnification});
     }
 }
 
