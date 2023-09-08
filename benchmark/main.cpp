@@ -6,7 +6,7 @@
 
 #include <benchmark/benchmark.h>
 #include <Metal/Metal.hpp>
-#include "framework/common/metal_helpers.h"
+#include "common/metal_helpers.h"
 #include "mad_throughput.h"
 
 int main(int argc, char **argv) {

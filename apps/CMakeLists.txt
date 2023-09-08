@@ -25,7 +25,6 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         view_controller.mm
         view_delegate.mm
         renderer.mm
-        camera.cpp
         ${RESOURCES}
 )
 
@@ -41,8 +40,9 @@ foreach (_item ${PXR_LIBRARIES}) # Iterate over list of absolute paths
 endforeach ()
 
 target_link_libraries(${PROJECT_NAME}
-        metal-cpp
-        framework
+        common
+        metal-framework
+        usd-framework
         ${PXR_LIBRARY_NAMES}
 )
 

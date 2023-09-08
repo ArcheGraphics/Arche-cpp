@@ -5,10 +5,10 @@
 //  property of any third parties.
 
 #include "renderer.h"
-#include "camera.h"
-#include "framework/common/metal_helpers.h"
-#include "framework/common/logging.h"
-#include "framework/common/filesystem.h"
+#include "usd/camera.h"
+#include "common/metal_helpers.h"
+#include "common/logging.h"
+#include "common/filesystem.h"
 
 #include <pxr/pxr.h>
 #include <pxr/base/gf/camera.h>

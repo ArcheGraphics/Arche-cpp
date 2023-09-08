@@ -14,6 +14,6 @@ set(SRC
 
 add_executable(${PROJECT_NAME} ${SRC})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE framework benchmark gtest)
+target_link_libraries(${PROJECT_NAME} PRIVATE common metal-framework benchmark gtest)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)

@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #import "view_controller.h"
-#import "camera.h"
+#import "usd/camera.h"
 #import "renderer.h"
 #import "view_delegate.h"
 #import <CoreImage/CoreImage.h>

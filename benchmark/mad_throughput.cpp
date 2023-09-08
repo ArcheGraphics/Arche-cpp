@@ -8,8 +8,8 @@
 #include "compute/buffer_utils.h"
 #include "compute/status_util.h"
 #include "compute/data_type_util.h"
-#include "framework/common/metal_helpers.h"
-#include "framework/common/filesystem.h"
+#include "common/metal_helpers.h"
+#include "common/filesystem.h"
 #include <spdlog/fmt/fmt.h>
 #include <gtest/gtest.h>
 

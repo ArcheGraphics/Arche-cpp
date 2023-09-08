@@ -57,7 +57,7 @@ if (METAL_WARNINGS_AS_ERRORS)
     endif ()
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC

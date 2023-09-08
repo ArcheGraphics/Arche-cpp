@@ -6,7 +6,7 @@
 
 #include "view_delegate.h"
 #include "renderer.h"
-#include "metal/common/logging.h"
+#include "common/logging.h"
 #include <spdlog/async_logger.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
