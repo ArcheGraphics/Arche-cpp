@@ -30,15 +30,15 @@ MTL::CounterSet *GPUCounter::get_counter_set(MTL::CommonCounterSet counterSetNam
     auto count = device.counterSets()->count();
     for (int i = 0; i < count; ++i) {
         auto counterSet = static_cast<MTL::CounterSet *>(device.counterSets()->object(i));
-        if (counterSet->isEqual(counterSet->name())) {
-            LOGI("GPU device {} supports the {} counter set.",
-                 device.name()->utf8String(), counterSetName->utf8String());
+        if (counterSetName->isEqual(counterSet->name())) {
+//            LOGI("GPU device {} supports the {} counter set.",
+//                 device.name()->utf8String(), counterSetName->utf8String());
             return counterSet;
         }
     }
 
-    LOGE("GPU device {} doesn't support the {} counter set.",
-         device.name()->utf8String(), counterSetName->utf8String());
+//    LOGE("GPU device {} doesn't support the {} counter set.",
+//         device.name()->utf8String(), counterSetName->utf8String());
     return nullptr;
 }
 
@@ -47,14 +47,14 @@ bool GPUCounter::is_counter_support(MTL::CounterSet *counterSet, MTL::CommonCoun
     for (int i = 0; i < count; ++i) {
         auto counter = static_cast<MTL::Counter *>(counterSet->counters()->object(i));
         if (counterName->isEqual(counter->name())) {
-            LOGI("Counter set {} supports the {} counter set.",
-                 counterSet->name()->utf8String(), counterName->utf8String());
+//            LOGI("Counter set {} supports the {} counter set.",
+//                 counterSet->name()->utf8String(), counterName->utf8String());
             return true;
         }
     }
 
-    LOGE("Counter set {} doesn't support the {} counter set.",
-         counterSet->name()->utf8String(), counterName->utf8String());
+//    LOGE("Counter set {} doesn't support the {} counter set.",
+//         counterSet->name()->utf8String(), counterName->utf8String());
     return false;
 }
 
@@ -104,10 +104,10 @@ void GPUCounter::update_final_times() {
 
 double GPUCounter::calculate_elapsed_seconds_between(uint32_t begin, uint32_t end) {
     /// Represents the size of the counter sample buffer.
-    NS::Range range = NS::Range::Make(begin, end);
+    NS::Range range = NS::Range::Make(begin, end + 1);
     // Convert the contents of the counter sample buffer into the standard data format.
     auto data = buffer->resolveCounterRange(range);
-    auto sampleCount = begin - end;
+    auto sampleCount = end - begin + 1;
 
     auto resolvedSampleCount = data->length() / sizeof(MTL::CounterResultTimestamp);
     if (resolvedSampleCount < sampleCount) {

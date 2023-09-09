@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     auto device = vox::make_shared(MTL::CreateSystemDefaultDevice());
     auto queue = vox::make_shared(device->newCommandQueue());
 
-    vox::LatencyMeasureMode mode = vox::LatencyMeasureMode::kSystemSubmit;
+    vox::LatencyMeasureMode mode = vox::LatencyMeasureMode::kGpuTimestamp;
     auto app = std::make_unique<vox::benchmark::MADThroughPut>();
     app->register_benchmarks(queue, mode);
 
