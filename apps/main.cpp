@@ -6,6 +6,7 @@
 
 #include "common/gui/window.h"
 #include "renderer.h"
+#include "usd/camera.h"
 
 int main(int argc, char *argv[]) {
     NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
@@ -15,6 +16,11 @@ int main(int argc, char *argv[]) {
 
     vox::Renderer renderer{window.native_handle(), resolution, resolution};
     renderer.setupScene("assets/Kitchen_set/Kitchen_set.usd");
+
+    window.set_scroll_callback([&](float dx, float dy) {
+        renderer.viewCamera()->panByDelta({dx, dy});
+        renderer.requestFrame(); // manually now
+    });
 
     while (!window.should_close()) {
         renderer.draw();

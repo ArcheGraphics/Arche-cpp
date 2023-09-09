@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "camera.h"
-//#include "renderer.h"
+//#include "apps/renderer.h"
 #include <pxr/base/gf/frustum.h>
 
 using namespace pxr;
@@ -30,8 +30,8 @@ Camera::Camera(const pxr::GfCamera &sceneCamera, Renderer *renderer) {
     cameraTransform = sceneCamera.GetTransform();
 
 //    if (renderer->isZUp()) {
-//        cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
-//                                                GfRotation(GfVec3d::XAxis(), -90.0));
+        cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
+                                                GfRotation(GfVec3d::XAxis(), -90.0));
 //    }
 
     GfVec3d rotation = cameraTransform.DecomposeRotation(
@@ -110,7 +110,7 @@ pxr::GfRotation Camera::getRotation() {
                             GfRotation(GfVec3d::YAxis(), _rotation[1]);
 
 //    if (_renderer->isZUp()) {
-//        gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
+        gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
 //    }
 
     return gfRotation;
