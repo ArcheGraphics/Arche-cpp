@@ -24,6 +24,10 @@
 #include <MetalKit/MetalKit.h>
 #import <CoreImage/CIContext.h>
 
+#include <spdlog/async_logger.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+
 #include <cmath>
 #include <memory>
 #include <mutex>
@@ -34,7 +38,6 @@ using namespace pxr;
 
 namespace vox {
 namespace {
-const MTL::PixelFormat AAPLDefaultColorPixelFormat = MTL::PixelFormatBGRA8Unorm;
 const double AAPLDefaultFocalLength = 18.0;
 const uint32_t AAPLMaxBuffersInFlight = 3;
 
@@ -138,70 +141,6 @@ void Renderer::initializeMaterial() {
     _sceneAmbient = GfVec4f(0.01f, 0.01f, 0.01f, 1.0f);
 }
 
-/// Prepares the Metal objects for copying to the view.
-void Renderer::loadMetal() {
-    auto raw_source = fs::read_shader("usd_blit.metal");
-    auto source = NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding);
-    NS::Error *error{nullptr};
-    auto option = make_shared(MTL::CompileOptions::alloc()->init());
-    auto defaultLibrary = make_shared(_device->newLibrary(source, option.get(), &error));
-    if (error != nullptr) {
-        LOGE("Error: could not load Metal shader library: {}",
-             error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
-    }
-
-    auto functionName = NS::String::string("vtxBlit", NS::UTF8StringEncoding);
-    auto vertexFunction = make_shared(defaultLibrary->newFunction(functionName));
-    functionName = NS::String::string("fragBlitLinear", NS::UTF8StringEncoding);
-    auto fragmentFunction = make_shared(defaultLibrary->newFunction(functionName));
-
-    // Set up the pipeline state object.
-    auto pipelineStateDescriptor = make_shared(MTL::RenderPipelineDescriptor::alloc()->init());
-    pipelineStateDescriptor->setRasterSampleCount(1);
-    pipelineStateDescriptor->setVertexFunction(vertexFunction.get());
-    pipelineStateDescriptor->setFragmentFunction(fragmentFunction.get());
-    pipelineStateDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatInvalid);
-
-    // Configure the color attachment for blending.
-    MTL::RenderPipelineColorAttachmentDescriptor *colorDescriptor = pipelineStateDescriptor->colorAttachments()->object(0);
-    colorDescriptor->setPixelFormat(AAPLDefaultColorPixelFormat);
-    colorDescriptor->setBlendingEnabled(true);
-    colorDescriptor->setRgbBlendOperation(MTL::BlendOperationAdd);
-    colorDescriptor->setAlphaBlendOperation(MTL::BlendOperationAdd);
-    colorDescriptor->setSourceRGBBlendFactor(MTL::BlendFactorOne);
-    colorDescriptor->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
-    colorDescriptor->setDestinationRGBBlendFactor(MTL::BlendFactorOneMinusSourceAlpha);
-    colorDescriptor->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
-
-    error = nullptr;
-    _blitToViewPSO = make_shared(_device->newRenderPipelineState(pipelineStateDescriptor.get(), &error));
-    if (!_blitToViewPSO) {
-        LOGE("Failed to created pipeline state, error {}", error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
-    }
-}
-
-void Renderer::blitToView(void *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture) {
-    auto *mtk_view = (__bridge MTKView *)(view);
-    auto *renderPassDescriptor = (__bridge MTL::RenderPassDescriptor *)mtk_view.currentRenderPassDescriptor;
-    if (!renderPassDescriptor)
-        return;
-
-    // Create a render command encoder to encode copy command.
-    auto renderEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
-    if (!renderEncoder) return;
-
-    // Blit the texture to the view.
-    renderEncoder->pushDebugGroup(NS::String::string("FinalBlit", NS::UTF8StringEncoding));
-    renderEncoder->setFragmentTexture(texture, 0);
-    renderEncoder->setRenderPipelineState(_blitToViewPSO.get());
-    renderEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
-    renderEncoder->popDebugGroup();
-
-    // Finish encoding the copy command.
-    renderEncoder->endEncoding();
-    commandBuffer->presentDrawable((__bridge MTL::Drawable *)mtk_view.currentDrawable);
-}
-
 /// Requests the bounding box cache from Hydra.
 pxr::UsdGeomBBoxCache Renderer::computeBboxCache() {
     TfTokenVector purposes;
@@ -272,7 +211,7 @@ pxr::HgiTextureHandle Renderer::drawWithHydra(double timeCode, CGSize viewSize) 
 
 /// Draw the scene, and blit the result to the view.
 /// Returns false if the engine wasn't initialized.
-bool Renderer::drawMainView(void *view, double timeCode) {
+bool Renderer::drawMainView(double timeCode) {
     if (!_engine) {
         return false;
     }
@@ -283,8 +222,7 @@ bool Renderer::drawMainView(void *view, double timeCode) {
     hgi->StartFrame();
 
     // Draw the scene using Hydra, and recast the result to a MTLTexture.
-    auto *mtk_view = (__bridge MTKView *)(view);
-    CGSize viewSize = mtk_view.drawableSize;
+    CGSize viewSize = _swapchain->layer()->drawableSize();
     HgiTextureHandle hgiTexture = drawWithHydra(timeCode, viewSize);
     auto texture = static_cast<HgiMetalTexture *>(hgiTexture.Get())->GetTextureId();
 
@@ -296,7 +234,7 @@ bool Renderer::drawMainView(void *view, double timeCode) {
     }];
 
     // Copy the rendered texture to the view.
-    blitToView(view, (__bridge MTL::CommandBuffer *)(commandBuffer), (__bridge MTL::Texture *)(texture));
+    _swapchain->present((__bridge MTL::CommandBuffer *)(commandBuffer), (__bridge MTL::Texture *)(texture));
 
     // Tell Hydra to commit the command buffer, and complete the work.
     hgi->CommitPrimaryCommandBuffer();
@@ -400,9 +338,7 @@ double Renderer::updateTime() {
     return timeCode;
 }
 
-void Renderer::draw(void *view) {
-//    NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
-
+void Renderer::draw() {
     // There's nothing to render until the scene is set up.
     if (!_sceneSetup) {
         return;
@@ -421,12 +357,11 @@ void Renderer::draw(void *view) {
 
     double timeCode = updateTime();
 
-    bool drawSucceeded = drawMainView(view, timeCode);
+    bool drawSucceeded = drawMainView(timeCode);
 
     if (drawSucceeded) {
         _requestedFrames--;
     }
-//    pPool->release();
 }
 
 /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
@@ -444,29 +379,39 @@ bool Renderer::loadStage(const std::string &filePath) {
     return true;
 }
 
-Renderer::Renderer(void *view) {
+Renderer::Renderer(uint64_t window_handle, uint width, uint height) {
     _device = make_shared(MTL::CreateSystemDefaultDevice());
-    auto *mtk_view = (__bridge MTKView *)(view);
-    mtk_view.device = (__bridge id<MTLDevice>)_device.get();
-    mtk_view.colorPixelFormat = (MTLPixelFormat)AAPLDefaultColorPixelFormat;
-    mtk_view.sampleCount = 1;
-
     _requestedFrames = 1;
     _startTimeInSeconds = 0;
     _sceneSetup = false;
 
-    loadMetal();
+    _swapchain = std::make_unique<metal::MetalSwapchain>(*_device, window_handle, width, height);
+
     initializeMaterial();
+
+    // setup logger
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+
+    auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
+
+#ifdef METAL_DEBUG
+    logger->set_level(spdlog::level::debug);
+#else
+    logger->set_level(spdlog::level::info);
+#endif
+
+    logger->set_pattern(LOGGER_FORMAT);
+    spdlog::set_default_logger(logger);
 }
 
 Renderer::~Renderer() {
     _device.reset();
     _engine.reset();
     _stage.Reset();
-}
+    _swapchain.reset();
 
-void Renderer::drawableSizeWillChange(void *pView, CGSize size) {
-    requestFrame();
+    spdlog::drop_all();
 }
 
 }// namespace vox

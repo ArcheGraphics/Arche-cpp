@@ -12,7 +12,6 @@
 #include "common/filesystem.h"
 
 namespace vox::metal {
-
 MetalSwapchain::MetalSwapchain(MTL::Device &device, uint64_t window_handle,
                                uint width, uint height, bool allow_hdr,
                                bool vsync, uint back_buffer_size) noexcept
@@ -23,8 +22,10 @@ MetalSwapchain::MetalSwapchain(MTL::Device &device, uint64_t window_handle,
       _render_pass_desc{make_shared(MTL::RenderPassDescriptor::alloc()->init())} {
     _layer->retain();
     auto attachment_desc = _render_pass_desc->colorAttachments()->object(0);
-    attachment_desc->setLoadAction(MTL::LoadActionDontCare);
+    attachment_desc->setLoadAction(MTL::LoadActionClear);
     attachment_desc->setStoreAction(MTL::StoreActionStore);
+    attachment_desc->setClearColor(MTL::ClearColor(1.0, 1.0, 1.0, 1.0));
+    _format = allow_hdr ? MTL::PixelFormatRGBA16Float : MTL::PixelFormatBGRA8Unorm;
 
     create_pso(device);
 }
@@ -59,6 +60,17 @@ void MetalSwapchain::create_pso(MTL::Device &device) {
     pipelineStateDescriptor->setFragmentFunction(fragmentFunction.get());
     pipelineStateDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatInvalid);
 
+    // Configure the color attachment for blending.
+    MTL::RenderPipelineColorAttachmentDescriptor *colorDescriptor = pipelineStateDescriptor->colorAttachments()->object(0);
+    colorDescriptor->setPixelFormat(_format);
+    colorDescriptor->setBlendingEnabled(true);
+    colorDescriptor->setRgbBlendOperation(MTL::BlendOperationAdd);
+    colorDescriptor->setAlphaBlendOperation(MTL::BlendOperationAdd);
+    colorDescriptor->setSourceRGBBlendFactor(MTL::BlendFactorOne);
+    colorDescriptor->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
+    colorDescriptor->setDestinationRGBBlendFactor(MTL::BlendFactorOneMinusSourceAlpha);
+    colorDescriptor->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
+
     error = nullptr;
     _pipeline = make_shared(device.newRenderPipelineState(pipelineStateDescriptor.get(), &error));
     if (!_pipeline) {
@@ -82,7 +94,6 @@ void MetalSwapchain::present(MTL::CommandBuffer *command_buffer, MTL::Texture *i
         command_encoder->endEncoding();
         command_buffer->presentDrawable(drawable);
         if (_command_label) { command_buffer->setLabel(_command_label); }
-        command_buffer->commit();
     } else {
         LOGW("Failed to acquire next drawable from swapchain.");
     }

@@ -20,8 +20,8 @@ namespace vox::metal {
 class MetalSwapchain {
 public:
     MetalSwapchain(MTL::Device &device, uint64_t window_handle,
-                   uint width, uint height, bool allow_hdr,
-                   bool vsync, uint back_buffer_size) noexcept;
+                   uint width, uint height, bool allow_hdr = false,
+                   bool vsync = true, uint back_buffer_size = 1) noexcept;
 
     ~MetalSwapchain() noexcept;
 
@@ -39,6 +39,7 @@ private:
     std::shared_ptr<MTL::RenderPipelineState> _pipeline{};
     std::shared_ptr<MTL::RenderPassDescriptor> _render_pass_desc{};
     NS::String *_command_label{};
+    MTL::PixelFormat _format;
 };
 
 }// namespace vox::metal

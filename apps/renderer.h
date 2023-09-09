@@ -16,16 +16,16 @@
 #include <pxr/usdImaging/usdImagingGL/engine.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
+#include "metal/metal_swapchain.h"
+
 namespace vox {
 class Camera;
 class Renderer {
 public:
-    explicit Renderer(void *view);
+    Renderer(uint64_t window_handle, uint width, uint height);
     ~Renderer();
 
-    void draw(void *pView);
-
-    void drawableSizeWillChange(void *pView, CGSize size);
+    void draw();
 
     /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
     void requestFrame();
@@ -41,11 +41,6 @@ private:
     /// Sets an initial material for the scene.
     void initializeMaterial();
 
-    /// Prepares the Metal objects for copying to the view.
-    void loadMetal();
-
-    void blitToView(void *view, MTL::CommandBuffer *commandBuffer, MTL::Texture *texture);
-
     /// Requests the bounding box cache from Hydra.
     pxr::UsdGeomBBoxCache computeBboxCache();
 
@@ -57,7 +52,7 @@ private:
 
     /// Draw the scene, and blit the result to the view.
     /// Returns false if the engine wasn't initialized.
-    bool drawMainView(void *view, double timeCode);
+    bool drawMainView(double timeCode);
 
     /// Uses Hydra to load the USD or USDZ file.
     bool loadStage(const std::string &filePath);
@@ -75,8 +70,8 @@ private:
     double updateTime();
 
 private:
+    std::unique_ptr<metal::MetalSwapchain> _swapchain{};
     std::shared_ptr<MTL::Device> _device{};
-    std::shared_ptr<MTL::RenderPipelineState> _blitToViewPSO{};
     dispatch_semaphore_t _inFlightSemaphore{};
 
     double _startTimeInSeconds{};
