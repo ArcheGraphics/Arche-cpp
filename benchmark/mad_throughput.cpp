@@ -9,6 +9,7 @@
 #include "compute/status_util.h"
 #include "compute/data_type_util.h"
 #include "compute/gpu_counter.h"
+#include "compute/gpu_capture.h"
 #include "common/metal_helpers.h"
 #include "common/filesystem.h"
 #include <spdlog/fmt/fmt.h>
@@ -146,6 +147,9 @@ static void throughput(::benchmark::State &state,
 
     {
         for ([[maybe_unused]] auto _ : state) {
+            // auto scope = compute::create_capture_scope("test", *device);
+            // scope->beginScope();
+
             auto commandBuffer = make_shared(queue->commandBuffer());
             auto encoder = make_shared(commandBuffer->computeCommandEncoder());
 
@@ -185,6 +189,7 @@ static void throughput(::benchmark::State &state,
                     break;
             }
 
+            // scope->endScope();
         }
         double numOperation = double(num_element) * 2. /*fma*/ *
                               10. /*10 elements per loop iteration*/ *

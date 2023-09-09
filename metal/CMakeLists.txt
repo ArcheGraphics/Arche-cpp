@@ -31,6 +31,8 @@ set(COMPUTE_FILES
         compute/image_utils.cpp
         compute/gpu_counter.h
         compute/gpu_counter.cpp
+        compute/gpu_capture.h
+        compute/gpu_capture.cpp
 )
 
 source_group("\\" FILES ${FRAMEWORK_FILES})
