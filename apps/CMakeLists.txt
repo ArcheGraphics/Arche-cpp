@@ -28,8 +28,6 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         ${RESOURCES}
 )
 
-add_definitions(-DMACOS)
-add_definitions(-DPXR_METAL_SUPPORT_ENABLED)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 

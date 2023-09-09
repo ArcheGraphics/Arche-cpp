@@ -22,10 +22,19 @@ set(COMMON_FILES
         utils.cpp
 )
 
+set(GUI_FILES
+        gui/window.cpp
+        gui/window.h
+        gui/input.h
+        gui/imgui_impl_glfw.h
+        gui/imgui_impl_glfw.cpp
+)
+
 source_group("common\\" FILES ${COMMON_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
+        ${GUI_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
@@ -50,6 +59,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
+        glfw
+        imgui
 )
 
 if (${NEED_LINK_ATOMIC})

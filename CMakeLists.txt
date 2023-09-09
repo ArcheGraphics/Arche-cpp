@@ -54,6 +54,11 @@ if (USE_CUDA)
     endif ()
 endif ()
 
+if (APPLE)
+    add_definitions(-DMACOS)
+    add_definitions(-DPXR_METAL_SUPPORT_ENABLED)
+endif ()
+
 # Add third party libraries
 add_subdirectory(third_party)
 

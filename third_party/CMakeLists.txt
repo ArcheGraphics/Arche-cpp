@@ -53,3 +53,12 @@ target_include_directories(stb INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/stb")
 
 # spdlog
 add_subdirectory(spdlog)
+
+# glfw
+option(GLFW_BUILD_DOCS OFF)
+option(GLFW_BUILD_TESTS OFF)
+option(GLFW_BUILD_EXAMPLES OFF)
+option(GLFW_BUILD_TESTS OFF)
+option(GLFW_INSTALL OFF)
+option(BUILD_SHARED_LIBS ON)
+add_subdirectory(glfw)
