@@ -9,8 +9,9 @@ cmake_minimum_required(VERSION 3.16)
 project(metal-framework LANGUAGES C CXX)
 
 set(COMMON_FILES
+        metal_api.h
         metal_swapchain.cpp
-        metal_swapchain.mm)
+        metal_swapchain_layer.mm)
 
 set(FG_FILES
         fg/framegraph.h

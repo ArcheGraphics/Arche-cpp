@@ -234,7 +234,7 @@ bool Renderer::drawMainView(double timeCode) {
     }];
 
     // Copy the rendered texture to the view.
-    _swapchain->present((__bridge MTL::CommandBuffer *)(commandBuffer), (__bridge MTL::Texture *)(texture));
+    _swapchain->present((MTL::CommandBuffer *)(commandBuffer), (MTL::Texture *)(texture));
 
     // Tell Hydra to commit the command buffer, and complete the work.
     hgi->CommitPrimaryCommandBuffer();
