@@ -8,6 +8,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(metal-framework LANGUAGES C CXX)
 
+set(COMMON_FILES
+        metal_swapchain.cpp
+        metal_swapchain.mm)
+
 set(FG_FILES
         fg/framegraph.h
         fg/realize.h
@@ -42,6 +46,7 @@ source_group("framegraph\\" FILES ${FG_FILES})
 set(PROJECT_FILES
         ${FG_FILES}
         ${COMPUTE_FILES}
+        ${COMMON_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
