@@ -143,20 +143,20 @@ void Renderer::loadMetal() {
     auto raw_source = fs::read_shader("usd_blit.metal");
     auto source = NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding);
     NS::Error *error{nullptr};
-    auto option = CLONE_METAL_CUSTOM_DELETER(MTL::CompileOptions, MTL::CompileOptions::alloc()->init());
-    auto defaultLibrary = CLONE_METAL_CUSTOM_DELETER(MTL::Library, _device->newLibrary(source, option.get(), &error));
+    auto option = make_shared(MTL::CompileOptions::alloc()->init());
+    auto defaultLibrary = make_shared(_device->newLibrary(source, option.get(), &error));
     if (error != nullptr) {
         LOGE("Error: could not load Metal shader library: {}",
              error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
     }
 
     auto functionName = NS::String::string("vtxBlit", NS::UTF8StringEncoding);
-    auto vertexFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName));
+    auto vertexFunction = make_shared(defaultLibrary->newFunction(functionName));
     functionName = NS::String::string("fragBlitLinear", NS::UTF8StringEncoding);
-    auto fragmentFunction = CLONE_METAL_CUSTOM_DELETER(MTL::Function, defaultLibrary->newFunction(functionName));
+    auto fragmentFunction = make_shared(defaultLibrary->newFunction(functionName));
 
     // Set up the pipeline state object.
-    auto pipelineStateDescriptor = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineDescriptor, MTL::RenderPipelineDescriptor::alloc()->init());
+    auto pipelineStateDescriptor = make_shared(MTL::RenderPipelineDescriptor::alloc()->init());
     pipelineStateDescriptor->setRasterSampleCount(1);
     pipelineStateDescriptor->setVertexFunction(vertexFunction.get());
     pipelineStateDescriptor->setFragmentFunction(fragmentFunction.get());
@@ -174,7 +174,7 @@ void Renderer::loadMetal() {
     colorDescriptor->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
 
     error = nullptr;
-    _blitToViewPSO = CLONE_METAL_CUSTOM_DELETER(MTL::RenderPipelineState, _device->newRenderPipelineState(pipelineStateDescriptor.get(), &error));
+    _blitToViewPSO = make_shared(_device->newRenderPipelineState(pipelineStateDescriptor.get(), &error));
     if (!_blitToViewPSO) {
         LOGE("Failed to created pipeline state, error {}", error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
     }
@@ -445,7 +445,7 @@ bool Renderer::loadStage(const std::string &filePath) {
 }
 
 Renderer::Renderer(void *view) {
-    _device = CLONE_METAL_CUSTOM_DELETER(MTL::Device, MTL::CreateSystemDefaultDevice());
+    _device = make_shared(MTL::CreateSystemDefaultDevice());
     auto *mtk_view = (__bridge MTKView *)(view);
     mtk_view.device = (__bridge id<MTLDevice>)_device.get();
     mtk_view.colorPixelFormat = (MTLPixelFormat)AAPLDefaultColorPixelFormat;

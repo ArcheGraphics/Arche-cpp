@@ -12,12 +12,12 @@ void set_device_buffer_via_staging_buffer(
     MTL::Device &device, MTL::Buffer &device_buffer,
     size_t buffer_size_in_bytes,
     const std::function<void(void *, size_t)> &staging_buffer_setter) {
-    auto stage_buffer = CLONE_METAL_CUSTOM_DELETER(MTL::Buffer, device.newBuffer(buffer_size_in_bytes, MTL::ResourceStorageModeShared));
+    auto stage_buffer = make_shared(device.newBuffer(buffer_size_in_bytes, MTL::ResourceStorageModeShared));
     staging_buffer_setter(stage_buffer->contents(), buffer_size_in_bytes);
 
-    auto queue = CLONE_METAL_CUSTOM_DELETER(MTL::CommandQueue, device.newCommandQueue());
-    auto commandBuffer = CLONE_METAL_CUSTOM_DELETER(MTL::CommandBuffer, queue->commandBuffer());
-    auto blit = CLONE_METAL_CUSTOM_DELETER(MTL::BlitCommandEncoder, commandBuffer->blitCommandEncoder());
+    auto queue = make_shared(device.newCommandQueue());
+    auto commandBuffer = make_shared(queue->commandBuffer());
+    auto blit = make_shared(commandBuffer->blitCommandEncoder());
     blit->copyFromBuffer(stage_buffer.get(), 0, &device_buffer, 0, buffer_size_in_bytes);
     blit->endEncoding();
     commandBuffer->commit();
@@ -28,11 +28,11 @@ void get_device_buffer_via_staging_buffer(
     MTL::Device &device, MTL::Buffer &device_buffer,
     size_t buffer_size_in_bytes,
     const std::function<void(void *, size_t)> &staging_buffer_getter) {
-    auto stage_buffer = CLONE_METAL_CUSTOM_DELETER(MTL::Buffer, device.newBuffer(buffer_size_in_bytes, MTL::ResourceStorageModeShared));
+    auto stage_buffer = make_shared(device.newBuffer(buffer_size_in_bytes, MTL::ResourceStorageModeShared));
 
-    auto queue = CLONE_METAL_CUSTOM_DELETER(MTL::CommandQueue, device.newCommandQueue());
-    auto commandBuffer = CLONE_METAL_CUSTOM_DELETER(MTL::CommandBuffer, queue->commandBuffer());
-    auto blit = CLONE_METAL_CUSTOM_DELETER(MTL::BlitCommandEncoder, commandBuffer->blitCommandEncoder());
+    auto queue = make_shared(device.newCommandQueue());
+    auto commandBuffer = make_shared(queue->commandBuffer());
+    auto blit = make_shared(commandBuffer->blitCommandEncoder());
     blit->copyFromBuffer(&device_buffer, 0, stage_buffer.get(), 0, buffer_size_in_bytes);
     blit->endEncoding();
     commandBuffer->commit();

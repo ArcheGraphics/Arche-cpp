@@ -11,12 +11,12 @@
 
 int main(int argc, char **argv) {
     ::benchmark::Initialize(&argc, argv);
-    auto device = CLONE_METAL_CUSTOM_DELETER(MTL::Device, MTL::CreateSystemDefaultDevice());
-    auto queue = CLONE_METAL_CUSTOM_DELETER(MTL::CommandQueue, device->newCommandQueue());
+    auto device = vox::make_shared(MTL::CreateSystemDefaultDevice());
+    auto queue = vox::make_shared(device->newCommandQueue());
 
-    size_t device_index = 0;
+    vox::LatencyMeasureMode mode = vox::LatencyMeasureMode::kSystemSubmit;
     auto app = std::make_unique<vox::benchmark::MADThroughPut>();
-    app->register_benchmarks(queue);
+    app->register_benchmarks(queue, mode);
 
     ::benchmark::RunSpecifiedBenchmarks();
 }

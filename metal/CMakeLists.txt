@@ -29,6 +29,8 @@ set(COMPUTE_FILES
         compute/buffer_utils.cpp
         compute/image_utils.h
         compute/image_utils.cpp
+        compute/gpu_counter.h
+        compute/gpu_counter.cpp
 )
 
 source_group("\\" FILES ${FRAMEWORK_FILES})

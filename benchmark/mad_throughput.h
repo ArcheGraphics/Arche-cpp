@@ -11,7 +11,7 @@
 namespace vox::benchmark {
 class MADThroughPut : public BenchmarkAPI {
 public:
-    void register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queue) override;
+    void register_benchmarks(std::shared_ptr<MTL::CommandQueue> &queue, LatencyMeasureMode mode) override;
 
 private:
     std::shared_ptr<MTL::Library> _library{nullptr};

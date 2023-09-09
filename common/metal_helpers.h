@@ -6,11 +6,12 @@
 
 #pragma once
 
-#ifndef CLONE_METAL_CUSTOM_DELETER
-#define CLONE_METAL_CUSTOM_DELETER(ClassName, ptr) \
-    std::shared_ptr<ClassName>(                    \
-        ptr,                                       \
-        [](ClassName *obj) {                       \
-            obj->release();                        \
-        });
-#endif
+namespace vox {
+template<typename T>
+inline std::shared_ptr<T> make_shared(T *ptr) {
+    return std::shared_ptr<T>(ptr, [](T *obj) {
+        obj->release();
+    });
+}
+
+}// namespace vox
