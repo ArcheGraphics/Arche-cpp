@@ -13,11 +13,11 @@
 #include <pxr/pxr.h>
 #include <pxr/base/gf/camera.h>
 #include <pxr/base/plug/plugin.h>
-#include "pxr/base/plug/registry.h"
+#include <pxr/base/plug/registry.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
-#include "pxr/usd/usdGeom/camera.h"
-#include "pxr/usd/usdGeom/metrics.h"
+#include <pxr/usd/usdGeom/camera.h>
+#include <pxr/usd/usdGeom/metrics.h>
 #include <pxr/imaging/hgi/blitCmdsOps.h>
 #include <pxr/imaging/hgiMetal/hgi.h>
 #include <pxr/imaging/hgiMetal/texture.h>

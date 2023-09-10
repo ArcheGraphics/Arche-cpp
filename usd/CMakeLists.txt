@@ -11,6 +11,8 @@ project(usd-framework LANGUAGES C CXX)
 set(COMMON_FILES
         camera.h
         camera.cpp
+        usd_renderer.h
+        usd_renderer.cpp
 )
 
 source_group("common\\" FILES ${COMMON_FILES})
@@ -27,14 +29,8 @@ if (${METAL_VULKAN_DEBUG})
     target_compile_definitions(${PROJECT_NAME} PUBLIC METAL_VULKAN_DEBUG)
 endif ()
 
-if (METAL_WARNINGS_AS_ERRORS)
-    message(STATUS "Warnings as Errors Enabled")
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        target_compile_options(${PROJECT_NAME} PRIVATE /W3 /WX)
-    endif ()
-endif ()
+# silent c++20 warning
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
 
