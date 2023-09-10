@@ -9,8 +9,6 @@
 #include <pxr/base/arch/fileSystem.h>
 #include <pxr/base/tf/diagnostic.h>
 
-#include <OpenImageIO/imageio.h>
-
 #include <optional>
 #include <unordered_set>
 
@@ -139,24 +137,6 @@ bool readExtensionFromDataSignature(const std::vector<uint8_t> &data, std::strin
     return false;
 }
 
-bool readImageMetadata(const char *path, int &channelCount, bool &isSrgbInUSD) {
-    using namespace OIIO;
-
-    auto image = ImageInput::open(path);
-    if (!image) {
-        TF_RUNTIME_ERROR("unable to open file for reading: %s", path);
-        return false;
-    }
-
-    const ImageSpec &spec = image->spec();
-    channelCount = spec.nchannels;
-    // Detection logic of HioOIIO_Image::IsColorSpaceSRGB for _sourceColorSpace auto (default value)
-    // https://github.com/PixarAnimationStudios/USD/blob/857ffda41f4f1553fe1019ac7c7b4f08c233a7bb/pxr/imaging/plugin/hioOiio/oiioImage.cpp
-    isSrgbInUSD = (channelCount == 3 || channelCount == 4) && spec.format == TypeDesc::UINT8;
-    image->close();
-    return true;
-}
-
 std::optional<ImageMetadata> processImage(const cgltf_image *image,
                                           const fs::path &srcDir,
                                           const fs::path &dstDir,
@@ -240,13 +220,6 @@ std::optional<ImageMetadata> processImage(const cgltf_image *image,
     ImageMetadata metadata;
     metadata.filePath = dstFilePath;
     metadata.refPath = dstRefPath;
-
-    // Read the metadata required for MaterialX shading network creation
-    if (!readImageMetadata(dstFilePath.c_str(), metadata.channelCount, metadata.isSrgbInUSD)) {
-        TF_RUNTIME_ERROR("unable to read metadata of image %s", dstFilePath.c_str());
-        return std::nullopt;
-    }
-
     return metadata;
 }
 
