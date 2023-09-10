@@ -15,7 +15,7 @@
 
 #include "cgltf_util.h"
 #include "converter.h"
-#include "debugCodes.h"
+#include "debug_codes.h"
 
 using namespace vox;
 namespace fs = std::filesystem;

@@ -11,8 +11,6 @@
 
 #include <MaterialXCore/Document.h>
 #include <MaterialXCore/Value.h>
-#include <MaterialXFormat/XmlIo.h>
-#include <MaterialXFormat/Util.h>
 
 #include <filesystem>
 #include <cassert>

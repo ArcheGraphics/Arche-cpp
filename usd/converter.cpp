@@ -61,7 +61,7 @@ using namespace vox;
 
 template<typename T>
 bool readVtArrayFromNonSparseAccessor(const cgltf_accessor *accessor, VtArray<T> &array) {
-    cgltf_size elementSize = cgltf_calc_size(accessor->type, accessor->component_type);
+    cgltf_size elementSize = vox::cgltf_calc_size(accessor->type, accessor->component_type);
 
     array.resize(accessor->count);
 
@@ -178,9 +178,10 @@ void markAttributeAsGenerated(UsdAttribute attr) {
 
 namespace vox {
 Converter::Converter(const cgltf_data *data, UsdStageRefPtr stage, const Params &params)
-    : m_data(data), m_stage(stage), m_params(params), m_mtlxDoc(mx::createDocument()), m_mtlxConverter(m_mtlxDoc, m_imgMetadata,
-                                                                                                       params.gltfPbrImpl == GltfPbrImpl::Flattened,
-                                                                                                       params.explicitColorspaceTransforms, params.hdStormCompat),
+    : m_data(data), m_stage(stage), m_params(params), m_mtlxDoc(mx::createDocument()),
+      m_mtlxConverter(m_mtlxDoc, m_imgMetadata,
+                      params.gltfPbrImpl == GltfPbrImpl::Flattened,
+                      params.explicitColorspaceTransforms, params.hdStormCompat),
       m_usdPreviewSurfaceConverter(m_stage, m_imgMetadata) {
 }
 
@@ -191,7 +192,7 @@ void Converter::convert(FileExports &fileExports) {
 
     auto defaultPrim = rootXForm.GetPrim();
     m_stage->SetDefaultPrim(defaultPrim);
-    m_stage->SetMetadata(SdfFieldKeys->Documentation, TfStringPrintf("Converted from glTF with guc %s", GUC_VERSION_STRING));
+    m_stage->SetMetadata(SdfFieldKeys->Documentation, TfStringPrintf("Converted from glTF with guc %s", "1.0"));
 
     UsdGeomSetStageUpAxis(m_stage, UsdGeomTokens->y);
     UsdGeomSetStageMetersPerUnit(m_stage, 1.0);

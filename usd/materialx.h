@@ -138,7 +138,7 @@ private:
 private:
     bool getTextureMetadata(const cgltf_texture_view &textureView, ImageMetadata &metadata) const;
     bool getTextureFilePath(const cgltf_texture_view &textureView, std::string &filePath) const;
-    bool isTextureSrgbInUsd(const cgltf_texture_view &textureView) const;
+    [[nodiscard]] bool isTextureSrgbInUsd(const cgltf_texture_view &textureView) const;
     int getTextureChannelCount(const cgltf_texture_view &textureView) const;
 
     std::string getTextureValueType(const cgltf_texture_view &textureView, bool color) const;

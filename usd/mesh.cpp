@@ -12,8 +12,6 @@
 
 #include <mikktspace.h>
 
-#include "debug_codes.h"
-
 namespace vox {
 bool createGeometryRepresentation(const cgltf_primitive *prim,
                                   const VtIntArray &inIndices,

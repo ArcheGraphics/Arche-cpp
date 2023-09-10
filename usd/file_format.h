@@ -15,7 +15,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 #define USDGLTF_FILE_FORMAT_TOKENS \
-    ((Id, "glTF"))((Version, GUC_VERSION_STRING))((Target, "usd"))
+    ((Id, "glTF"))((Version, "1.0"))((Target, "usd"))
 
 TF_DECLARE_PUBLIC_TOKENS(UsdGlTFFileFormatTokens, USDGLTF_FILE_FORMAT_TOKENS);
 
