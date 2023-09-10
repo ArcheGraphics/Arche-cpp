@@ -13,6 +13,17 @@ set(COMMON_FILES
         camera.cpp
         usd_renderer.h
         usd_renderer.cpp
+        # GLTF
+        cgltf_util.cpp
+        converter.cpp
+        debug_codes.cpp
+        file_format.cpp
+        guc.cpp
+        image.cpp
+        materialx.cpp
+        mesh.cpp
+        naming.cpp
+        usd_preview_surface.cpp
 )
 
 source_group("common\\" FILES ${COMMON_FILES})
@@ -37,6 +48,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
+        mikktspace
+        cgltf
         ${PXR_LIBRARY_NAMES}
 )
 

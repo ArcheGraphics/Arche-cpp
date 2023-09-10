@@ -19,3 +19,9 @@
 [submodule "third_party/glfw"]
 	path = third_party/glfw
 	url = https://github.com/glfw/glfw
+[submodule "third_party/cgltf"]
+	path = third_party/cgltf
+	url = https://github.com/jkuhlmann/cgltf
+[submodule "third_party/MikkTSpace"]
+	path = third_party/MikkTSpace
+	url = https://github.com/mmikk/MikkTSpace
