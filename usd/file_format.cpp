@@ -67,8 +67,7 @@ UsdGlTFFileFormat::UsdGlTFFileFormat()
           UsdGlTFFileFormatTokens->Id) {
 }
 
-UsdGlTFFileFormat::~UsdGlTFFileFormat() {
-}
+UsdGlTFFileFormat::~UsdGlTFFileFormat() = default;
 
 bool UsdGlTFFileFormat::CanRead(const std::string &filePath) const {
     // FIXME: implement? In my tests, this is not even called.

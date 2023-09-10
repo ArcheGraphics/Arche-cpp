@@ -164,7 +164,7 @@ bool createTangents(const VtIntArray &indices,
         indices, positions, normals, texcoords, unindexedSigns, unindexedTangents};
 
     auto getNumFacesFunc = [](const SMikkTSpaceContext *pContext) {
-        UserData *userData = (UserData *)pContext->m_pUserData;
+        auto *userData = (UserData *)pContext->m_pUserData;
         return (int)userData->indices.size() / 3;
     };
 
@@ -173,7 +173,7 @@ bool createTangents(const VtIntArray &indices,
     };
 
     auto getPositionFunc = [](const SMikkTSpaceContext *pContext, float fvPosOut[], const int iFace, const int iVert) {
-        UserData *userData = (UserData *)pContext->m_pUserData;
+        auto *userData = (UserData *)pContext->m_pUserData;
         int vertexIndex = userData->indices[iFace * 3 + iVert];
         const GfVec3f &position = userData->positions[vertexIndex];
         fvPosOut[0] = position[0];
@@ -182,7 +182,7 @@ bool createTangents(const VtIntArray &indices,
     };
 
     auto getNormalFunc = [](const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace, const int iVert) {
-        UserData *userData = (UserData *)pContext->m_pUserData;
+        auto *userData = (UserData *)pContext->m_pUserData;
         int vertexIndex = userData->indices[iFace * 3 + iVert];
         const GfVec3f &normal = userData->normals[vertexIndex];
         fvNormOut[0] = normal[0];
@@ -191,7 +191,7 @@ bool createTangents(const VtIntArray &indices,
     };
 
     auto getTexCoordFunc = [](const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace, const int iVert) {
-        UserData *userData = (UserData *)pContext->m_pUserData;
+        auto *userData = (UserData *)pContext->m_pUserData;
         int vertexIndex = userData->indices[iFace * 3 + iVert];
         const GfVec2f &texcoord = userData->texcoords[vertexIndex];
         fvTexcOut[0] = texcoord[0];
@@ -199,7 +199,7 @@ bool createTangents(const VtIntArray &indices,
     };
 
     auto setTSpaceBasicFunc = [](const SMikkTSpaceContext *pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert) {
-        UserData *userData = (UserData *)pContext->m_pUserData;
+        auto *userData = (UserData *)pContext->m_pUserData;
         int newVertexIndex = iFace * 3 + iVert;
         userData->unindexedTangents[newVertexIndex] = GfVec3f(fvTangent[0], fvTangent[1], fvTangent[2]);
         userData->unindexedSigns[newVertexIndex] = fSign;

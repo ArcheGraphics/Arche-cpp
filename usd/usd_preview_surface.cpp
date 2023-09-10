@@ -7,10 +7,10 @@
 #include "usd_preview_surface.h"
 
 #include <pxr/usd/usdShade/material.h>
-#include <pxr/usd/usdShade/materialBindingAPI.h>
 #include <pxr/usd/usdMtlx/reader.h>
 
 #include <filesystem>
+#include <utility>
 
 #include "naming.h"
 #include "debug_codes.h"
@@ -79,7 +79,7 @@ void connectTextureInputOutput(UsdShadeInput &input, UsdShadeShader &node, const
 namespace vox {
 UsdPreviewSurfaceMaterialConverter::UsdPreviewSurfaceMaterialConverter(UsdStageRefPtr stage,
                                                                        const ImageMetadataMap &imageMetadataMap)
-    : m_stage(stage), m_imageMetadataMap(imageMetadataMap) {
+    : m_stage(std::move(stage)), m_imageMetadataMap(imageMetadataMap) {
 }
 
 void UsdPreviewSurfaceMaterialConverter::convert(const cgltf_material *material, const SdfPath &path) {

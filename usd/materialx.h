@@ -40,41 +40,41 @@ private:
                             const std::string &materialName);
 
     void setGltfPbrInputs(const cgltf_material *material,
-                          mx::NodeGraphPtr nodeGraph,
-                          mx::NodePtr shaderNode);
+                          const mx::NodeGraphPtr &nodeGraph,
+                          const mx::NodePtr &shaderNode);
 
 private:
-    void setDiffuseTextureInput(mx::NodeGraphPtr nodeGraph,
-                                mx::InputPtr shaderInput,
+    void setDiffuseTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                const mx::InputPtr &shaderInput,
                                 const cgltf_texture_view *textureView,
                                 const mx::Color3 &factor);
 
-    void setAlphaTextureInput(mx::NodeGraphPtr nodeGraph,
-                              mx::InputPtr shaderInput,
+    void setAlphaTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                              const mx::InputPtr &shaderInput,
                               const cgltf_texture_view *textureView,
                               float factor);
 
-    bool setNormalTextureInput(mx::NodeGraphPtr nodeGraph,
-                               mx::InputPtr shaderInput,
+    bool setNormalTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                               const mx::InputPtr &shaderInput,
                                const cgltf_texture_view &textureView);
 
-    void setOcclusionTextureInput(mx::NodeGraphPtr nodeGraph,
-                                  mx::InputPtr shaderInput,
+    void setOcclusionTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                  const mx::InputPtr &shaderInput,
                                   const cgltf_texture_view &textureView);
 
-    void setIridescenceThicknessInput(mx::NodeGraphPtr nodeGraph,
-                                      mx::InputPtr shaderInput,
+    void setIridescenceThicknessInput(const mx::NodeGraphPtr &nodeGraph,
+                                      const mx::InputPtr &shaderInput,
                                       const cgltf_iridescence *iridescence);
 
 private:
-    void setSrgbTextureInput(mx::NodeGraphPtr nodeGraph,
-                             mx::InputPtr input,
+    void setSrgbTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                             const mx::InputPtr &input,
                              const cgltf_texture_view &textureView,
                              mx::Color3 factor,
                              mx::Color3 fallback);
 
-    void setFloatTextureInput(mx::NodeGraphPtr nodeGraph,
-                              mx::InputPtr input,
+    void setFloatTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                              const mx::InputPtr &input,
                               const cgltf_texture_view &textureView,
                               int channelIndex,
                               float factor,
@@ -105,42 +105,42 @@ private:
     //           | RGBA (4)      | extract_float | convert_color3     |
     //           +---------------+---------------+--------------------+
     //
-    mx::NodePtr addFloatTextureNodes(mx::NodeGraphPtr nodeGraph,
+    mx::NodePtr addFloatTextureNodes(const mx::NodeGraphPtr &nodeGraph,
                                      const cgltf_texture_view &textureView,
                                      std::string &filePath,
                                      int channelIndex,
                                      float defaultValue);
 
-    mx::NodePtr addFloat3TextureNodes(mx::NodeGraphPtr nodeGraph,
+    mx::NodePtr addFloat3TextureNodes(const mx::NodeGraphPtr &nodeGraph,
                                       const cgltf_texture_view &textureView,
                                       std::string &filePath,
                                       bool color,
                                       mx::ValuePtr defaultValue);
 
-    mx::NodePtr addTextureTransformNode(mx::NodeGraphPtr nodeGraph,
-                                        mx::NodePtr texcoordNode,
-                                        const cgltf_texture_transform &transform);
+    static mx::NodePtr addTextureTransformNode(const mx::NodeGraphPtr &nodeGraph,
+                                               const mx::NodePtr &texcoordNode,
+                                               const cgltf_texture_transform &transform);
 
-    mx::NodePtr addTextureNode(mx::NodeGraphPtr nodeGraph,
+    mx::NodePtr addTextureNode(const mx::NodeGraphPtr &nodeGraph,
                                const std::string &filePath,
                                const std::string &textureType,
                                bool isSrgb,
                                const cgltf_texture_view &textureView,
-                               mx::ValuePtr defaultValue);
+                               const mx::ValuePtr &defaultValue);
 
-    mx::NodePtr makeGeompropValueNode(mx::NodeGraphPtr nodeGraph,
+    mx::NodePtr makeGeompropValueNode(const mx::NodeGraphPtr &nodeGraph,
                                       const std::string &geompropName,
                                       const std::string &geompropValueTypeName,
-                                      mx::ValuePtr defaultValue = nullptr);
+                                      const mx::ValuePtr &defaultValue = nullptr);
 
-    void connectNodeGraphNodeToShaderInput(mx::NodeGraphPtr nodeGraph, mx::InputPtr input, mx::NodePtr node);
+    void connectNodeGraphNodeToShaderInput(const mx::NodeGraphPtr &nodeGraph, const mx::InputPtr &input, const mx::NodePtr &node) const;
 
 private:
     bool getTextureMetadata(const cgltf_texture_view &textureView, ImageMetadata &metadata) const;
     bool getTextureFilePath(const cgltf_texture_view &textureView, std::string &filePath) const;
     [[nodiscard]] bool isTextureSrgbInUsd(const cgltf_texture_view &textureView) const;
-    int getTextureChannelCount(const cgltf_texture_view &textureView) const;
+    [[nodiscard]] int getTextureChannelCount(const cgltf_texture_view &textureView) const;
 
-    std::string getTextureValueType(const cgltf_texture_view &textureView, bool color) const;
+    [[nodiscard]] std::string getTextureValueType(const cgltf_texture_view &textureView, bool color) const;
 };
 }// namespace vox

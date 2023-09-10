@@ -8,7 +8,6 @@
 
 #include <pxr/base/tf/envSetting.h>
 #include <pxr/base/gf/matrix4f.h>
-#include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usd/editContext.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdGeom/mesh.h>
@@ -32,9 +31,9 @@
 #include <MaterialXFormat/XmlIo.h>
 #include <MaterialXFormat/Util.h>
 
+#include <utility>
+
 #include "debug_codes.h"
-#include "usd_preview_surface.h"
-#include "materialx.h"
 #include "mesh.h"
 #include "cgltf_util.h"
 #include "image.h"
@@ -169,7 +168,7 @@ bool findMtlxGltfPbrFilePath(fs::path &path) {
     return false;
 }
 
-void markAttributeAsGenerated(UsdAttribute attr) {
+void markAttributeAsGenerated(const UsdAttribute &attr) {
     VtDictionary customData;
     customData[_tokens->generated] = true;
     attr.SetCustomDataByKey(_tokens->guc, VtValue(customData));
@@ -178,7 +177,7 @@ void markAttributeAsGenerated(UsdAttribute attr) {
 
 namespace vox {
 Converter::Converter(const cgltf_data *data, UsdStageRefPtr stage, const Params &params)
-    : m_data(data), m_stage(stage), m_params(params), m_mtlxDoc(mx::createDocument()),
+    : m_data(data), m_stage(std::move(std::move(stage))), m_params(params), m_mtlxDoc(mx::createDocument()),
       m_mtlxConverter(m_mtlxDoc, m_imgMetadata,
                       params.gltfPbrImpl == GltfPbrImpl::Flattened,
                       params.explicitColorspaceTransforms, params.hdStormCompat),
@@ -253,7 +252,7 @@ void Converter::convert(FileExports &fileExports) {
     }
 
     // Step 4: create scene graph (nodes, meshes, lights, cameras, ...)
-    auto createNode = [this](const cgltf_node *nodeData, SdfPath path) {
+    auto createNode = [this](const cgltf_node *nodeData, const SdfPath &path) {
         std::string baseName(nodeData->name ? nodeData->name : "node");
         SdfPath nodePath = makeUniqueStageSubpath(m_stage, path, baseName);
 
@@ -421,7 +420,7 @@ void Converter::createMaterials(FileExports &fileExports, bool createDefaultMate
     } else {
         // Otherwise, write the document as XML to a separate file
         mx::XmlWriteOptions writeOptions;
-        writeOptions.elementPredicate = [](mx::ConstElementPtr elem) {
+        writeOptions.elementPredicate = [](const mx::ConstElementPtr &elem) {
             // Prevent imported libraries (pbrlib etc.) from being emitted as XML includes
             return !elem->hasSourceUri() || elem->getSourceUri() == MTLX_GLTF_PBR_FILE_NAME;
         };
@@ -440,7 +439,7 @@ void Converter::createMaterials(FileExports &fileExports, bool createDefaultMate
     }
 }
 
-void Converter::createNodesRecursively(const cgltf_node *nodeData, SdfPath path) {
+void Converter::createNodesRecursively(const cgltf_node *nodeData, const SdfPath &path) {
     auto xform = UsdGeomXform::Define(m_stage, path);
 
     if (nodeData->has_matrix) {
@@ -502,7 +501,7 @@ void Converter::createNodesRecursively(const cgltf_node *nodeData, SdfPath path)
     }
 }
 
-void Converter::createOrOverCamera(const cgltf_camera *cameraData, SdfPath path) {
+void Converter::createOrOverCamera(const cgltf_camera *cameraData, const SdfPath &path) {
     UsdPrim prim;
     if (overridePrimInPathMap((void *)cameraData, path, prim)) {
         return;
@@ -543,7 +542,7 @@ void Converter::createOrOverCamera(const cgltf_camera *cameraData, SdfPath path)
     m_uniquePaths[(void *)cameraData] = path;
 }
 
-void Converter::createOrOverLight(const cgltf_light *lightData, SdfPath path) {
+void Converter::createOrOverLight(const cgltf_light *lightData, const SdfPath &path) {
     UsdPrim prim;
     if (overridePrimInPathMap((void *)lightData, path, prim)) {
         return;
@@ -582,7 +581,7 @@ void Converter::createOrOverLight(const cgltf_light *lightData, SdfPath path) {
     m_uniquePaths[(void *)lightData] = path;
 }
 
-void Converter::createOrOverMesh(const cgltf_mesh *meshData, SdfPath path) {
+void Converter::createOrOverMesh(const cgltf_mesh *meshData, const SdfPath &path) {
     auto xform = UsdGeomXform::Define(m_stage, path);
 
     for (size_t i = 0; i < meshData->primitives_count; i++) {
@@ -657,7 +656,7 @@ void Converter::createMaterialBinding(UsdPrim &prim, const std::string &material
     }
 }
 
-bool Converter::createPrimitive(const cgltf_primitive *primitiveData, SdfPath path, UsdPrim &prim) {
+bool Converter::createPrimitive(const cgltf_primitive *primitiveData, const SdfPath &path, UsdPrim &prim) {
     const cgltf_material *material = primitiveData->material;
 
     // "If material is undefined, then a default material MUST be used." (glTF spec. 3.7.2.1)

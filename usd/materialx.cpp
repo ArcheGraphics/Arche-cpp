@@ -14,6 +14,7 @@
 
 #include <filesystem>
 #include <cassert>
+#include <utility>
 
 #include "naming.h"
 #include "debug_codes.h"
@@ -47,7 +48,7 @@ namespace detail {
 using namespace vox;
 
 mx::Color3 makeMxColor3(const float *ptr) {
-    return mx::Color3(ptr[0], ptr[1], ptr[2]);
+    return {ptr[0], ptr[1], ptr[2]};
 }
 
 // Same logic as: https://github.com/PixarAnimationStudios/USD/blob/3b097e3ba8fabf1777a1256e241ea15df83f3065/pxr/imaging/hdSt/textureUtils.cpp#L74-L94
@@ -61,7 +62,7 @@ float convertLinearFloatToSrgb(float in) {
     return GfClamp(out, 0.0f, 1.0f);
 }
 
-mx::ValuePtr convertFloat3ValueToSrgb(mx::ValuePtr value) {
+mx::ValuePtr convertFloat3ValueToSrgb(const mx::ValuePtr &value) {
     if (value->isA<mx::Color3>()) {
         auto color = value->asA<mx::Color3>();
         return mx::Value::createValue(mx::Color3(convertLinearFloatToSrgb(color[0]),
@@ -116,7 +117,7 @@ std::string getMtlxAddressMode(int addressMode) {
 // fallback value which is returned when the image can not be loaded must match the image value type,
 // rather than the extracted value. This means, as an example, that when we define a default value
 // for roughness, the float needs to be extrapolated to the R, B, and possibly A component.
-std::string getTextureTypeAdjustedDefaultValueString(mx::ValuePtr defaultValue, const std::string &textureType) {
+std::string getTextureTypeAdjustedDefaultValueString(const mx::ValuePtr &defaultValue, const std::string &textureType) {
     mx::ValuePtr valuePtr = nullptr;
 
     if ((defaultValue->isA<float>() && textureType == MTLX_TYPE_FLOAT) ||
@@ -166,7 +167,7 @@ std::string getTextureTypeAdjustedDefaultValueString(mx::ValuePtr defaultValue, 
     return "";
 }
 
-mx::NodePtr makeClampNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
+mx::NodePtr makeClampNode(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode) {
     mx::NodePtr node = nodeGraph->addNode("clamp", mx::EMPTY_STRING, srcNode->getType());
 
     auto inInput = node->addInput("in", srcNode->getType());
@@ -175,7 +176,7 @@ mx::NodePtr makeClampNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
     return node;
 }
 
-mx::NodePtr makeMultiplyFactorNodeIfNecessary(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode, mx::ValuePtr factor) {
+mx::NodePtr makeMultiplyFactorNodeIfNecessary(const mx::NodeGraphPtr &nodeGraph, mx::NodePtr srcNode, const mx::ValuePtr &factor) {
     // Skip multiplication if possible.
     if ((factor->isA<float>() && factor->asA<float>() == 1.0f) ||
         (factor->isA<mx::Vector3>() && factor->asA<mx::Vector3>() == mx::Vector3(1.0)) ||
@@ -197,7 +198,7 @@ mx::NodePtr makeMultiplyFactorNodeIfNecessary(mx::NodeGraphPtr nodeGraph, mx::No
 
 // These two functions implement the following code with MaterialX nodes:
 // https://github.com/PixarAnimationStudios/USD/blob/3b097e3ba8fabf1777a1256e241ea15df83f3065/pxr/imaging/hdSt/textureUtils.cpp#L74-L94
-mx::NodePtr makeSrgbToLinearConversionNodes(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
+mx::NodePtr makeSrgbToLinearConversionNodes(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode) {
     TF_VERIFY(srcNode->getType() == MTLX_TYPE_FLOAT);
 
     mx::NodePtr leftBranch = nodeGraph->addNode("divide", mx::EMPTY_STRING, MTLX_TYPE_FLOAT);
@@ -254,7 +255,7 @@ mx::NodePtr makeSrgbToLinearConversionNodes(mx::NodeGraphPtr nodeGraph, mx::Node
     return makeClampNode(nodeGraph, ifGrEqNode);
 }
 
-mx::NodePtr makeLinearToSrgbConversionNodes(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
+mx::NodePtr makeLinearToSrgbConversionNodes(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode) {
     TF_VERIFY(srcNode->getType() == MTLX_TYPE_FLOAT);
 
     mx::NodePtr leftBranch = makeMultiplyFactorNodeIfNecessary(nodeGraph, srcNode, mx::Value::createValue(12.92f));
@@ -297,7 +298,7 @@ mx::NodePtr makeLinearToSrgbConversionNodes(mx::NodeGraphPtr nodeGraph, mx::Node
     return makeClampNode(nodeGraph, ifGrEqNode);
 }
 
-mx::NodePtr makeExtractChannelNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode, int index) {
+mx::NodePtr makeExtractChannelNode(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode, int index) {
     mx::NodePtr node = nodeGraph->addNode("extract", mx::EMPTY_STRING, MTLX_TYPE_FLOAT);
 
     auto input = node->addInput("in", srcNode->getType());
@@ -309,7 +310,7 @@ mx::NodePtr makeExtractChannelNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNo
     return node;
 }
 
-mx::NodePtr makeConversionNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode, const std::string &destType) {
+mx::NodePtr makeConversionNode(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode, const std::string &destType) {
     mx::NodePtr node = nodeGraph->addNode("convert", mx::EMPTY_STRING, destType);
 
     auto input = node->addInput("in", srcNode->getType());
@@ -318,7 +319,7 @@ mx::NodePtr makeConversionNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode, 
     return node;
 }
 
-mx::NodePtr makeVectorToWorldSpaceNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
+mx::NodePtr makeVectorToWorldSpaceNode(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode) {
     mx::NodePtr node = nodeGraph->addNode("transformvector", mx::EMPTY_STRING, srcNode->getType());
 
     auto input = node->addInput("in", srcNode->getType());
@@ -333,7 +334,7 @@ mx::NodePtr makeVectorToWorldSpaceNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr s
     return node;
 }
 
-mx::NodePtr makeNormalizeNode(mx::NodeGraphPtr nodeGraph, mx::NodePtr srcNode) {
+mx::NodePtr makeNormalizeNode(const mx::NodeGraphPtr &nodeGraph, const mx::NodePtr &srcNode) {
     mx::NodePtr node = nodeGraph->addNode("normalize", mx::EMPTY_STRING, MTLX_TYPE_VECTOR3);
 
     auto input = node->addInput("in", MTLX_TYPE_VECTOR3);
@@ -349,7 +350,7 @@ MaterialXMaterialConverter::MaterialXMaterialConverter(mx::DocumentPtr doc,
                                                        bool flatten_nodes,
                                                        bool explicit_colorspace_transforms,
                                                        bool hdstorm_compat)
-    : m_doc(doc), m_imageMetadataMap(imageMetadataMap), m_defaultColorSetName(makeColorSetName(0)), m_defaultOpacitySetName(makeOpacitySetName(0)), m_flattenNodes(flatten_nodes), m_explicitColorSpaceTransforms(explicit_colorspace_transforms || hdstorm_compat), m_hdstormCompat(hdstorm_compat) {
+    : m_doc(std::move(std::move(doc))), m_imageMetadataMap(imageMetadataMap), m_defaultColorSetName(makeColorSetName(0)), m_defaultOpacitySetName(makeOpacitySetName(0)), m_flattenNodes(flatten_nodes), m_explicitColorSpaceTransforms(explicit_colorspace_transforms || hdstorm_compat), m_hdstormCompat(hdstorm_compat) {
     if (!m_explicitColorSpaceTransforms) {
         // see MaterialX spec "Color Spaces and Color Management Systems"
         m_doc->setAttribute("colorspace", MTLX_COLORSPACE_LINEAR);
@@ -393,7 +394,7 @@ void MaterialXMaterialConverter::createGltfPbrNodes(const cgltf_material *materi
 
         // 2. Create new surface node.
         mx::NodePtr newSurfaceNode = m_doc->addNode("surface", shaderName, MTLX_TYPE_SURFACESHADER);
-        for (mx::InputPtr surfaceInput : surfaceNode->getInputs()) {
+        for (const mx::InputPtr &surfaceInput : surfaceNode->getInputs()) {
             std::string nodegraphOutputName = "out_" + surfaceInput->getName();
 
             mx::OutputPtr nodegraphOutput = nodeGraph->addOutput(nodegraphOutputName, surfaceInput->getType());
@@ -415,8 +416,8 @@ void MaterialXMaterialConverter::createGltfPbrNodes(const cgltf_material *materi
 }
 
 void MaterialXMaterialConverter::setGltfPbrInputs(const cgltf_material *material,
-                                                  mx::NodeGraphPtr nodeGraph,
-                                                  mx::NodePtr shaderNode) {
+                                                  const mx::NodeGraphPtr &nodeGraph,
+                                                  const mx::NodePtr &shaderNode) {
     mx::InputPtr baseColorInput = shaderNode->addInput("base_color", MTLX_TYPE_COLOR3);
     mx::InputPtr alphaInput = shaderNode->addInput("alpha", MTLX_TYPE_FLOAT);
     mx::InputPtr occlusionInput = shaderNode->addInput("occlusion", MTLX_TYPE_FLOAT);
@@ -611,8 +612,8 @@ void MaterialXMaterialConverter::setGltfPbrInputs(const cgltf_material *material
     }
 }
 
-void MaterialXMaterialConverter::setDiffuseTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                        mx::InputPtr shaderInput,
+void MaterialXMaterialConverter::setDiffuseTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                        const mx::InputPtr &shaderInput,
                                                         const cgltf_texture_view *textureView,
                                                         const mx::Color3 &factor) {
     auto defaultVertexValue = mx::Value::createValue(mx::Vector3(1.0f, 1.0f, 1.0f));
@@ -641,8 +642,8 @@ void MaterialXMaterialConverter::setDiffuseTextureInput(mx::NodeGraphPtr nodeGra
     connectNodeGraphNodeToShaderInput(nodeGraph, shaderInput, multiplyNode2);
 }
 
-void MaterialXMaterialConverter::setAlphaTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                      mx::InputPtr shaderInput,
+void MaterialXMaterialConverter::setAlphaTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                      const mx::InputPtr &shaderInput,
                                                       const cgltf_texture_view *textureView,
                                                       float factor) {
     auto defaultOpacityValue = mx::Value::createValue(1.0f);
@@ -680,8 +681,8 @@ void MaterialXMaterialConverter::setAlphaTextureInput(mx::NodeGraphPtr nodeGraph
     connectNodeGraphNodeToShaderInput(nodeGraph, shaderInput, multiplyNode2);
 }
 
-bool MaterialXMaterialConverter::setNormalTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                       mx::InputPtr shaderInput,
+bool MaterialXMaterialConverter::setNormalTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                       const mx::InputPtr &shaderInput,
                                                        const cgltf_texture_view &textureView) {
     std::string filePath;
     if (!getTextureFilePath(textureView, filePath)) {
@@ -832,8 +833,8 @@ bool MaterialXMaterialConverter::setNormalTextureInput(mx::NodeGraphPtr nodeGrap
     return true;
 }
 
-void MaterialXMaterialConverter::setOcclusionTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                          mx::InputPtr shaderInput,
+void MaterialXMaterialConverter::setOcclusionTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                          const mx::InputPtr &shaderInput,
                                                           const cgltf_texture_view &textureView) {
     std::string filePath;
     if (!getTextureFilePath(textureView, filePath)) {
@@ -871,8 +872,8 @@ void MaterialXMaterialConverter::setOcclusionTextureInput(mx::NodeGraphPtr nodeG
     connectNodeGraphNodeToShaderInput(nodeGraph, shaderInput, addNode);
 }
 
-void MaterialXMaterialConverter::setIridescenceThicknessInput(mx::NodeGraphPtr nodeGraph,
-                                                              mx::InputPtr shaderInput,
+void MaterialXMaterialConverter::setIridescenceThicknessInput(const mx::NodeGraphPtr &nodeGraph,
+                                                              const mx::InputPtr &shaderInput,
                                                               const cgltf_iridescence *iridescence) {
     std::string filePath;
     if (!getTextureFilePath(iridescence->iridescence_thickness_texture, filePath)) {
@@ -901,8 +902,8 @@ void MaterialXMaterialConverter::setIridescenceThicknessInput(mx::NodeGraphPtr n
     connectNodeGraphNodeToShaderInput(nodeGraph, shaderInput, mixNode);
 }
 
-void MaterialXMaterialConverter::setSrgbTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                     mx::InputPtr input,
+void MaterialXMaterialConverter::setSrgbTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                     const mx::InputPtr &input,
                                                      const cgltf_texture_view &textureView,
                                                      mx::Color3 factor,
                                                      mx::Color3 fallback) {
@@ -921,8 +922,8 @@ void MaterialXMaterialConverter::setSrgbTextureInput(mx::NodeGraphPtr nodeGraph,
     }
 }
 
-void MaterialXMaterialConverter::setFloatTextureInput(mx::NodeGraphPtr nodeGraph,
-                                                      mx::InputPtr input,
+void MaterialXMaterialConverter::setFloatTextureInput(const mx::NodeGraphPtr &nodeGraph,
+                                                      const mx::InputPtr &input,
                                                       const cgltf_texture_view &textureView,
                                                       int channelIndex,
                                                       float factor,
@@ -941,7 +942,7 @@ void MaterialXMaterialConverter::setFloatTextureInput(mx::NodeGraphPtr nodeGraph
     }
 }
 
-mx::NodePtr MaterialXMaterialConverter::addFloatTextureNodes(mx::NodeGraphPtr nodeGraph,
+mx::NodePtr MaterialXMaterialConverter::addFloatTextureNodes(const mx::NodeGraphPtr &nodeGraph,
                                                              const cgltf_texture_view &textureView,
                                                              std::string &filePath,
                                                              int channelIndex,
@@ -981,7 +982,7 @@ mx::NodePtr MaterialXMaterialConverter::addFloatTextureNodes(mx::NodeGraphPtr no
     return valueNode;
 }
 
-mx::NodePtr MaterialXMaterialConverter::addFloat3TextureNodes(mx::NodeGraphPtr nodeGraph,
+mx::NodePtr MaterialXMaterialConverter::addFloat3TextureNodes(const mx::NodeGraphPtr &nodeGraph,
                                                               const cgltf_texture_view &textureView,
                                                               std::string &filePath,
                                                               bool color,
@@ -1042,8 +1043,8 @@ mx::NodePtr MaterialXMaterialConverter::addFloat3TextureNodes(mx::NodeGraphPtr n
     return valueNode;
 }
 
-mx::NodePtr MaterialXMaterialConverter::addTextureTransformNode(mx::NodeGraphPtr nodeGraph,
-                                                                mx::NodePtr texcoordNode,
+mx::NodePtr MaterialXMaterialConverter::addTextureTransformNode(const mx::NodeGraphPtr &nodeGraph,
+                                                                const mx::NodePtr &texcoordNode,
                                                                 const cgltf_texture_transform &transform) {
     mx::NodePtr node = nodeGraph->addNode("place2d", mx::EMPTY_STRING, MTLX_TYPE_VECTOR2);
 
@@ -1068,12 +1069,12 @@ mx::NodePtr MaterialXMaterialConverter::addTextureTransformNode(mx::NodeGraphPtr
     return node;
 }
 
-mx::NodePtr MaterialXMaterialConverter::addTextureNode(mx::NodeGraphPtr nodeGraph,
+mx::NodePtr MaterialXMaterialConverter::addTextureNode(const mx::NodeGraphPtr &nodeGraph,
                                                        const std::string &filePath,
                                                        const std::string &textureType,
                                                        bool isSrgb,
                                                        const cgltf_texture_view &textureView,
-                                                       mx::ValuePtr defaultValue) {
+                                                       const mx::ValuePtr &defaultValue) {
     mx::NodePtr node = nodeGraph->addNode("image", mx::EMPTY_STRING, textureType);
 
     const cgltf_texture_transform &transform = textureView.transform;
@@ -1144,10 +1145,10 @@ mx::NodePtr MaterialXMaterialConverter::addTextureNode(mx::NodeGraphPtr nodeGrap
     return node;
 }
 
-mx::NodePtr MaterialXMaterialConverter::makeGeompropValueNode(mx::NodeGraphPtr nodeGraph,
+mx::NodePtr MaterialXMaterialConverter::makeGeompropValueNode(const mx::NodeGraphPtr &nodeGraph,
                                                               const std::string &geompropName,
                                                               const std::string &geompropValueTypeName,
-                                                              mx::ValuePtr defaultValue) {
+                                                              const mx::ValuePtr &defaultValue) {
     mx::NodePtr node;
 #ifndef NDEBUG
     if (TfGetEnvSetting(GUC_ENABLE_MTLX_VIEWER_COMPAT)) {
@@ -1189,7 +1190,7 @@ mx::NodePtr MaterialXMaterialConverter::makeGeompropValueNode(mx::NodeGraphPtr n
     return node;
 }
 
-void MaterialXMaterialConverter::connectNodeGraphNodeToShaderInput(mx::NodeGraphPtr nodeGraph, mx::InputPtr input, mx::NodePtr node) {
+void MaterialXMaterialConverter::connectNodeGraphNodeToShaderInput(const mx::NodeGraphPtr &nodeGraph, const mx::InputPtr &input, const mx::NodePtr &node) const {
     const std::string &nodeName = node->getName();
 
     if (m_flattenNodes) {

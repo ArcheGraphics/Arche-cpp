@@ -176,7 +176,7 @@ std::optional<ImageMetadata> processImage(const cgltf_image *image,
         if (!readImageDataFromBase64(comma + 1, data)) {
             return std::nullopt;
         }
-    } else if (uri && strstr(uri, "://") == NULL) {
+    } else if (uri && strstr(uri, "://") == nullptr) {
         srcFilePath = std::string(uri);
         cgltf_decode_uri(srcFilePath.data());
         srcFilePath = (srcDir / srcFilePath).string();

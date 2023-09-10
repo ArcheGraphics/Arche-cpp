@@ -27,7 +27,7 @@ public:
 
     UsdGlTFFileFormat();
 
-    virtual ~UsdGlTFFileFormat();
+    ~UsdGlTFFileFormat() override;
 
 public:
     bool CanRead(const std::string &file) const override;

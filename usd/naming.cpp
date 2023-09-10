@@ -129,7 +129,7 @@ std::string makeUniqueImageFileName(const char *nameHint,
     return finalName;
 }
 
-SdfPath makeUniqueStageSubpath(UsdStageRefPtr stage,
+SdfPath makeUniqueStageSubpath(const UsdStageRefPtr &stage,
                                const SdfPath &root,
                                const std::string &baseName,
                                const std::string &delimiter) {

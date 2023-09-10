@@ -59,12 +59,12 @@ public:
 
 private:
     void createMaterials(FileExports &fileExports, bool createDefaultMaterial);
-    void createNodesRecursively(const cgltf_node *nodeData, SdfPath path);
-    void createOrOverCamera(const cgltf_camera *cameraData, SdfPath path);
-    void createOrOverLight(const cgltf_light *lightData, SdfPath path);
-    void createOrOverMesh(const cgltf_mesh *meshData, SdfPath path);
+    void createNodesRecursively(const cgltf_node *nodeData, const SdfPath &path);
+    void createOrOverCamera(const cgltf_camera *cameraData, const SdfPath &path);
+    void createOrOverLight(const cgltf_light *lightData, const SdfPath &path);
+    void createOrOverMesh(const cgltf_mesh *meshData, const SdfPath &path);
     void createMaterialBinding(UsdPrim &prim, const std::string &materialName);
-    bool createPrimitive(const cgltf_primitive *primitiveData, SdfPath path, UsdPrim &prim);
+    bool createPrimitive(const cgltf_primitive *primitiveData, const SdfPath &path, UsdPrim &prim);
 
 private:
     bool overridePrimInPathMap(void *dataPtr, const SdfPath &path, UsdPrim &prim);
