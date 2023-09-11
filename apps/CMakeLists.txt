@@ -19,15 +19,33 @@ set(MANIPULATOR_FILES
         manipulators/camera_rig.cpp
 )
 
+set(COMMAND_FILES
+        commands/attribute_commands.cpp
+        commands/command_stack.cpp
+        commands/commands_impl.cpp
+        commands/layer_commands.cpp
+        commands/prim_commands.cpp
+        commands/sdf_command_group.cpp
+        commands/sdf_command_group_recorder.cpp
+        commands/sdf_layer_instructions.cpp
+        commands/sdf_undo_redo_recorder.cpp
+        commands/undo_layer_state_delegate.cpp
+)
+
+set(EDITOR_FILES
+        editor/editor_settings.cpp
+)
+
 add_executable(${PROJECT_NAME}
         main.cpp
         viewport.mm
         camera.cpp
         selection.cpp
         blueprints.cpp
-        editor_settings.cpp
         ${BASE_FILES}
+        ${COMMAND_FILES}
         ${MANIPULATOR_FILES}
+        ${EDITOR_FILES}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
