@@ -31,6 +31,15 @@ set(MANIPULATOR_FILES
         editor/manipulators/manipulator.h
         editor/manipulators/camera_rig.h
         editor/manipulators/camera_rig.cpp
+        editor/manipulators/camera_manipulator.cpp
+        editor/manipulators/mouse_hover_manipulator.cpp
+        editor/manipulators/playblast.cpp
+        editor/manipulators/position_manipulator.cpp
+        editor/manipulators/rotation_manipulator.cpp
+        editor/manipulators/scale_manipulator.cpp
+        editor/manipulators/selection_manipulator.cpp
+        editor/manipulators/viewport.cpp
+        editor/manipulators/imaging_settings.cpp
 )
 
 set(COMMAND_FILES
@@ -93,7 +102,7 @@ set(PROJECT_FILES
         ${BASE_FILES}
         ${COMMAND_FILES}
         ${MANIPULATOR_FILES}
-        ${WIDGETS_FILES}
+#        ${WIDGETS_FILES}
         ${FONT_FILES}
         ${EDITOR_FILES}
 )
