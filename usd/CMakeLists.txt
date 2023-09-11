@@ -70,6 +70,9 @@ set(WIDGETS_FILES
         editor/widgets/vt_value_editor.cpp
 )
 
+set(FONT_FILES
+        editor/fonts/resources_loader.cpp)
+
 set(EDITOR_FILES
         editor/editor/editor_settings.cpp
 )
@@ -91,6 +94,7 @@ set(PROJECT_FILES
         ${COMMAND_FILES}
         ${MANIPULATOR_FILES}
         ${WIDGETS_FILES}
+        ${FONT_FILES}
         ${EDITOR_FILES}
 )
 
