@@ -9,18 +9,7 @@
 #include <string>
 
 namespace vox {
-bool Splitter(bool splitVertically, float thickness, float *size1, float *size2, float minSize1, float minSize2,
-              float splitterLongAxisSize) {
-    ImGuiContext &g = *GImGui;
-    ImGuiWindow *window = g.CurrentWindow;
-    ImGuiID id = window->GetID("##Splitter");
-    ImRect bb;
-    bb.Min = window->DC.CursorPos + (splitVertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
-    bb.Max = bb.Min + ImGui::CalcItemSize(splitVertically ? ImVec2(thickness, splitterLongAxisSize) : ImVec2(splitterLongAxisSize, thickness),
-                                          0.0f, 0.0f);
-    return ImGui::SplitterBehavior(bb, id, splitVertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, minSize1, minSize2, 0.0f);
-}
-
+namespace {
 // Code originaly from David Briscoe & others
 // https://gist.github.com/idbrii/5ddb2135ca122a0ec240ce046d9e6030
 // modified here to have a simpler matching algorithm without scores and a different look.
@@ -32,24 +21,31 @@ bool Splitter(bool splitVertically, float thickness, float *size1, float *size2,
 // My contributions are CC0/public domain.
 
 // Posted in issue: https://github.com/ocornut/imgui/issues/1658#issuecomment-1086193100
-
-#ifdef _WIN64
-#include <shlwapi.h>
-inline bool pattern_match(const char *pattern_buffer, const char *item) { return StrStrIA(item, pattern_buffer) != nullptr; }
-#else
 inline bool pattern_match(const char *pattern_buffer, const char *item) { return strcasestr(item, pattern_buffer) != nullptr; }
-#endif
 
 // Copied from imgui_widgets.cpp
-static float CalcMaxPopupHeightFromItemCount(int items_count) {
+float calc_max_popup_height_from_item_count(int items_count) {
     ImGuiContext &g = *GImGui;
     if (items_count <= 0)
         return FLT_MAX;
     return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2);
 }
+}// namespace
 
-bool ComboWithFilter(const char *label, const char *preview_value, const std::vector<std::string> &items, int *current_item,
-                     ImGuiComboFlags combo_flags, int popup_max_height_in_items) {
+bool splitter(bool splitVertically, float thickness, float *size1, float *size2, float minSize1, float minSize2,
+              float splitterLongAxisSize) {
+    ImGuiContext &g = *GImGui;
+    ImGuiWindow *window = g.CurrentWindow;
+    ImGuiID id = window->GetID("##Splitter");
+    ImRect bb;
+    bb.Min = window->DC.CursorPos + (splitVertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
+    bb.Max = bb.Min + ImGui::CalcItemSize(splitVertically ? ImVec2(thickness, splitterLongAxisSize) : ImVec2(splitterLongAxisSize, thickness),
+                                          0.0f, 0.0f);
+    return ImGui::SplitterBehavior(bb, id, splitVertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, minSize1, minSize2, 0.0f);
+}
+
+bool combo_with_filter(const char *label, const char *preview_value, const std::vector<std::string> &items, int *current_item,
+                       ImGuiComboFlags combo_flags, int popup_max_height_in_items) {
     ImGuiContext &g = *GImGui;
 
     ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -106,7 +102,7 @@ bool ComboWithFilter(const char *label, const char *preview_value, const std::ve
 
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint)) {
         int items = popup_max_height_in_items + search_bar_height;
-        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, CalcMaxPopupHeightFromItemCount(items)));
+        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, calc_max_popup_height_from_item_count(items)));
     }
 
     if (!ImGui::BeginCombo(label, preview_value, combo_flags))

@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.10)
 project(apps)
 
 set(BASE_FILES
+        base/geometric_functions.h
         base/usd_helpers.cpp
         base/imgui_helpers.cpp
 )
@@ -23,6 +24,8 @@ add_executable(${PROJECT_NAME}
         viewport.mm
         camera.cpp
         selection.cpp
+        blueprints.cpp
+        editor_settings.cpp
         ${BASE_FILES}
         ${MANIPULATOR_FILES}
 )
