@@ -7,6 +7,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(apps)
 
+set(BASE_FILES
+        base/usd_helpers.cpp
+        base/imgui_helpers.cpp
+)
+
 set(MANIPULATOR_FILES
         manipulators/manipulator.h
         manipulators/camera_rig.h
@@ -17,7 +22,8 @@ add_executable(${PROJECT_NAME}
         main.cpp
         viewport.mm
         camera.cpp
-        usd_helpers.cpp
+        selection.cpp
+        ${BASE_FILES}
         ${MANIPULATOR_FILES}
 )
 
