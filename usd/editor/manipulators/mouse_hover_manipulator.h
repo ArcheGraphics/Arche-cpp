@@ -11,7 +11,7 @@
 namespace vox {
 class MouseHoverManipulator : public Manipulator {
 public:
-    Manipulator *OnUpdate(Viewport &viewport);
+    Manipulator *on_update(Viewport &viewport) override;
 };
 
 }// namespace vox

@@ -25,7 +25,7 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usdImaging/usdImagingGL/engine.h>
 
-#include "Imaging_settings.h"
+#include "imaging_settings.h"
 
 namespace vox {
 class Viewport final {
@@ -38,89 +38,89 @@ public:
     Viewport &operator=(const Viewport &) = delete;
 
     /// Render hydra
-    void Render();
+    void render();
 
     /// Update internal data: selection, current renderer
-    void Update();
+    void update();
 
     /// Draw the full widget
-    void Draw();
+    void draw();
 
     /// Returns the time code of this viewport
-    UsdTimeCode GetCurrentTimeCode() const { return _imagingSettings.frame; }
-    void SetCurrentTimeCode(const UsdTimeCode &tc);
+    UsdTimeCode get_current_time_code() const { return _imagingSettings.frame; }
+    void set_current_time_code(const UsdTimeCode &tc);
 
     /// Camera framing
-    void FrameSelection(const Selection &);
-    void FrameRootPrim();
+    void frame_selection(const Selection &);
+    void frame_root_prim();
 
     // Cameras
     /// Return the camera used to render the viewport
-    GfCamera &GetCurrentCamera();
-    const GfCamera &GetCurrentCamera() const;
+    GfCamera &get_current_camera();
+    const GfCamera &get_current_camera() const;
 
     // Set the camera path
-    void SetCameraPath(const SdfPath &cameraPath);
-    const SdfPath &GetCameraPath() { return _selectedCameraPath; }
+    void set_camera_path(const SdfPath &cameraPath);
+    const SdfPath &get_camera_path() { return _selectedCameraPath; }
     // Returns a UsdGeom camera if the selected camera is in the stage
-    UsdGeomCamera GetUsdGeomCamera();
+    UsdGeomCamera get_usd_geom_camera();
 
-    CameraManipulator &GetCameraManipulator() { return _cameraManipulator; }
+    CameraManipulator &get_camera_manipulator() { return _cameraManipulator; }
 
     // Picking
-    bool TestIntersection(GfVec2d clickedPoint, SdfPath &outHitPrimPath, SdfPath &outHitInstancerPath, int &outHitInstanceIndex);
-    GfVec2d GetPickingBoundarySize() const;
+    bool test_intersection(GfVec2d clickedPoint, SdfPath &outHitPrimPath, SdfPath &outHitInstancerPath, int &outHitInstanceIndex);
+    GfVec2d get_picking_boundary_size() const;
 
     // Utility function for compute a scale for the manipulators. It uses the distance between the camera
     // and objectPosition. TODO: remove multiplier, not useful anymore
-    double ComputeScaleFactor(const GfVec3d &objectPosition, double multiplier = 1.0) const;
+    double compute_scale_factor(const GfVec3d &objectPosition, double multiplier = 1.0) const;
 
     /// All the manipulators are currently stored in this class, this might change, but right now
     /// GetManipulator is the function that will return the official manipulator based on its type ManipulatorT
     template<typename ManipulatorT>
-    inline Manipulator *GetManipulator();
-    Manipulator &GetActiveManipulator() { return *_activeManipulator; }
+    inline Manipulator *get_manipulator();
+    Manipulator &get_active_manipulator() { return *_activeManipulator; }
 
     // The chosen manipulator is the one selected in the toolbar, Translate/Rotate/Scale/Select ...
     // Manipulator *_chosenManipulator;
     template<typename ManipulatorT>
-    inline void ChooseManipulator() { _activeManipulator = GetManipulator<ManipulatorT>(); };
+    inline void choose_manipulator() { _activeManipulator = get_manipulator<ManipulatorT>(); };
     template<typename ManipulatorT>
-    inline bool IsChosenManipulator() {
-        return _activeManipulator == GetManipulator<ManipulatorT>();
+    inline bool is_chosen_manipulator() {
+        return _activeManipulator == get_manipulator<ManipulatorT>();
     };
 
     /// Draw manipulator toolbox, to select translate, rotate, scale
-    void DrawManipulatorToolbox(const ImVec2 widgetPosition);
+    void draw_manipulator_toolbox(const ImVec2 widgetPosition);
 
     /// Draw toolbar: camera selection, renderer options, viewport options ...
-    void DrawToolBar(const ImVec2 widgetPosition);
+    void draw_tool_bar(const ImVec2 widgetPosition);
 
     /// Draw stage selector
-    void DrawStageSelector(const ImVec2 widgetPosition);
+    void draw_stage_selector(const ImVec2 widgetPosition);
 
     // Position of the mouse in the viewport in normalized unit
     // This is computed in HandleEvents
 
-    GfVec2d GetMousePosition() const { return _mousePosition; }
+    GfVec2d get_mouse_position() const { return _mousePosition; }
 
-    UsdStageRefPtr GetCurrentStage() { return _stage; }
-    const UsdStageRefPtr GetCurrentStage() const { return _stage; };
+    UsdStageRefPtr get_current_stage() { return _stage; }
+    const UsdStageRefPtr get_current_stage() const { return _stage; };
 
-    void SetCurrentStage(UsdStageRefPtr stage) { _stage = stage; }
+    void set_current_stage(UsdStageRefPtr stage) { _stage = stage; }
 
-    Selection &GetSelection() { return _selection; }
+    Selection &get_selection() { return _selection; }
 
-    SelectionManipulator &GetSelectionManipulator() { return _selectionManipulator; }
+    SelectionManipulator &get_selection_manipulator() { return _selectionManipulator; }
 
     /// Handle events is implemented as a finite state machine.
     /// The state are simply the current manipulator used.
-    void HandleManipulationEvents();
-    void HandleKeyboardShortcut();
+    void handle_manipulation_events();
+    void handle_keyboard_shortcut();
 
     /// Playback controls
-    void StartPlayback();
-    void StopPlayback();
+    void start_playback();
+    void stop_playback();
 
 private:
     // Manipulators
@@ -145,11 +145,10 @@ private:
     GfCamera _perspectiveCamera;// opengl
 
     // Hydra canvas
-    void BeginHydraUI(int width, int height);
-    void EndHydraUI();
+    void begin_hydra_ui(int width, int height);
+    void end_hydra_ui();
     GfVec2i _textureSize;
     GfVec2d _mousePosition;
-    Grid _grid;
 
     UsdStageRefPtr _stage;
 
@@ -166,16 +165,16 @@ private:
 };
 
 template<>
-inline Manipulator *Viewport::GetManipulator<PositionManipulator>() { return &_positionManipulator; }
+inline Manipulator *Viewport::get_manipulator<PositionManipulator>() { return &_positionManipulator; }
 template<>
-inline Manipulator *Viewport::GetManipulator<RotationManipulator>() { return &_rotationManipulator; }
+inline Manipulator *Viewport::get_manipulator<RotationManipulator>() { return &_rotationManipulator; }
 template<>
-inline Manipulator *Viewport::GetManipulator<MouseHoverManipulator>() { return &_mouseHover; }
+inline Manipulator *Viewport::get_manipulator<MouseHoverManipulator>() { return &_mouseHover; }
 template<>
-inline Manipulator *Viewport::GetManipulator<CameraManipulator>() { return &_cameraManipulator; }
+inline Manipulator *Viewport::get_manipulator<CameraManipulator>() { return &_cameraManipulator; }
 template<>
-inline Manipulator *Viewport::GetManipulator<SelectionManipulator>() { return &_selectionManipulator; }
+inline Manipulator *Viewport::get_manipulator<SelectionManipulator>() { return &_selectionManipulator; }
 template<>
-inline Manipulator *Viewport::GetManipulator<ScaleManipulator>() { return &_scaleManipulator; }
+inline Manipulator *Viewport::get_manipulator<ScaleManipulator>() { return &_scaleManipulator; }
 
 }// namespace vox

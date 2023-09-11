@@ -8,45 +8,46 @@
 #include "camera_manipulator.h"
 #include "viewport.h"
 #include "commands/commands.h"
+#include <imgui.h>
 
 namespace vox {
 CameraManipulator::CameraManipulator(const GfVec2i &viewportSize, bool isZUp) : CameraRig(viewportSize, isZUp) {}
 
-void CameraManipulator::OnBeginEdition(Viewport &viewport) {
-    _stageCamera = viewport.GetUsdGeomCamera();
+void CameraManipulator::on_begin_edition(Viewport &viewport) {
+    _stageCamera = viewport.get_usd_geom_camera();
     if (_stageCamera) {
-        BeginEdition(viewport.GetCurrentStage());
+        begin_edition(viewport.get_current_stage());
     }
 }
 
-void CameraManipulator::OnEndEdition(Viewport &viewport) {
+void CameraManipulator::on_end_edition(Viewport &viewport) {
     if (_stageCamera) {
-        EndEdition();
+        end_edition();
     }
 }
 
-Manipulator *CameraManipulator::OnUpdate(Viewport &viewport) {
-    auto &cameraManipulator = viewport.GetCameraManipulator();
+Manipulator *CameraManipulator::on_update(Viewport &viewport) {
+    auto &cameraManipulator = viewport.get_camera_manipulator();
     ImGuiIO &io = ImGui::GetIO();
 
     /// If the user released key alt, escape camera manipulation
     if (!ImGui::IsKeyDown(ImGuiKey_LeftAlt)) {
-        return viewport.GetManipulator<MouseHoverManipulator>();
+        return viewport.get_manipulator<MouseHoverManipulator>();
     } else if (ImGui::IsMouseReleased(1) || ImGui::IsMouseReleased(2) || ImGui::IsMouseReleased(0)) {
-        SetMovementType(MovementType::None);
+        set_movement_type(MovementType::None);
     } else if (ImGui::IsMouseClicked(0)) {
-        SetMovementType(MovementType::Orbit);
+        set_movement_type(MovementType::Orbit);
     } else if (ImGui::IsMouseClicked(2)) {
-        SetMovementType(MovementType::Truck);
+        set_movement_type(MovementType::Truck);
     } else if (ImGui::IsMouseClicked(1)) {
-        SetMovementType(MovementType::Dolly);
+        set_movement_type(MovementType::Dolly);
     }
-    auto &currentCamera = viewport.GetCurrentCamera();
+    auto &currentCamera = viewport.get_current_camera();
 
-    if (Move(currentCamera, io.MouseDelta.x, io.MouseDelta.y)) {
+    if (move(currentCamera, io.MouseDelta.x, io.MouseDelta.y)) {
         if (_stageCamera) {
             // This is going to fill the undo/redo buffer :S
-            _stageCamera.SetFromCamera(currentCamera, viewport.GetCurrentTimeCode());
+            _stageCamera.SetFromCamera(currentCamera, viewport.get_current_time_code());
         }
     }
 

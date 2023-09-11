@@ -15,9 +15,9 @@ class CameraManipulator : public CameraRig, public Manipulator {
 public:
     CameraManipulator(const GfVec2i &viewportSize, bool isZUp = false);
 
-    void OnBeginEdition(Viewport &) override;
-    Manipulator *OnUpdate(Viewport &) override;
-    void OnEndEdition(Viewport &) override;
+    void on_begin_edition(Viewport &) override;
+    Manipulator *on_update(Viewport &) override;
+    void on_end_edition(Viewport &) override;
 
 private:
     UsdGeomCamera _stageCamera;

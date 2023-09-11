@@ -9,7 +9,8 @@
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/camera.h>
-
+#include <imgui.h>
+#include <imgui_stdlib.h>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -47,7 +48,7 @@ PlayblastModalDialog::PlayblastModalDialog(UsdStagePtr stage) : _stage(stage) {
     }
 };
 
-void PlayblastModalDialog::Draw() {
+void PlayblastModalDialog::draw() {
     // Draw available cameras
     const char *selectedCameraName = _cameraPath == SdfPath() ? "No camera" : _cameraPath.GetText();
     if (ImGui::BeginCombo("Stage camera", selectedCameraName)) {
@@ -96,13 +97,13 @@ void PlayblastModalDialog::Draw() {
                 _recorder.Record(_stage, camera, UsdTimeCode::Default(), outputFrame.string());
             }
         }
-        CloseModal();
+        close_modal();
     }
     ImGui::SameLine();
     ImGui::EndDisabled();
 
     if (ImGui::Button("Cancel")) {
-        CloseModal();
+        close_modal();
     }
 }
 

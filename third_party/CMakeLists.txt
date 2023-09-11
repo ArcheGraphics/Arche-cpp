@@ -42,9 +42,11 @@ set(IMGUI_FILES
         "${IMGUI_DIR}/imgui_internal.h"
         "${IMGUI_DIR}/imstb_rectpack.h"
         "${IMGUI_DIR}/imstb_textedit.h"
-        "${IMGUI_DIR}/imstb_truetype.h")
+        "${IMGUI_DIR}/imstb_truetype.h"
+        "${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp"
+        "${IMGUI_DIR}/misc/cpp/imgui_stdlib.h")
 add_library(imgui STATIC ${IMGUI_FILES})
-target_include_directories(imgui PUBLIC ${IMGUI_DIR})
+target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/misc/cpp)
 target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/imconfig.h")
 set_target_properties(imgui PROPERTIES FOLDER "ThirdParty" POSITION_INDEPENDENT_CODE ON)
 

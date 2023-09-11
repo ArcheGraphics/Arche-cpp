@@ -19,22 +19,22 @@ namespace vox {
 static constexpr float axisSize = 1.2f;
 static constexpr int nbSegments = 1024;// nb segments per circle
 
-static void CreateCircle(std::vector<GfVec2d> &points) {
+static void create_circle(std::vector<GfVec2d> &points) {
     points.clear();
     points.reserve(3 * nbSegments);
     for (int i = 0; i < nbSegments; ++i) {
-        points.emplace_back(cos(2.f * PI_F * i / nbSegments), sin(2.f * PI_F * i / nbSegments));
+        points.emplace_back(cos(2.f * std::numbers::pi_v<float> * i / nbSegments), sin(2.f * std::numbers::pi_v<float> * i / nbSegments));
     }
 }
 
 RotationManipulator::RotationManipulator() : _selectedAxis(None) {
-    CreateCircle(_manipulatorCircles);
+    create_circle(_manipulatorCircles);
     _manipulator2dPoints.reserve(3 * nbSegments);
 }
 
 RotationManipulator::~RotationManipulator() {}
 
-static bool IntersectsUnitCircle(const GfVec3d &planeNormal3d, const GfVec3d &planeOrigin3d, const GfRay &ray, float scale) {
+static bool intersects_unit_circle(const GfVec3d &planeNormal3d, const GfVec3d &planeOrigin3d, const GfRay &ray, float scale) {
     if (scale == 0)
         return false;
 
@@ -52,28 +52,27 @@ static bool IntersectsUnitCircle(const GfVec3d &planeNormal3d, const GfVec3d &pl
     return false;
 }
 
-bool RotationManipulator::IsMouseOver(const Viewport &viewport) {
-
+bool RotationManipulator::is_mouse_over(const Viewport &viewport) {
     if (_xformable) {
-        const GfVec2d mousePosition = viewport.GetMousePosition();
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
+        const GfVec2d mousePosition = viewport.get_mouse_position();
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
         const GfRay ray = frustum.ComputeRay(mousePosition);
-        const auto manipulatorCoordinates = ComputeManipulatorToWorldTransform(viewport);
+        const auto manipulatorCoordinates = compute_manipulator_to_world_transform(viewport);
         const GfVec3d xAxis = manipulatorCoordinates.GetRow3(0);
         const GfVec3d yAxis = manipulatorCoordinates.GetRow3(1);
         const GfVec3d zAxis = manipulatorCoordinates.GetRow3(2);
         const GfVec3d origin = manipulatorCoordinates.GetRow3(3);
 
         // Circles are scaled to keep the same screen size
-        double scale = viewport.ComputeScaleFactor(origin, axisSize);
+        double scale = viewport.compute_scale_factor(origin, axisSize);
 
-        if (IntersectsUnitCircle(xAxis, origin, ray, scale)) {
+        if (intersects_unit_circle(xAxis, origin, ray, scale)) {
             _selectedAxis = XAxis;
             return true;
-        } else if (IntersectsUnitCircle(yAxis, origin, ray, scale)) {
+        } else if (intersects_unit_circle(yAxis, origin, ray, scale)) {
             _selectedAxis = YAxis;
             return true;
-        } else if (IntersectsUnitCircle(zAxis, origin, ray, scale)) {
+        } else if (intersects_unit_circle(zAxis, origin, ray, scale)) {
             _selectedAxis = ZAxis;
             return true;
         }
@@ -82,17 +81,17 @@ bool RotationManipulator::IsMouseOver(const Viewport &viewport) {
     return false;
 }
 
-void RotationManipulator::OnSelectionChange(Viewport &viewport) {
+void RotationManipulator::on_selection_change(Viewport &viewport) {
     // TODO: we should set here if the new selection will be editable or not
-    auto &selection = viewport.GetSelection();
-    auto primPath = selection.GetAnchorPrimPath(viewport.GetCurrentStage());
-    _xformAPI = UsdGeomXformCommonAPI(viewport.GetCurrentStage()->GetPrimAtPath(primPath));
+    auto &selection = viewport.get_selection();
+    auto primPath = selection.get_anchor_prim_path(viewport.get_current_stage());
+    _xformAPI = UsdGeomXformCommonAPI(viewport.get_current_stage()->GetPrimAtPath(primPath));
     _xformable = UsdGeomXformable(_xformAPI.GetPrim());
 }
 
-GfMatrix4d RotationManipulator::ComputeManipulatorToWorldTransform(const Viewport &viewport) {
+GfMatrix4d RotationManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
-        const auto currentTime = GetViewportTimeCode(viewport);
+        const auto currentTime = get_viewport_time_code(viewport);
         GfVec3d translation;
         GfVec3f rotation, scale, pivot;
 
@@ -119,10 +118,10 @@ GfMatrix4d RotationManipulator::ComputeManipulatorToWorldTransform(const Viewpor
 // critical at this point. Use a binary search algorithm on rotated array to find the begining of the visible part,
 // then iterate but with less resolution (1 point every 3 samples for example)
 template<int axis>
-inline static size_t ProjectHalfCircle(const std::vector<GfVec2d> &_manipulatorCircles, double scale,
-                                       const GfVec3d &cameraPosition, const GfVec4d &manipulatorOrigin, const GfMatrix4d &mv,
-                                       const GfMatrix4d &proj, const GfVec2d &textureSize, const GfMatrix4d &toWorld,
-                                       std::vector<ImVec2> &_manipulator2dPoints) {
+inline static size_t project_half_circle(const std::vector<GfVec2d> &_manipulatorCircles, double scale,
+                                         const GfVec3d &cameraPosition, const GfVec4d &manipulatorOrigin, const GfMatrix4d &mv,
+                                         const GfMatrix4d &proj, const GfVec2d &textureSize, const GfMatrix4d &toWorld,
+                                         std::vector<ImVec2> &_manipulator2dPoints) {
     int rotateIndex = -1;
     size_t circleBegin = _manipulator2dPoints.size();
     for (int i = 0; i < _manipulatorCircles.size(); ++i) {
@@ -133,7 +132,7 @@ inline static size_t ProjectHalfCircle(const std::vector<GfVec2d> &_manipulatorC
                                  (pointInWorldSpace - manipulatorOrigin));
         if (dot >= 0.0) {
             const GfVec2d pointInPixelSpace =
-                ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(pointInWorldSpace.data()));
+                project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(pointInWorldSpace.data()));
             _manipulator2dPoints.emplace_back(pointInPixelSpace[0], pointInPixelSpace[1]);
         } else {
             if (rotateIndex == -1 && _manipulator2dPoints.size() > circleBegin) {
@@ -160,20 +159,19 @@ inline ImColor AxisColor(int selectedAxis) {
     }
 }
 
-void RotationManipulator::OnDrawFrame(const Viewport &viewport) {
-
+void RotationManipulator::on_draw_frame(const Viewport &viewport) {
     if (_xformable) {
-        const auto &camera = viewport.GetCurrentCamera();
+        const auto &camera = viewport.get_current_camera();
         auto mv = camera.GetFrustum().ComputeViewMatrix();
         auto proj = camera.GetFrustum().ComputeProjectionMatrix();
-        auto manipulatorCoordinates = ComputeManipulatorToWorldTransform(viewport);
+        auto manipulatorCoordinates = compute_manipulator_to_world_transform(viewport);
         auto origin = manipulatorCoordinates.ExtractTranslation();
         auto cameraPosition = mv.GetInverse().ExtractTranslation();
 
         // Circles must be scaled to keep the same screen size
-        double scale = viewport.ComputeScaleFactor(origin, axisSize);
+        double scale = viewport.compute_scale_factor(origin, axisSize);
 
-        const auto toWorld = ComputeManipulatorToWorldTransform(viewport);
+        const auto toWorld = compute_manipulator_to_world_transform(viewport);
 
         ImDrawList *draw_list = ImGui::GetWindowDrawList();
         ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -182,12 +180,12 @@ void RotationManipulator::OnDrawFrame(const Viewport &viewport) {
         const GfVec4d manipulatorOrigin = GfVec4d(origin[0], origin[1], origin[2], 1.0);
         // Fill _manipulator2dPoints
         _manipulator2dPoints.clear();
-        const size_t xEnd = ProjectHalfCircle<0>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
-                                                 textureSize, toWorld, _manipulator2dPoints);
-        const size_t yEnd = ProjectHalfCircle<1>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
-                                                 textureSize, toWorld, _manipulator2dPoints);
-        const size_t zEnd = ProjectHalfCircle<2>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
-                                                 textureSize, toWorld, _manipulator2dPoints);
+        const size_t xEnd = project_half_circle<0>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
+                                                   textureSize, toWorld, _manipulator2dPoints);
+        const size_t yEnd = project_half_circle<1>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
+                                                   textureSize, toWorld, _manipulator2dPoints);
+        const size_t zEnd = project_half_circle<2>(_manipulatorCircles, scale, cameraPosition, manipulatorOrigin, mv, proj,
+                                                   textureSize, toWorld, _manipulator2dPoints);
 
         draw_list->AddPolyline(_manipulator2dPoints.data(), xEnd, AxisColor<XAxis>(_selectedAxis), ImDrawFlags_None, 3);
         draw_list->AddPolyline(_manipulator2dPoints.data() + xEnd, yEnd - xEnd, AxisColor<YAxis>(_selectedAxis), ImDrawFlags_None, 3);
@@ -196,13 +194,12 @@ void RotationManipulator::OnDrawFrame(const Viewport &viewport) {
 }
 
 // TODO: find a more meaningful function name
-GfVec3d RotationManipulator::ComputeClockHandVector(Viewport &viewport) {
-
+GfVec3d RotationManipulator::compute_clock_hand_vector(Viewport &viewport) {
     const GfPlane plane(_planeNormal3d, _planeOrigin3d);
     double distance = 0.0;
 
-    const GfVec2d mousePosition = viewport.GetMousePosition();
-    const GfFrustum frustum = viewport.GetCurrentCamera().GetFrustum();
+    const GfVec2d mousePosition = viewport.get_mouse_position();
+    const GfFrustum frustum = viewport.get_current_camera().GetFrustum();
     const GfRay ray = frustum.ComputeRay(mousePosition);
     if (ray.Intersect(plane, &distance)) {
         const auto intersection = ray.GetPoint(distance);
@@ -212,9 +209,9 @@ GfVec3d RotationManipulator::ComputeClockHandVector(Viewport &viewport) {
     return GfVec3d();
 }
 
-void RotationManipulator::OnBeginEdition(Viewport &viewport) {
+void RotationManipulator::on_begin_edition(Viewport &viewport) {
     if (_xformable) {
-        const auto manipulatorCoordinates = ComputeManipulatorToWorldTransform(viewport);
+        const auto manipulatorCoordinates = compute_manipulator_to_world_transform(viewport);
         _planeOrigin3d = manipulatorCoordinates.ExtractTranslation();
         _planeNormal3d = GfVec3d();// default init
         if (_selectedAxis == XAxis) {
@@ -226,29 +223,29 @@ void RotationManipulator::OnBeginEdition(Viewport &viewport) {
         }
 
         // Compute rotation starting point
-        _rotateFrom = ComputeClockHandVector(viewport);
+        _rotateFrom = compute_clock_hand_vector(viewport);
 
         // Save the rotation values
         GfVec3d translation;
         GfVec3f rotation, scale, pivot;
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder,
-                                                GetViewportTimeCode(viewport));
+                                                get_viewport_time_code(viewport));
 
         _rotateMatrixOnBegin =
             UsdGeomXformOp::GetOpTransform(UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(rotOrder), VtValue(rotation));
     }
-    BeginEdition(viewport.GetCurrentStage());
+    begin_edition(viewport.get_current_stage());
 }
 
-Manipulator *RotationManipulator::OnUpdate(Viewport &viewport) {
+Manipulator *RotationManipulator::on_update(Viewport &viewport) {
     if (ImGui::IsMouseReleased(0)) {
-        return viewport.GetManipulator<MouseHoverManipulator>();
+        return viewport.get_manipulator<MouseHoverManipulator>();
     }
     if (_xformable && _selectedAxis != None) {
 
         // Compute rotation angle in world coordinates
-        const GfVec3d rotateTo = ComputeClockHandVector(viewport);
+        const GfVec3d rotateTo = compute_clock_hand_vector(viewport);
         const GfRotation worldRotation(_rotateFrom, rotateTo);
         const auto axisSign = _planeNormal3d * worldRotation.GetAxis() > 0 ? 1.0 : -1.0;
 
@@ -276,7 +273,7 @@ Manipulator *RotationManipulator::OnUpdate(Viewport &viewport) {
         GfVec3f rotation, scale, pivot;
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder,
-                                                GetViewportTimeCode(viewport));
+                                                get_viewport_time_code(viewport));
         double thetaTw = GfDegreesToRadians(rotation[0]);
         double thetaFB = GfDegreesToRadians(rotation[1]);
         double thetaLR = GfDegreesToRadians(rotation[2]);
@@ -286,7 +283,7 @@ Manipulator *RotationManipulator::OnUpdate(Viewport &viewport) {
         const GfVec3f newRotationValues =
             GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR));
         if (_xformAPI) {
-            _xformAPI.SetRotate(newRotationValues, rotOrder, GetEditionTimeCode(viewport));
+            _xformAPI.SetRotate(newRotationValues, rotOrder, get_edition_time_code(viewport));
         } else {// Modify only if we have a single matrix
             bool reset = false;
             auto ops = _xformable.GetOrderedXformOps(&reset);
@@ -295,7 +292,7 @@ Manipulator *RotationManipulator::OnUpdate(Viewport &viewport) {
                 // "xformOp:scale", "!invert!xformOp:translate:pivot" ] - No pivot here
                 GfMatrix4d current = GfMatrix4d().SetScale(scale) * _rotateMatrixOnBegin *
                                      GfMatrix4d(1.0).SetRotate(deltaRotation) * GfMatrix4d().SetTranslate(translation);
-                ops[0].Set(current, GetEditionTimeCode(viewport));
+                ops[0].Set(current, get_edition_time_code(viewport));
             }
         }
     }
@@ -303,20 +300,20 @@ Manipulator *RotationManipulator::OnUpdate(Viewport &viewport) {
     return this;
 };
 
-void RotationManipulator::OnEndEdition(Viewport &) { EndEdition(); }
+void RotationManipulator::on_end_edition(Viewport &) { end_edition(); }
 
 // TODO code should be shared with position manipulator
-UsdTimeCode RotationManipulator::GetEditionTimeCode(const Viewport &viewport) {
+UsdTimeCode RotationManipulator::get_edition_time_code(const Viewport &viewport) {
     std::vector<double> timeSamples;// TODO: is there a faster way to know it the xformable has timesamples ?
     const auto xformable = UsdGeomXformable(_xformAPI.GetPrim());
     xformable.GetTimeSamples(&timeSamples);
     if (timeSamples.empty()) {
         return UsdTimeCode::Default();
     } else {
-        return GetViewportTimeCode(viewport);
+        return get_viewport_time_code(viewport);
     }
 }
 
-UsdTimeCode RotationManipulator::GetViewportTimeCode(const Viewport &viewport) { return viewport.GetCurrentTimeCode(); }
+UsdTimeCode RotationManipulator::get_viewport_time_code(const Viewport &viewport) { return viewport.get_current_time_code(); }
 
 }// namespace vox

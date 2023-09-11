@@ -13,16 +13,16 @@
 
 namespace vox {
 template<typename HasPositionT>
-inline void CopyCameraPosition(const GfCamera &camera, HasPositionT &object) {
+inline void copy_camera_position(const GfCamera &camera, HasPositionT &object) {
     GfVec3d camPos = camera.GetFrustum().GetPosition();
     GfVec4f lightPos(camPos[0], camPos[1], camPos[2], 1.0);
     object.SetPosition(lightPos);
 }
 
-void ImagingSettings::SetLightPositionFromCamera(const GfCamera &camera) {
+void ImagingSettings::set_light_position_from_camera(const GfCamera &camera) {
     if (_lights.empty())
         return;
-    CopyCameraPosition(camera, _lights[0]);
+    copy_camera_position(camera, _lights[0]);
 }
 
 ImagingSettings::ImagingSettings() {
@@ -55,7 +55,7 @@ ImagingSettings::ImagingSettings() {
     _ambient = {0.0, 0.0, 0.0, 0.0};
 }
 
-const GlfSimpleLightVector &ImagingSettings::GetLights() {
+const GlfSimpleLightVector &ImagingSettings::get_lights() {
     // Only a camera light for the moment
     if (enableCameraLight && _lights.empty()) {
         GlfSimpleLight simpleLight;
@@ -77,23 +77,23 @@ const GlfSimpleLightVector &ImagingSettings::GetLights() {
 // This is obviously not thread safe but supposed to work in the main rendering thread
 static std::map<TfToken, TfToken> aovSelection;// a vector might be faster
 
-static void SetAovSelection(UsdImagingGLEngine &renderer, TfToken aov) { aovSelection[renderer.GetCurrentRendererId()] = aov; }
+static void set_aov_selection(UsdImagingGLEngine &renderer, TfToken aov) { aovSelection[renderer.GetCurrentRendererId()] = aov; }
 
-static TfToken GetAovSelection(UsdImagingGLEngine &renderer) {
+static TfToken get_aov_selection(UsdImagingGLEngine &renderer) {
     auto aov = aovSelection.find(renderer.GetCurrentRendererId());
     if (aov == aovSelection.end()) {
-        SetAovSelection(renderer, TfToken("color"));
+        set_aov_selection(renderer, TfToken("color"));
         return TfToken("color");
     } else {
         return aov->second;
     }
 }
 
-void InitializeRendererAov(UsdImagingGLEngine &renderer) {
-    renderer.SetRendererAov(GetAovSelection(renderer));
+void initialize_renderer_aov(UsdImagingGLEngine &renderer) {
+    renderer.SetRendererAov(get_aov_selection(renderer));
 }
 
-void DrawImagingSettings(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
+void draw_imaging_settings(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     // General render parameters
     ImGui::ColorEdit4("Background color", renderparams.clearColor.data());
@@ -146,17 +146,17 @@ void DrawImagingSettings(UsdImagingGLEngine &renderer, ImagingSettings &renderpa
     ImGui::Checkbox("Show grid", &renderparams.showGrid);
 }
 
-void DrawRendererSelectionCombo(UsdImagingGLEngine &renderer) {
+void draw_renderer_selection_combo(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     const auto currentPlugin = renderer.GetCurrentRendererId();
     std::string pluginName = renderer.GetRendererDisplayName(currentPlugin);
     if (ImGui::BeginCombo("Renderer", pluginName.c_str())) {
-        DrawRendererSelectionList(renderer);
+        draw_renderer_selection_list(renderer);
         ImGui::EndCombo();
     }
 }
 
-void DrawRendererSelectionList(UsdImagingGLEngine &renderer) {
+void draw_renderer_selection_list(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     const auto currentPlugin = renderer.GetCurrentRendererId();
     auto plugins = renderer.GetRendererPlugins();
@@ -170,7 +170,7 @@ void DrawRendererSelectionList(UsdImagingGLEngine &renderer) {
             if (!renderer.SetRendererPlugin(plugins[n])) {
                 std::cerr << "unable to set default renderer plugin" << std::endl;
             } else {
-                renderer.SetRendererAov(GetAovSelection(renderer));
+                renderer.SetRendererAov(get_aov_selection(renderer));
             }
         }
         if (is_selected)
@@ -178,7 +178,7 @@ void DrawRendererSelectionList(UsdImagingGLEngine &renderer) {
     }
 }
 
-void DrawRendererControls(UsdImagingGLEngine &renderer) {
+void draw_renderer_controls(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     if (renderer.IsPauseRendererSupported()) {
         ImGui::Separator();
@@ -201,7 +201,7 @@ void DrawRendererControls(UsdImagingGLEngine &renderer) {
     }
 }
 
-void DrawRendererCommands(UsdImagingGLEngine &renderer) {
+void draw_renderer_commands(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     if (ImGui::BeginMenu("Renderer Commands")) {
         HdCommandDescriptors commands = renderer.GetRendererCommandDescriptors();
@@ -216,7 +216,7 @@ void DrawRendererCommands(UsdImagingGLEngine &renderer) {
     }
 }
 
-void DrawRendererSettings(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
+void draw_renderer_settings(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     // Renderer settings
     for (auto setting : renderer.GetRendererSettingsList()) {
@@ -230,9 +230,9 @@ void DrawRendererSettings(UsdImagingGLEngine &renderer, ImagingSettings &renderp
     }
 }
 
-void DrawColorCorrection(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
+void draw_color_correction(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
-    if (renderer.IsColorCorrectionCapable() && GetAovSelection(renderer) == TfToken("color")) {
+    if (renderer.IsColorCorrectionCapable() && get_aov_selection(renderer) == TfToken("color")) {
         ImGui::Separator();
         // Gamma correction is not implemented yet in usd
         // ImGui::Checkbox("Gamma correction", &renderparams.gammaCorrectColors);
@@ -252,10 +252,10 @@ void DrawColorCorrection(UsdImagingGLEngine &renderer, ImagingSettings &renderpa
     }
 }
 
-void DrawAovSettings(UsdImagingGLEngine &renderer) {
+void draw_aov_settings(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     TfToken newSelection;
-    const TfToken selectedAov = GetAovSelection(renderer);
+    const TfToken selectedAov = get_aov_selection(renderer);
     if (ImGui::BeginCombo("AOV", selectedAov.GetString().c_str())) {
         for (auto &aov : renderer.GetRendererAovs()) {
             if (ImGui::Selectable(aov.GetString().c_str())) {
@@ -266,7 +266,7 @@ void DrawAovSettings(UsdImagingGLEngine &renderer) {
     }
     if (newSelection != TfToken()) {
         renderer.SetRendererAov(newSelection);
-        SetAovSelection(renderer, newSelection);
+        set_aov_selection(renderer, newSelection);
     }
 }
 

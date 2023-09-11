@@ -13,7 +13,7 @@
 #include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 
-#include "Manipulator.h"
+#include "manipulator.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -26,24 +26,24 @@ public:
 
     /// From ViewportEditor
     /// Note: a Manipulator does not store a viewport as it can be rendered in multiple viewport at the same time
-    void OnBeginEdition(Viewport &) override;
-    Manipulator *OnUpdate(Viewport &) override;
-    void OnEndEdition(Viewport &) override;
+    void on_begin_edition(Viewport &) override;
+    Manipulator *on_update(Viewport &) override;
+    void on_end_edition(Viewport &) override;
 
     /// Return true if the mouse is over this manipulator for the viewport passed in argument
-    bool IsMouseOver(const Viewport &) override;
+    bool is_mouse_over(const Viewport &) override;
 
     /// Draw the translate manipulator as seen in the viewport
-    void OnDrawFrame(const Viewport &) override;
+    void on_draw_frame(const Viewport &) override;
 
     /// Called when the viewport changes its selection
-    void OnSelectionChange(Viewport &) override;
+    void on_selection_change(Viewport &) override;
 
 private:
-    void ProjectMouseOnAxis(const Viewport &viewport, GfVec3d &closestPoint);
-    GfMatrix4d ComputeManipulatorToWorldTransform(const Viewport &viewport);
+    void project_mouse_on_axis(const Viewport &viewport, GfVec3d &closestPoint);
+    GfMatrix4d compute_manipulator_to_world_transform(const Viewport &viewport);
 
-    UsdTimeCode GetEditionTimeCode(const Viewport &viewport);
+    UsdTimeCode get_edition_time_code(const Viewport &viewport);
 
     ManipulatorAxis _selectedAxis;
 

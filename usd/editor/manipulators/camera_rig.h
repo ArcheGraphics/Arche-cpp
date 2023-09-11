@@ -30,22 +30,22 @@ public:
     CameraRig &operator=(const CameraRig &) = delete;
 
     /// Reset the camera position to the original position
-    void ResetPosition(GfCamera &);
+    void reset_position(GfCamera &);
 
     /// Set the type of movement
-    void SetMovementType(MovementType mode) { _movementType = mode; }
+    void set_movement_type(MovementType mode) { _movementType = mode; }
 
     /// Update the camera position depending on the Movement type
-    bool Move(GfCamera &, double deltaX, double deltaY);
+    bool move(GfCamera &, double deltaX, double deltaY);
 
     /// Frame the camera so that the bounding box is visible.
-    void FrameBoundingBox(GfCamera &, const GfBBox3d &);
+    void frame_bounding_box(GfCamera &, const GfBBox3d &);
 
     /// Set if the up vector is Z
-    void SetZIsUp(bool);
+    void set_z_is_up(bool);
 
     ///
-    void SetViewportSize(const GfVec2i &viewportSize) { _viewportSize = viewportSize; }
+    void set_viewport_size(const GfVec2i &viewportSize) { _viewportSize = viewportSize; }
 
 private:
     MovementType _movementType;

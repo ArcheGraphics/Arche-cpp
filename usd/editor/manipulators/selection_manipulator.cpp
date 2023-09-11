@@ -10,21 +10,22 @@
 #include "viewport.h"
 #include "selection_manipulator.h"
 #include "commands/commands.h"
+#include "fonts/IconsFontAwesome5.h"
 
 namespace vox {
-bool SelectionManipulator::IsPickablePath(const UsdStage &stage, const SdfPath &path) {
+bool SelectionManipulator::is_pickable_path(const UsdStage &stage, const SdfPath &path) {
     auto prim = stage.GetPrimAtPath(path);
     if (prim.IsPseudoRoot())
         return true;
-    if (GetPickMode() == SelectionManipulator::PickMode::Prim)
+    if (get_pick_mode() == SelectionManipulator::PickMode::Prim)
         return true;
 
     TfToken primKind;
     UsdModelAPI(prim).GetKind(&primKind);
-    if (GetPickMode() == SelectionManipulator::PickMode::Model && KindRegistry::GetInstance().IsA(primKind, KindTokens->model)) {
+    if (get_pick_mode() == SelectionManipulator::PickMode::Model && KindRegistry::GetInstance().IsA(primKind, KindTokens->model)) {
         return true;
     }
-    if (GetPickMode() == SelectionManipulator::PickMode::Assembly &&
+    if (get_pick_mode() == SelectionManipulator::PickMode::Assembly &&
         KindRegistry::GetInstance().IsA(primKind, KindTokens->assembly)) {
         return true;
     }
@@ -39,47 +40,47 @@ bool SelectionManipulator::IsPickablePath(const UsdStage &stage, const SdfPath &
     return false;
 }
 
-Manipulator *SelectionManipulator::OnUpdate(Viewport &viewport) {
-    Selection &selection = viewport.GetSelection();
-    auto mousePosition = viewport.GetMousePosition();
+Manipulator *SelectionManipulator::on_update(Viewport &viewport) {
+    Selection &selection = viewport.get_selection();
+    auto mousePosition = viewport.get_mouse_position();
     SdfPath outHitPrimPath;
     SdfPath outHitInstancerPath;
     int outHitInstanceIndex = 0;
-    viewport.TestIntersection(mousePosition, outHitPrimPath, outHitInstancerPath, outHitInstanceIndex);
+    viewport.test_intersection(mousePosition, outHitPrimPath, outHitInstancerPath, outHitInstanceIndex);
     if (!outHitPrimPath.IsEmpty()) {
-        if (viewport.GetCurrentStage()) {
-            while (!IsPickablePath(*viewport.GetCurrentStage(), outHitPrimPath)) {
+        if (viewport.get_current_stage()) {
+            while (!is_pickable_path(*viewport.get_current_stage(), outHitPrimPath)) {
                 outHitPrimPath = outHitPrimPath.GetParentPath();
             }
         }
 
         if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
             // TODO: a command
-            selection.AddSelected(viewport.GetCurrentStage(), outHitPrimPath);
+            selection.add_selected(viewport.get_current_stage(), outHitPrimPath);
         } else {
-            ExecuteAfterDraw<EditorSetSelection>(viewport.GetCurrentStage(), outHitPrimPath);
+            execute_after_draw<EditorSetSelection>(viewport.get_current_stage(), outHitPrimPath);
         }
     } else if (outHitInstancerPath.IsEmpty()) {
-        selection.Clear(viewport.GetCurrentStage());
+        selection.clear(viewport.get_current_stage());
     }
-    return viewport.GetManipulator<MouseHoverManipulator>();
+    return viewport.get_manipulator<MouseHoverManipulator>();
 }
 
-void SelectionManipulator::OnDrawFrame(const Viewport &) {
+void SelectionManipulator::on_draw_frame(const Viewport &) {
     // Draw a rectangle for the selection
 }
 
-void DrawPickMode(SelectionManipulator &manipulator) {
+void draw_pick_mode(SelectionManipulator &manipulator) {
     static const char *PickModeStr[3] = {ICON_FA_HAND_POINTER "      Prim  ", ICON_FA_HAND_POINTER "    Model  ", ICON_FA_HAND_POINTER " Assembly"};
-    if (ImGui::BeginCombo("##Pick mode", PickModeStr[int(manipulator.GetPickMode())], ImGuiComboFlags_NoArrowButton)) {
+    if (ImGui::BeginCombo("##Pick mode", PickModeStr[int(manipulator.get_pick_mode())], ImGuiComboFlags_NoArrowButton)) {
         if (ImGui::Selectable(PickModeStr[0])) {
-            manipulator.SetPickMode(SelectionManipulator::PickMode::Prim);
+            manipulator.set_pick_mode(SelectionManipulator::PickMode::Prim);
         }
         if (ImGui::Selectable(PickModeStr[1])) {
-            manipulator.SetPickMode(SelectionManipulator::PickMode::Model);
+            manipulator.set_pick_mode(SelectionManipulator::PickMode::Model);
         }
         if (ImGui::Selectable(PickModeStr[2])) {
-            manipulator.SetPickMode(SelectionManipulator::PickMode::Assembly);
+            manipulator.set_pick_mode(SelectionManipulator::PickMode::Assembly);
         }
         ImGui::EndCombo();
     }

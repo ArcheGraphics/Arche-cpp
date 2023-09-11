@@ -18,11 +18,12 @@ struct ImagingSettings : UsdImagingGLRenderParams {
 
     ImagingSettings();
 
-    void SetLightPositionFromCamera(const GfCamera &);
+    void set_light_position_from_camera(const GfCamera &);
+
+    const GlfSimpleLightVector &get_lights();
 
     // Defaults GL lights and materials
     bool enableCameraLight;
-    const GlfSimpleLightVector &GetLights();
 
     GlfSimpleMaterial _material;
     GfVec4f _ambient;
@@ -36,16 +37,16 @@ private:
 
 /// We keep track of the selected AOV in the UI, unfortunately the selected AOV is not awvailable in
 /// UsdImagingGLEngine, so we need the initialize the UI data with this function
-void InitializeRendererAov(UsdImagingGLEngine &);
+void initialize_renderer_aov(UsdImagingGLEngine &);
 
 ///
-void DrawRendererSelectionCombo(UsdImagingGLEngine &);
-void DrawRendererSelectionList(UsdImagingGLEngine &);
-void DrawRendererControls(UsdImagingGLEngine &);
-void DrawRendererCommands(UsdImagingGLEngine &);
-void DrawRendererSettings(UsdImagingGLEngine &, ImagingSettings &);
-void DrawImagingSettings(UsdImagingGLEngine &, ImagingSettings &);
-void DrawAovSettings(UsdImagingGLEngine &);
-void DrawColorCorrection(UsdImagingGLEngine &, ImagingSettings &);
+void draw_renderer_selection_combo(UsdImagingGLEngine &);
+void draw_renderer_selection_list(UsdImagingGLEngine &);
+void draw_renderer_controls(UsdImagingGLEngine &);
+void draw_renderer_commands(UsdImagingGLEngine &);
+void draw_renderer_settings(UsdImagingGLEngine &, ImagingSettings &);
+void draw_imaging_settings(UsdImagingGLEngine &, ImagingSettings &);
+void draw_aov_settings(UsdImagingGLEngine &);
+void draw_color_correction(UsdImagingGLEngine &, ImagingSettings &);
 
 }// namespace vox

@@ -10,30 +10,30 @@
 namespace vox {
 // A modal dialog should know how to draw itself
 struct ModalDialog {
-    virtual void Draw() = 0;
+    virtual void draw() = 0;
     virtual ~ModalDialog(){};
-    virtual const char *DialogId() const = 0;
-    static void CloseModal();
+    virtual const char *dialog_id() const = 0;
+    static void close_modal();
 };
 
 /// This is a private variable and function for DrawModalDialog don't use them !
 extern bool modalOpenTriggered;
-void _PushModalDialog(ModalDialog *);
+void _push_modal_dialog(ModalDialog *);
 
 /// Trigger a modal dialog
 template<typename T, typename... ArgTypes>
-void DrawModalDialog(ArgTypes &&...args) {
+void draw_modal_dialog(ArgTypes &&...args) {
     modalOpenTriggered = true;
     _PushModalDialog(new T(args...));
 }
 
 /// Draw the current modal dialog if it has been triggered
-void DrawCurrentModal();
+void draw_current_modal();
 
 /// Convenience function to draw an Ok and Cancel buttons in a Modal dialog
-void DrawOkCancelModal(const std::function<void()> &onOk, bool disableOk = false);
+void draw_ok_cancel_modal(const std::function<void()> &onOk, bool disableOk = false);
 
 /// Force closing the current modal dialog
-void ForceCloseCurrentModal();
+void force_close_current_modal();
 
 }// namespace vox

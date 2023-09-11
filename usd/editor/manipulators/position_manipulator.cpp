@@ -5,10 +5,11 @@
 //  property of any third parties.
 
 #include "position_manipulator.h"
-#include "commands/Commands.h"
+#include "commands/commands.h"
 #include "base/constants.h"
 #include "base/geometric_functions.h"
 #include "viewport.h"
+#include <imgui.h>
 #include <iostream>
 #include <pxr/base/gf/matrix4f.h>
 
@@ -38,42 +39,41 @@ PositionManipulator::PositionManipulator() : _selectedAxis(None) {}
 
 PositionManipulator::~PositionManipulator() {}
 
-bool PositionManipulator::IsMouseOver(const Viewport &viewport) {
-
+bool PositionManipulator::is_mouse_over(const Viewport &viewport) {
     if (_xformAPI || _xformable) {
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
         const auto mv = frustum.ComputeViewMatrix();
         const auto proj = frustum.ComputeProjectionMatrix();
 
-        const auto toWorld = ComputeManipulatorToWorldTransform(viewport);
+        const auto toWorld = compute_manipulator_to_world_transform(viewport);
 
         // World position for origin is the pivot
         const auto pivot = toWorld.ExtractTranslation();
 
         // Axis are scaled to keep the same screen size
-        const double axisLength = axisSize * viewport.ComputeScaleFactor(pivot, axisSize);
+        const double axisLength = axisSize * viewport.compute_scale_factor(pivot, axisSize);
 
         // Local axis as draw in opengl
         const GfVec4d xAxis3d = GfVec4d(axisLength, 0.0, 0.0, 1.0) * toWorld;
         const GfVec4d yAxis3d = GfVec4d(0.0, axisLength, 0.0, 1.0) * toWorld;
         const GfVec4d zAxis3d = GfVec4d(0.0, 0.0, axisLength, 1.0) * toWorld;
 
-        const auto originOnScreen = ProjectToNormalizedScreen(mv, proj, pivot);
-        const auto xAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(xAxis3d.data()));
-        const auto yAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(yAxis3d.data()));
-        const auto zAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(zAxis3d.data()));
+        const auto originOnScreen = project_to_normalized_screen(mv, proj, pivot);
+        const auto xAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(xAxis3d.data()));
+        const auto yAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(yAxis3d.data()));
+        const auto zAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(zAxis3d.data()));
 
-        const auto pickBounds = viewport.GetPickingBoundarySize();
-        const auto mousePosition = viewport.GetMousePosition();
+        const auto pickBounds = viewport.get_picking_boundary_size();
+        const auto mousePosition = viewport.get_mouse_position();
 
         // TODO: it looks like USD has function to compute segment, have a look !
-        if (IntersectsSegment(xAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        if (intersects_segment(xAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = XAxis;
             return true;
-        } else if (IntersectsSegment(yAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        } else if (intersects_segment(yAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = YAxis;
             return true;
-        } else if (IntersectsSegment(zAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        } else if (intersects_segment(zAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = ZAxis;
             return true;
         }
@@ -83,16 +83,16 @@ bool PositionManipulator::IsMouseOver(const Viewport &viewport) {
 }
 
 // Same as rotation manipulator now -- TODO : share in a common class
-void PositionManipulator::OnSelectionChange(Viewport &viewport) {
-    auto &selection = viewport.GetSelection();
-    auto primPath = selection.GetAnchorPrimPath(viewport.GetCurrentStage());
-    _xformAPI = UsdGeomXformCommonAPI(viewport.GetCurrentStage()->GetPrimAtPath(primPath));
-    _xformable = UsdGeomXformable(viewport.GetCurrentStage()->GetPrimAtPath(primPath));
+void PositionManipulator::on_selection_change(Viewport &viewport) {
+    auto &selection = viewport.get_selection();
+    auto primPath = selection.get_anchor_prim_path(viewport.get_current_stage());
+    _xformAPI = UsdGeomXformCommonAPI(viewport.get_current_stage()->GetPrimAtPath(primPath));
+    _xformable = UsdGeomXformable(viewport.get_current_stage()->GetPrimAtPath(primPath));
 }
 
-GfMatrix4d PositionManipulator::ComputeManipulatorToWorldTransform(const Viewport &viewport) {
+GfMatrix4d PositionManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
-        const auto currentTime = viewport.GetCurrentTimeCode();
+        const auto currentTime = viewport.get_current_time_code();
         GfMatrix4d localTransform;
         bool resetsXformStack = false;
         _xformable.GetLocalTransformation(&localTransform, &resetsXformStack, currentTime);
@@ -129,20 +129,19 @@ inline ImColor AxisColor(int selectedAxis) {
     }
 }
 
-void PositionManipulator::OnDrawFrame(const Viewport &viewport) {
-
+void PositionManipulator::on_draw_frame(const Viewport &viewport) {
     if (_xformAPI || _xformable) {
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
         const auto mv = frustum.ComputeViewMatrix();
         const auto proj = frustum.ComputeProjectionMatrix();
 
-        const auto toWorld = ComputeManipulatorToWorldTransform(viewport);
+        const auto toWorld = compute_manipulator_to_world_transform(viewport);
 
         // World position for origin is the pivot
         const auto pivot = toWorld.ExtractTranslation();
 
         // Axis are scaled to keep the same screen size
-        const double axisLength = axisSize * viewport.ComputeScaleFactor(pivot, axisSize);
+        const double axisLength = axisSize * viewport.compute_scale_factor(pivot, axisSize);
 
         // Local axis as draw in opengl
         const GfVec4d xAxis3d = GfVec4d(axisLength, 0.0, 0.0, 1.0) * toWorld;
@@ -153,10 +152,10 @@ void PositionManipulator::OnDrawFrame(const Viewport &viewport) {
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         auto textureSize = GfVec2d(viewport->WorkSize[0], viewport->WorkSize[1]);
 
-        const auto originOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, pivot);
-        const auto xAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(xAxis3d.data()));
-        const auto yAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(yAxis3d.data()));
-        const auto zAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(zAxis3d.data()));
+        const auto originOnScreen = project_to_texture_screen_space(mv, proj, textureSize, pivot);
+        const auto xAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(xAxis3d.data()));
+        const auto yAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(yAxis3d.data()));
+        const auto zAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(zAxis3d.data()));
 
         // TODO : Draw grey if not editable
 
@@ -169,31 +168,30 @@ void PositionManipulator::OnDrawFrame(const Viewport &viewport) {
     }
 }
 
-void PositionManipulator::OnBeginEdition(Viewport &viewport) {
+void PositionManipulator::on_begin_edition(Viewport &viewport) {
     // Save original translation values
     GfVec3f scale, pivot, rotation;
     GfMatrix4d localTransform;
     bool resetsXformStack = false;
-    _xformable.GetLocalTransformation(&localTransform, &resetsXformStack, viewport.GetCurrentTimeCode());
+    _xformable.GetLocalTransformation(&localTransform, &resetsXformStack, viewport.get_current_time_code());
     _translationOnBegin = localTransform.ExtractTranslation();
 
     // Save mouse position on selected axis
-    const GfMatrix4d objectTransform = ComputeManipulatorToWorldTransform(viewport);
+    const GfMatrix4d objectTransform = compute_manipulator_to_world_transform(viewport);
     _axisLine = GfLine(objectTransform.ExtractTranslation(), objectTransform.GetRow3(_selectedAxis));
-    ProjectMouseOnAxis(viewport, _originMouseOnAxis);
+    project_mouse_on_axis(viewport, _originMouseOnAxis);
 
-    BeginEdition(viewport.GetCurrentStage());
+    begin_edition(viewport.get_current_stage());
 }
 
-Manipulator *PositionManipulator::OnUpdate(Viewport &viewport) {
-
+Manipulator *PositionManipulator::on_update(Viewport &viewport) {
     if (ImGui::IsMouseReleased(0)) {
-        return viewport.GetManipulator<MouseHoverManipulator>();
+        return viewport.get_manipulator<MouseHoverManipulator>();
     }
 
     if (_xformable && _selectedAxis < 3) {
         GfVec3d mouseOnAxis;
-        ProjectMouseOnAxis(viewport, mouseOnAxis);
+        project_mouse_on_axis(viewport, mouseOnAxis);
 
         // Get the sign
         double ori = 0.0;// = _axisLine.GetDirection()*_originMouseOnAxis;
@@ -205,42 +203,42 @@ Manipulator *PositionManipulator::OnUpdate(Viewport &viewport) {
         GfVec3d translation = _translationOnBegin;
         translation[_selectedAxis] += sign * (_originMouseOnAxis - mouseOnAxis).GetLength();
         if (_xformAPI) {
-            _xformAPI.SetTranslate(translation, GetEditionTimeCode(viewport));
+            _xformAPI.SetTranslate(translation, get_edition_time_code(viewport));
         } else {
             bool reset = false;
             auto ops = _xformable.GetOrderedXformOps(&reset);
             if (ops.size() == 1 && ops[0].GetOpType() == UsdGeomXformOp::Type::TypeTransform) {
-                GfMatrix4d current = ops[0].GetOpTransform(GetEditionTimeCode(viewport));
+                GfMatrix4d current = ops[0].GetOpTransform(get_edition_time_code(viewport));
                 current.SetTranslateOnly(translation);// TODO: what happens if there is a pivot ???
-                ops[0].Set(current, GetEditionTimeCode(viewport));
+                ops[0].Set(current, get_edition_time_code(viewport));
             }
         }
     }
     return this;
 };
 
-void PositionManipulator::OnEndEdition(Viewport &) { EndEdition(); };
+void PositionManipulator::on_end_edition(Viewport &) { end_edition(); };
 
 ///
-void PositionManipulator::ProjectMouseOnAxis(const Viewport &viewport, GfVec3d &linePoint) {
+void PositionManipulator::project_mouse_on_axis(const Viewport &viewport, GfVec3d &linePoint) {
     if ((_xformAPI || _xformable) && _selectedAxis < 3) {
         GfVec3d rayPoint;
         double a = 0;
         double b = 0;
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
-        const auto mouseRay = frustum.ComputeRay(viewport.GetMousePosition());
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
+        const auto mouseRay = frustum.ComputeRay(viewport.get_mouse_position());
         GfFindClosestPoints(mouseRay, _axisLine, &rayPoint, &linePoint, &a, &b);
     }
 }
 
-UsdTimeCode PositionManipulator::GetEditionTimeCode(const Viewport &viewport) {
+UsdTimeCode PositionManipulator::get_edition_time_code(const Viewport &viewport) {
     std::vector<double> timeSamples;// TODO: is there a faster way to know it the xformable has timesamples ?
     const auto xformable = UsdGeomXformable(_xformAPI.GetPrim());
     xformable.GetTimeSamples(&timeSamples);
     if (timeSamples.empty()) {
         return UsdTimeCode::Default();
     } else {
-        return viewport.GetCurrentTimeCode();
+        return viewport.get_current_time_code();
     }
 }
 

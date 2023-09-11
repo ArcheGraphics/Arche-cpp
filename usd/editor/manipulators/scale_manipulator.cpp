@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "scale_manipulator.h"
-#include "comands/commands.h"
+#include "commands/commands.h"
 #include "base/constants.h"
 #include "base/geometric_functions.h"
 #include "viewport.h"
@@ -23,42 +23,42 @@ ScaleManipulator::ScaleManipulator() : _selectedAxis(None) {}
 
 ScaleManipulator::~ScaleManipulator() {}
 
-bool ScaleManipulator::IsMouseOver(const Viewport &viewport) {
+bool ScaleManipulator::is_mouse_over(const Viewport &viewport) {
 
     if (_xformable) {
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
         const auto mv = frustum.ComputeViewMatrix();
         const auto proj = frustum.ComputeProjectionMatrix();
 
-        const auto toWorld = ComputeManipulatorToWorldTransform(viewport);
+        const auto toWorld = compute_manipulator_to_world_transform(viewport);
 
         // World position for origin is the pivot
         const auto pivot = toWorld.ExtractTranslation();
 
         // Axis are scaled to keep the same screen size
-        const double axisLength = axisSize * viewport.ComputeScaleFactor(pivot, axisSize);
+        const double axisLength = axisSize * viewport.compute_scale_factor(pivot, axisSize);
 
         // Local axis as draw in opengl
         const GfVec4d xAxis3d = GfVec4d(axisLength, 0.0, 0.0, 1.0) * toWorld;
         const GfVec4d yAxis3d = GfVec4d(0.0, axisLength, 0.0, 1.0) * toWorld;
         const GfVec4d zAxis3d = GfVec4d(0.0, 0.0, axisLength, 1.0) * toWorld;
 
-        const auto originOnScreen = ProjectToNormalizedScreen(mv, proj, pivot);
-        const auto xAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(xAxis3d.data()));
-        const auto yAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(yAxis3d.data()));
-        const auto zAxisOnScreen = ProjectToNormalizedScreen(mv, proj, GfVec3d(zAxis3d.data()));
+        const auto originOnScreen = project_to_normalized_screen(mv, proj, pivot);
+        const auto xAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(xAxis3d.data()));
+        const auto yAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(yAxis3d.data()));
+        const auto zAxisOnScreen = project_to_normalized_screen(mv, proj, GfVec3d(zAxis3d.data()));
 
-        const auto pickBounds = viewport.GetPickingBoundarySize();
-        const auto mousePosition = viewport.GetMousePosition();
+        const auto pickBounds = viewport.get_picking_boundary_size();
+        const auto mousePosition = viewport.get_mouse_position();
 
         // TODO: it looks like USD has function to compute segment, have a look !
-        if (IntersectsSegment(xAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        if (intersects_segment(xAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = XAxis;
             return true;
-        } else if (IntersectsSegment(yAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        } else if (intersects_segment(yAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = YAxis;
             return true;
-        } else if (IntersectsSegment(zAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
+        } else if (intersects_segment(zAxisOnScreen, originOnScreen, mousePosition, pickBounds)) {
             _selectedAxis = ZAxis;
             return true;
         }
@@ -68,16 +68,16 @@ bool ScaleManipulator::IsMouseOver(const Viewport &viewport) {
 }
 
 // Same as rotation manipulator now -- TODO : share in a common class
-void ScaleManipulator::OnSelectionChange(Viewport &viewport) {
-    auto &selection = viewport.GetSelection();
-    auto primPath = selection.GetAnchorPrimPath(viewport.GetCurrentStage());
-    _xformAPI = UsdGeomXformCommonAPI(viewport.GetCurrentStage()->GetPrimAtPath(primPath));
+void ScaleManipulator::on_selection_change(Viewport &viewport) {
+    auto &selection = viewport.get_selection();
+    auto primPath = selection.get_anchor_prim_path(viewport.get_current_stage());
+    _xformAPI = UsdGeomXformCommonAPI(viewport.get_current_stage()->GetPrimAtPath(primPath));
     _xformable = UsdGeomXformable(_xformAPI.GetPrim());
 }
 
-GfMatrix4d ScaleManipulator::ComputeManipulatorToWorldTransform(const Viewport &viewport) {
+GfMatrix4d ScaleManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
-        const auto currentTime = viewport.GetCurrentTimeCode();
+        const auto currentTime = viewport.get_current_time_code();
         GfVec3d translation;
         GfVec3f scale, pivot, rotation;
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
@@ -104,20 +104,19 @@ inline ImColor AxisColor(int selectedAxis) {
 }
 
 // TODO: same as rotation manipulator, share in a base class
-void ScaleManipulator::OnDrawFrame(const Viewport &viewport) {
-
+void ScaleManipulator::on_draw_frame(const Viewport &viewport) {
     if (_xformable) {
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
         const auto mv = frustum.ComputeViewMatrix();
         const auto proj = frustum.ComputeProjectionMatrix();
 
-        const auto toWorld = ComputeManipulatorToWorldTransform(viewport);
+        const auto toWorld = compute_manipulator_to_world_transform(viewport);
 
         // World position for origin is the pivot
         const auto pivot = toWorld.ExtractTranslation();
 
         // Axis are scaled to keep the same screen size
-        const double axisLength = axisSize * viewport.ComputeScaleFactor(pivot, axisSize);
+        const double axisLength = axisSize * viewport.compute_scale_factor(pivot, axisSize);
 
         // Local axis as draw in opengl
         const GfVec4d xAxis3d = GfVec4d(axisLength, 0.0, 0.0, 1.0) * toWorld;
@@ -128,10 +127,10 @@ void ScaleManipulator::OnDrawFrame(const Viewport &viewport) {
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         auto textureSize = GfVec2d(viewport->WorkSize[0], viewport->WorkSize[1]);
 
-        const auto originOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, pivot);
-        const auto xAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(xAxis3d.data()));
-        const auto yAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(yAxis3d.data()));
-        const auto zAxisOnScreen = ProjectToTextureScreenSpace(mv, proj, textureSize, GfVec3d(zAxis3d.data()));
+        const auto originOnScreen = project_to_texture_screen_space(mv, proj, textureSize, pivot);
+        const auto xAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(xAxis3d.data()));
+        const auto yAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(yAxis3d.data()));
+        const auto zAxisOnScreen = project_to_texture_screen_space(mv, proj, textureSize, GfVec3d(zAxis3d.data()));
 
         drawList->AddLine(ImVec2(originOnScreen[0], originOnScreen[1]), ImVec2(xAxisOnScreen[0], xAxisOnScreen[1]),
                           AxisColor<XAxis>(_selectedAxis), 3);
@@ -145,31 +144,30 @@ void ScaleManipulator::OnDrawFrame(const Viewport &viewport) {
     }
 }
 
-void ScaleManipulator::OnBeginEdition(Viewport &viewport) {
+void ScaleManipulator::on_begin_edition(Viewport &viewport) {
     // Save original translation values
     GfVec3d translation;
     GfVec3f pivot, rotation;
     UsdGeomXformCommonAPI::RotationOrder rotOrder;
     _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &_scaleOnBegin, &pivot, &rotOrder,
-                                            viewport.GetCurrentTimeCode());
+                                            viewport.get_current_time_code());
 
     // Save mouse position on selected axis
-    const GfMatrix4d objectTransform = ComputeManipulatorToWorldTransform(viewport);
+    const GfMatrix4d objectTransform = compute_manipulator_to_world_transform(viewport);
     _axisLine = GfLine(objectTransform.ExtractTranslation(), objectTransform.GetRow3(_selectedAxis));
-    ProjectMouseOnAxis(viewport, _originMouseOnAxis);
+    project_mouse_on_axis(viewport, _originMouseOnAxis);
 
-    BeginEdition(viewport.GetCurrentStage());
+    begin_edition(viewport.get_current_stage());
 }
 
-Manipulator *ScaleManipulator::OnUpdate(Viewport &viewport) {
-
+Manipulator *ScaleManipulator::on_update(Viewport &viewport) {
     if (ImGui::IsMouseReleased(0)) {
-        return viewport.GetManipulator<MouseHoverManipulator>();
+        return viewport.get_manipulator<MouseHoverManipulator>();
     }
 
     if (_xformable && _selectedAxis < 3) {
         GfVec3d mouseOnAxis;
-        ProjectMouseOnAxis(viewport, mouseOnAxis);
+        project_mouse_on_axis(viewport, mouseOnAxis);
 
         // Get the sign
         double ori;
@@ -192,7 +190,7 @@ Manipulator *ScaleManipulator::OnUpdate(Viewport &viewport) {
         }
 
         if (_xformAPI) {
-            _xformAPI.SetScale(scale, GetEditionTimeCode(viewport));
+            _xformAPI.SetScale(scale, get_edition_time_code(viewport));
         } else {
             bool reset = false;
             auto ops = _xformable.GetOrderedXformOps(&reset);
@@ -201,39 +199,39 @@ Manipulator *ScaleManipulator::OnUpdate(Viewport &viewport) {
                 GfVec3f scale_, pivot, rotation;
                 UsdGeomXformCommonAPI::RotationOrder rotOrder;
                 _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale_, &pivot, &rotOrder,
-                                                        GetEditionTimeCode(viewport));
+                                                        get_edition_time_code(viewport));
                 const auto transMat = GfMatrix4d(1.0).SetTranslate(translation);
                 const auto rotMat = _xformAPI.GetRotationTransform(rotation, rotOrder);
                 GfMatrix4d current = GfMatrix4d().SetScale(scale) * rotMat * transMat;
-                ops[0].Set(current, GetEditionTimeCode(viewport));
+                ops[0].Set(current, get_edition_time_code(viewport));
             }
         }
     }
     return this;
 };
 
-void ScaleManipulator::OnEndEdition(Viewport &) { EndEdition(); };
+void ScaleManipulator::on_end_edition(Viewport &) { end_edition(); };
 
 ///
-void ScaleManipulator::ProjectMouseOnAxis(const Viewport &viewport, GfVec3d &linePoint) {
+void ScaleManipulator::project_mouse_on_axis(const Viewport &viewport, GfVec3d &linePoint) {
     if (_xformable && _selectedAxis < 3) {
         GfVec3d rayPoint;
         double a = 0;
         double b = 0;
-        const auto &frustum = viewport.GetCurrentCamera().GetFrustum();
-        const auto mouseRay = frustum.ComputeRay(viewport.GetMousePosition());
+        const auto &frustum = viewport.get_current_camera().GetFrustum();
+        const auto mouseRay = frustum.ComputeRay(viewport.get_mouse_position());
         GfFindClosestPoints(mouseRay, _axisLine, &rayPoint, &linePoint, &a, &b);
     }
 }
 
-UsdTimeCode ScaleManipulator::GetEditionTimeCode(const Viewport &viewport) {
+UsdTimeCode ScaleManipulator::get_edition_time_code(const Viewport &viewport) {
     std::vector<double> timeSamples;// TODO: is there a faster way to know it the xformable has timesamples ?
     const auto xformable = UsdGeomXformable(_xformAPI.GetPrim());
     xformable.GetTimeSamples(&timeSamples);
     if (timeSamples.empty()) {
         return UsdTimeCode::Default();
     } else {
-        return viewport.GetCurrentTimeCode();
+        return viewport.get_current_time_code();
     }
 }
 

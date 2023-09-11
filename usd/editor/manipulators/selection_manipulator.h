@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <pxr/base/gf/vec3f.h>
+
 PXR_NAMESPACE_USING_DIRECTIVE
 
 #include "manipulator.h"
@@ -17,24 +19,24 @@ public:
     SelectionManipulator() = default;
     ~SelectionManipulator() = default;
 
-    void OnDrawFrame(const Viewport &) override;
+    void on_draw_frame(const Viewport &) override;
 
-    Manipulator *OnUpdate(Viewport &) override;
+    Manipulator *on_update(Viewport &) override;
 
     // Picking modes
     enum class PickMode { Prim,
                           Model,
                           Assembly };
-    void SetPickMode(PickMode pickMode) { _pickMode = pickMode; }
-    PickMode GetPickMode() const { return _pickMode; }
+    void set_pick_mode(PickMode pickMode) { _pickMode = pickMode; }
+    PickMode get_pick_mode() const { return _pickMode; }
 
 private:
     // Returns true
-    bool IsPickablePath(const class UsdStage &stage, const class SdfPath &path);
+    bool is_pickable_path(const class UsdStage &stage, const class SdfPath &path);
     PickMode _pickMode = PickMode::Prim;
 };
 
 /// Draw an ImGui menu to select the picking mode
-void DrawPickMode(SelectionManipulator &manipulator);
+void draw_pick_mode(SelectionManipulator &manipulator);
 
 }// namespace vox

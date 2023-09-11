@@ -12,6 +12,7 @@
 #include <pxr/base/gf/vec2d.h>
 #include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
+#include <imgui.h>
 #include "manipulator.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -24,26 +25,26 @@ public:
     ~RotationManipulator();
 
     /// From ViewportEditor
-    void OnBeginEdition(Viewport &) override;
-    Manipulator *OnUpdate(Viewport &) override;
-    void OnEndEdition(Viewport &) override;
+    void on_begin_edition(Viewport &) override;
+    Manipulator *on_update(Viewport &) override;
+    void on_end_edition(Viewport &) override;
 
     /// Return true if the mouse is over this manipulator in the viewport passed in argument
-    bool IsMouseOver(const Viewport &) override;
+    bool is_mouse_over(const Viewport &) override;
 
     /// Draw the translate manipulator as seen in the viewport
-    void OnDrawFrame(const Viewport &) override;
+    void on_draw_frame(const Viewport &) override;
 
     /// Called when the viewport changes its selection
-    void OnSelectionChange(Viewport &) override;
+    void on_selection_change(Viewport &) override;
 
 private:
-    UsdTimeCode GetEditionTimeCode(const Viewport &);
-    UsdTimeCode GetViewportTimeCode(const Viewport &);
+    UsdTimeCode get_edition_time_code(const Viewport &);
+    UsdTimeCode get_viewport_time_code(const Viewport &);
 
-    GfVec3d ComputeClockHandVector(Viewport &viewport);
+    GfVec3d compute_clock_hand_vector(Viewport &viewport);
 
-    GfMatrix4d ComputeManipulatorToWorldTransform(const Viewport &viewport);
+    GfMatrix4d compute_manipulator_to_world_transform(const Viewport &viewport);
     ManipulatorAxis _selectedAxis;
 
     UsdGeomXformCommonAPI _xformAPI;
