@@ -9,8 +9,6 @@ cmake_minimum_required(VERSION 3.16)
 project(usd-framework LANGUAGES C CXX)
 
 set(COMMON_FILES
-        camera.h
-        camera.cpp
         usd_renderer.h
         usd_renderer.cpp
         # GLTF

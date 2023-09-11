@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "camera.h"
-//#include "apps/renderer.h"
+#include "viewport.h"
 #include <pxr/base/gf/frustum.h>
 
 using namespace pxr;
@@ -16,8 +16,8 @@ double constexpr _minFocalLength = 10.0;
 double constexpr _maxFocalLength = 500.0;
 }// namespace
 
-Camera::Camera(Renderer *renderer) {
-    _renderer = renderer;
+Camera::Camera(Viewport *viewport) {
+    _viewport = viewport;
     _rotation = pxr::GfVec3d(0.0);
     _focus = pxr::GfVec3d(0.0);
     _distance = 50.0;
@@ -25,14 +25,14 @@ Camera::Camera(Renderer *renderer) {
 }
 
 /// Initializes a camera instance and sets the camera configuration and the current renderer.
-Camera::Camera(const pxr::GfCamera &sceneCamera, Renderer *renderer) {
+Camera::Camera(const pxr::GfCamera &sceneCamera, Viewport *viewport) {
     GfMatrix4d cameraTransform(1.0);
     cameraTransform = sceneCamera.GetTransform();
 
-    //    if (renderer->isZUp()) {
-    cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
-                                            GfRotation(GfVec3d::XAxis(), -90.0));
-    //    }
+    if (viewport->isZUp()) {
+        cameraTransform = cameraTransform * GfMatrix4d().SetRotate(
+                                                GfRotation(GfVec3d::XAxis(), -90.0));
+    }
 
     GfVec3d rotation = cameraTransform.DecomposeRotation(
         GfVec3d::YAxis(),
@@ -49,7 +49,7 @@ Camera::Camera(const pxr::GfCamera &sceneCamera, Renderer *renderer) {
     _focus = position + _distance * viewDir;
     _focalLength = sceneCamera.GetFocalLength();
 
-    _renderer = renderer;
+    _viewport = viewport;
 }
 
 /// Sets the camera position based on the current focus.
@@ -73,13 +73,13 @@ void Camera::panByDelta(pxr::GfVec2d delta) {
 
     _focus += scale * (delta[0] * xAxis + delta[1] * yAxis);
 
-    //    _renderer->requestFrame();
+    _viewport->requestFrame();
 }
 
 /// Adjusts the x- and y-rotations and requests a new frame to render.
 void Camera::rotateByDelta(pxr::GfVec2d delta) {
     _rotation += {delta[1], delta[0], 0.0f};
-    //    _renderer->requestFrame();
+    _viewport->requestFrame();
 }
 /// Adjusts the current zoom and requests a new frame to render.
 void Camera::zoomByDelta(double delta) {
@@ -90,13 +90,13 @@ void Camera::zoomByDelta(double delta) {
         _distance += delta * _scaleBias;
     }
 
-    //    _renderer->requestFrame();
+    _viewport->requestFrame();
 }
 
 /// Sets the new zoom and requests a new frame to render.
 void Camera::setZoomFactor(double zoomFactor) {
     _focalLength = _standardFocalLength * zoomFactor;
-    //    _renderer->requestFrame();
+    _viewport->requestFrame();
 }
 /// Gets the zoom factor based on the focal length.
 double Camera::getZoomFactor() const {
@@ -109,9 +109,9 @@ pxr::GfRotation Camera::getRotation() {
                             GfRotation(GfVec3d::XAxis(), _rotation[0]) *
                             GfRotation(GfVec3d::YAxis(), _rotation[1]);
 
-    //    if (_renderer->isZUp()) {
-    gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
-    //    }
+    if (_viewport->isZUp()) {
+        gfRotation = gfRotation * GfRotation(GfVec3d::XAxis(), 90.0);
+    }
 
     return gfRotation;
 }

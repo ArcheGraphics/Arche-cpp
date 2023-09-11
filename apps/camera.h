@@ -13,7 +13,7 @@
 #include <pxr/base/gf/rotation.h>
 
 namespace vox {
-class Renderer;
+class Viewport;
 
 enum class Projection {
     Perspective = 0,
@@ -34,10 +34,10 @@ struct CameraParams {
 class Camera {
 public:
     /// Initializes the class and sets the current renderer.
-    explicit Camera(Renderer *renderer);
+    explicit Camera(Viewport *viewport);
 
     /// Initializes a camera instance and sets the camera configuration and the current renderer.
-    Camera(const pxr::GfCamera &sceneCamera, Renderer *renderer);
+    Camera(const pxr::GfCamera &sceneCamera, Viewport *viewport);
 
     /// Sets the camera position based on the current focus.
     void setPositionFromFocus();
@@ -89,7 +89,7 @@ public:
     inline void setScaleViewport(double value) { _scaleViewport = value; }
 
 private:
-    Renderer *_renderer;
+    Viewport *_viewport;
 
     pxr::GfVec3d _position{};
     pxr::GfVec3d _rotation{};

@@ -4,8 +4,8 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "renderer.h"
-#include "usd/camera.h"
+#include "viewport.h"
+#include "camera.h"
 #include "common/metal_helpers.h"
 #include "common/logging.h"
 #include "common/filesystem.h"
@@ -131,7 +131,7 @@ GfFrustum computeFrustum(const GfMatrix4d &cameraTransform,
 }// namespace
 
 /// Sets an initial material for the scene.
-void Renderer::initializeMaterial() {
+void Viewport::initializeMaterial() {
     float kA = 0.2f;
     float kS = 0.1f;
     _material.SetAmbient(GfVec4f(kA, kA, kA, 1.0f));
@@ -142,7 +142,7 @@ void Renderer::initializeMaterial() {
 }
 
 /// Requests the bounding box cache from Hydra.
-pxr::UsdGeomBBoxCache Renderer::computeBboxCache() {
+pxr::UsdGeomBBoxCache Viewport::computeBboxCache() {
     TfTokenVector purposes;
     purposes.push_back(UsdGeomTokens->default_);
     purposes.push_back(UsdGeomTokens->proxy);
@@ -160,7 +160,7 @@ pxr::UsdGeomBBoxCache Renderer::computeBboxCache() {
 }
 
 /// Initializes the Storm engine.
-void Renderer::initializeEngine() {
+void Viewport::initializeEngine() {
     _inFlightSemaphore = dispatch_semaphore_create(AAPLMaxBuffersInFlight);
 
     SdfPathVector excludedPaths;
@@ -176,7 +176,7 @@ void Renderer::initializeEngine() {
 }
 
 /// Draws the scene using Hydra.
-pxr::HgiTextureHandle Renderer::drawWithHydra(double timeCode, CGSize viewSize) {
+pxr::HgiTextureHandle Viewport::drawWithHydra(double timeCode, CGSize viewSize) {
     // Camera projection setup.
     GfMatrix4d cameraTransform = _viewCamera->getTransform();
     CameraParams cameraParams = _viewCamera->getShaderParams();
@@ -211,7 +211,7 @@ pxr::HgiTextureHandle Renderer::drawWithHydra(double timeCode, CGSize viewSize) 
 
 /// Draw the scene, and blit the result to the view.
 /// Returns false if the engine wasn't initialized.
-bool Renderer::drawMainView(double timeCode) {
+bool Viewport::drawMainView(double timeCode) {
     if (!_engine) {
         return false;
     }
@@ -244,12 +244,9 @@ bool Renderer::drawMainView(double timeCode) {
 }
 
 /// Loads the scene from the provided URL and prepares the camera.
-void Renderer::setupScene(const std::string &url) {
+void Viewport::setupScene(const pxr::UsdStageRefPtr &stage) {
     // Load USD stage.
-    if (!loadStage(url)) {
-        // Failed to load stage. Nothing to render.
-        return;
-    }
+    _stage = stage;
 
     // Get scene information.
     getSceneInformation();
@@ -261,7 +258,7 @@ void Renderer::setupScene(const std::string &url) {
 }
 
 /// Determine the size of the world so the camera will frame its entire bounding box.
-void Renderer::calculateWorldCenterAndSize() {
+void Viewport::calculateWorldCenterAndSize() {
     UsdGeomBBoxCache bboxCache = computeBboxCache();
 
     GfBBox3d bbox = bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
@@ -279,7 +276,7 @@ void Renderer::calculateWorldCenterAndSize() {
 }
 
 /// Sets a camera up so that it sees the entire scene.
-void Renderer::setupCamera() {
+void Viewport::setupCamera() {
     calculateWorldCenterAndSize();
 
     std::vector<UsdPrim> sceneCameras = getAllPrimsOfType(_stage, TfType::Find<UsdGeomCamera>());
@@ -307,7 +304,7 @@ void Renderer::setupCamera() {
 }
 
 /// Gets important information about the scene, such as frames per second and if the z-axis points up.
-void Renderer::getSceneInformation() {
+void Viewport::getSceneInformation() {
     _timeCodesPerSecond = _stage->GetFramesPerSecond();
     if (_stage->HasAuthoredTimeCodeRange()) {
         _startTimeCode = _stage->GetStartTimeCode();
@@ -317,7 +314,7 @@ void Renderer::getSceneInformation() {
 }
 
 /// Updates the animation timing variables.
-double Renderer::updateTime() {
+double Viewport::updateTime() {
     double currentTimeInSeconds = getCurrentTimeInSeconds();
 
     // Store the ticks for the first frame.
@@ -338,7 +335,7 @@ double Renderer::updateTime() {
     return timeCode;
 }
 
-void Renderer::draw() {
+void Viewport::draw() {
     // There's nothing to render until the scene is set up.
     if (!_sceneSetup) {
         return;
@@ -365,21 +362,11 @@ void Renderer::draw() {
 }
 
 /// Increases a counter that the draw method uses to determine if a frame needs to be rendered.
-void Renderer::requestFrame() {
+void Viewport::requestFrame() {
     _requestedFrames++;
 }
 
-/// Uses Hydra to load the USD or USDZ file.
-bool Renderer::loadStage(const std::string &filePath) {
-    _stage = UsdStage::Open(filePath);
-    if (!_stage) {
-        LOGE("Failed to load stage at {}", filePath)
-        return false;
-    }
-    return true;
-}
-
-Renderer::Renderer(uint64_t window_handle, uint width, uint height) {
+Viewport::Viewport(uint64_t window_handle, uint width, uint height) {
     _device = make_shared(MTL::CreateSystemDefaultDevice());
     _requestedFrames = 1;
     _startTimeInSeconds = 0;
@@ -405,7 +392,7 @@ Renderer::Renderer(uint64_t window_handle, uint width, uint height) {
     spdlog::set_default_logger(logger);
 }
 
-Renderer::~Renderer() {
+Viewport::~Viewport() {
     _device.reset();
     _engine.reset();
     _stage.Reset();

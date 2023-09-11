@@ -20,10 +20,10 @@
 
 namespace vox {
 class Camera;
-class Renderer {
+class Viewport {
 public:
-    Renderer(uint64_t window_handle, uint width, uint height);
-    ~Renderer();
+    Viewport(uint64_t window_handle, uint width, uint height);
+    ~Viewport();
 
     void draw();
 
@@ -31,7 +31,7 @@ public:
     void requestFrame();
 
     /// Loads the scene from the provided URL and prepares the camera.
-    void setupScene(const std::string &url);
+    void setupScene(const pxr::UsdStageRefPtr &stage);
 
     [[nodiscard]] bool isZUp() const { return _isZUp; }
 
@@ -53,9 +53,6 @@ private:
     /// Draw the scene, and blit the result to the view.
     /// Returns false if the engine wasn't initialized.
     bool drawMainView(double timeCode);
-
-    /// Uses Hydra to load the USD or USDZ file.
-    bool loadStage(const std::string &filePath);
 
     /// Determine the size of the world so the camera will frame its entire bounding box.
     void calculateWorldCenterAndSize();

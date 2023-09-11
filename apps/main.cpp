@@ -5,8 +5,8 @@
 //  property of any third parties.
 
 #include "common/gui/window.h"
-#include "renderer.h"
-#include "usd/camera.h"
+#include "viewport.h"
+#include "camera.h"
 
 int main(int argc, char *argv[]) {
     NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
@@ -14,12 +14,13 @@ int main(int argc, char *argv[]) {
     static constexpr uint32_t resolution = 1024u;
     vox::Window window{"USD Viewer", resolution, resolution};
 
-    vox::Renderer renderer{window.native_handle(), resolution, resolution};
-    renderer.setupScene("assets/Kitchen_set/Kitchen_set.usd");
+    auto stage = pxr::UsdStage::Open("assets/Kitchen_set/Kitchen_set.usd");
+
+    vox::Viewport renderer{window.native_handle(), resolution, resolution};
+    renderer.setupScene(stage);
 
     window.set_scroll_callback([&](float dx, float dy) {
         renderer.viewCamera()->panByDelta({dx, dy});
-        renderer.requestFrame(); // manually now
     });
 
     while (!window.should_close()) {
