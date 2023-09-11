@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
         main.cpp
         viewport.mm
         camera.cpp
+        usd_helpers.cpp
         ${MANIPULATOR_FILES}
 )
 

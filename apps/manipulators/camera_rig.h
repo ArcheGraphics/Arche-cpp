@@ -6,8 +6,6 @@
 
 #pragma once
 
-#pragma once
-
 #include <pxr/base/gf/camera.h>
 #include <pxr/base/gf/vec2i.h>
 
