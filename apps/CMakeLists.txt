@@ -32,6 +32,30 @@ set(COMMAND_FILES
         commands/undo_layer_state_delegate.cpp
 )
 
+set(WIDGETS_FILES
+        widgets/composition_editor.cpp
+        widgets/connection_editor.cpp
+        widgets/content_browser.cpp
+        widgets/debug.cpp
+        widgets/file_browser.cpp
+        widgets/launcher_bar.cpp
+        widgets/modal_dialogs.cpp
+        widgets/sdf_attribute_editor.cpp
+        widgets/sdf_layer_editor.cpp
+        widgets/sdf_layer_scene_graph_editor.cpp
+        widgets/sdf_prim_editor.cpp
+        widgets/stage_layer_editor.cpp
+        widgets/stage_outliner.cpp
+        widgets/text_editor.cpp
+        widgets/text_filter.cpp
+        widgets/timeline.cpp
+        widgets/usd_prim_editor.cpp
+        widgets/variant_editor.cpp
+        widgets/vt_array_editor.cpp
+        widgets/vt_dictionary_editor.cpp
+        widgets/vt_value_editor.cpp
+)
+
 set(EDITOR_FILES
         editor/editor_settings.cpp
 )
@@ -45,6 +69,7 @@ add_executable(${PROJECT_NAME}
         ${BASE_FILES}
         ${COMMAND_FILES}
         ${MANIPULATOR_FILES}
+        ${WIDGETS_FILES}
         ${EDITOR_FILES}
 )
 
