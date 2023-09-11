@@ -4,7 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "usd_renderer.h"
+#include "usd_primitive.h"
 
 #include <pxr/base/gf/rotation.h>
 #include <pxr/usd/usdGeom/metrics.h>

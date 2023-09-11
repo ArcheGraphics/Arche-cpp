@@ -7,70 +7,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(apps)
 
-set(BASE_FILES
-        base/geometric_functions.h
-        base/usd_helpers.cpp
-        base/imgui_helpers.cpp
-)
-
-set(MANIPULATOR_FILES
-        manipulators/manipulator.h
-        manipulators/camera_rig.h
-        manipulators/camera_rig.cpp
-)
-
-set(COMMAND_FILES
-        commands/attribute_commands.cpp
-        commands/command_stack.cpp
-        commands/commands_impl.cpp
-        commands/layer_commands.cpp
-        commands/prim_commands.cpp
-        commands/sdf_command_group.cpp
-        commands/sdf_command_group_recorder.cpp
-        commands/sdf_layer_instructions.cpp
-        commands/sdf_undo_redo_recorder.cpp
-        commands/undo_layer_state_delegate.cpp
-)
-
-set(WIDGETS_FILES
-        widgets/composition_editor.cpp
-        widgets/connection_editor.cpp
-        widgets/content_browser.cpp
-        widgets/debug.cpp
-        widgets/file_browser.cpp
-        widgets/launcher_bar.cpp
-        widgets/modal_dialogs.cpp
-        widgets/sdf_attribute_editor.cpp
-        widgets/sdf_layer_editor.cpp
-        widgets/sdf_layer_scene_graph_editor.cpp
-        widgets/sdf_prim_editor.cpp
-        widgets/stage_layer_editor.cpp
-        widgets/stage_outliner.cpp
-        widgets/text_editor.cpp
-        widgets/text_filter.cpp
-        widgets/timeline.cpp
-        widgets/usd_prim_editor.cpp
-        widgets/variant_editor.cpp
-        widgets/vt_array_editor.cpp
-        widgets/vt_dictionary_editor.cpp
-        widgets/vt_value_editor.cpp
-)
-
-set(EDITOR_FILES
-        editor/editor_settings.cpp
-)
-
 add_executable(${PROJECT_NAME}
         main.cpp
         viewport.mm
         camera.cpp
-        selection.cpp
-        blueprints.cpp
-        ${BASE_FILES}
-        ${COMMAND_FILES}
-        ${MANIPULATOR_FILES}
-        ${WIDGETS_FILES}
-        ${EDITOR_FILES}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
@@ -84,6 +24,6 @@ endforeach ()
 target_link_libraries(${PROJECT_NAME}
         common
         metal-framework
-        usd-framework
+#        usd-framework
         ${PXR_LIBRARY_NAMES}
 )

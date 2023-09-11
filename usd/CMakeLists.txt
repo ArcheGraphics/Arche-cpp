@@ -8,26 +8,90 @@ cmake_minimum_required(VERSION 3.16)
 
 project(usd-framework LANGUAGES C CXX)
 
+set(CONVERTER_FILES
+        converter/cgltf_util.cpp
+        converter/converter.cpp
+        converter/debug_codes.cpp
+        converter/file_format.cpp
+        converter/guc.cpp
+        converter/image.cpp
+        converter/materialx.cpp
+        converter/mesh.cpp
+        converter/naming.cpp
+        converter/usd_preview_surface.cpp
+)
+
+set(BASE_FILES
+        editor/base/geometric_functions.h
+        editor/base/usd_helpers.cpp
+        editor/base/imgui_helpers.cpp
+)
+
+set(MANIPULATOR_FILES
+        editor/manipulators/manipulator.h
+        editor/manipulators/camera_rig.h
+        editor/manipulators/camera_rig.cpp
+)
+
+set(COMMAND_FILES
+        editor/commands/attribute_commands.cpp
+        editor/commands/command_stack.cpp
+        editor/commands/commands_impl.cpp
+        editor/commands/layer_commands.cpp
+        editor/commands/prim_commands.cpp
+        editor/commands/sdf_command_group.cpp
+        editor/commands/sdf_command_group_recorder.cpp
+        editor/commands/sdf_layer_instructions.cpp
+        editor/commands/sdf_undo_redo_recorder.cpp
+        editor/commands/undo_layer_state_delegate.cpp
+)
+
+set(WIDGETS_FILES
+        editor/widgets/composition_editor.cpp
+        editor/widgets/connection_editor.cpp
+        editor/widgets/content_browser.cpp
+        editor/widgets/debug.cpp
+        editor/widgets/file_browser.cpp
+        editor/widgets/launcher_bar.cpp
+        editor/widgets/modal_dialogs.cpp
+        editor/widgets/sdf_attribute_editor.cpp
+        editor/widgets/sdf_layer_editor.cpp
+        editor/widgets/sdf_layer_scene_graph_editor.cpp
+        editor/widgets/sdf_prim_editor.cpp
+        editor/widgets/stage_layer_editor.cpp
+        editor/widgets/stage_outliner.cpp
+        editor/widgets/text_editor.cpp
+        editor/widgets/text_filter.cpp
+        editor/widgets/timeline.cpp
+        editor/widgets/usd_prim_editor.cpp
+        editor/widgets/variant_editor.cpp
+        editor/widgets/vt_array_editor.cpp
+        editor/widgets/vt_dictionary_editor.cpp
+        editor/widgets/vt_value_editor.cpp
+)
+
+set(EDITOR_FILES
+        editor/editor/editor_settings.cpp
+)
+
 set(COMMON_FILES
-        usd_renderer.h
-        usd_renderer.cpp
-        # GLTF
-        cgltf_util.cpp
-        converter.cpp
-        debug_codes.cpp
-        file_format.cpp
-        guc.cpp
-        image.cpp
-        materialx.cpp
-        mesh.cpp
-        naming.cpp
-        usd_preview_surface.cpp
+        usd_primitive.h
+        usd_primitive.cpp
 )
 
 source_group("common\\" FILES ${COMMON_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
+        ${CONVERTER_FILES}
+        # Editor
+        editor/selection.cpp
+        editor/blueprints.cpp
+        ${BASE_FILES}
+        ${COMMAND_FILES}
+        ${MANIPULATOR_FILES}
+        ${WIDGETS_FILES}
+        ${EDITOR_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
@@ -48,6 +112,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         mikktspace
         cgltf
+        imgui
         ${PXR_LIBRARY_NAMES}
 )
 
