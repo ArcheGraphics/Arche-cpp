@@ -74,7 +74,7 @@ set(FONT_FILES
         editor/fonts/resources_loader.cpp)
 
 set(EDITOR_FILES
-        editor/editor/editor_settings.cpp
+        editor/entry/editor_settings.cpp
 )
 
 set(COMMON_FILES
@@ -109,7 +109,11 @@ endif ()
 # silent c++20 warning
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
+target_include_directories(${PROJECT_NAME} PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/editor
+        ../
+)
 
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC

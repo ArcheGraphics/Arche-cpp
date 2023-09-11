@@ -12,11 +12,12 @@
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usdGeom/gprim.h>
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "base/imgui_helpers.h"
 #include "usd_prim_editor.h"// for DrawUsdPrimEditTarget
 #include "stage_outliner.h"
 #include "vt_value_editor.h"
+#include "base/constants.h"
 
 namespace vox {
 #define StageOutlinerSeed 2342934
@@ -227,13 +228,13 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-    DrawBackgroundSelection(prim, selectedPaths.IsSelected(prim.GetStage(), prim.GetPath()));
+    DrawBackgroundSelection(prim, selectedPaths.is_selected(prim.GetStage(), prim.GetPath()));
     bool unfolded = true;
     {
         {
             TreeIndenter<StageOutlinerSeed, SdfPath> indenter(prim.GetPath());
             ScopedStyleColor primColor(ImGuiCol_Text, GetPrimColor(prim), ImGuiCol_HeaderHovered, 0, ImGuiCol_HeaderActive, 0);
-            const ImGuiID pathHash = IdOf(GetHash(prim.GetPath()));
+            const ImGuiID pathHash = IdOf(get_hash(prim.GetPath()));
 
             unfolded = ImGui::TreeNodeBehavior(pathHash, flags, prim.GetName().GetText());
             // TreeSelectionBehavior(selectedPaths, &prim);
@@ -241,10 +242,10 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
                 // TODO selection, should go in commands, ultimately the selection is passed
                 // as const
                 if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
-                    if (selectedPaths.IsSelected(prim.GetStage(), prim.GetPath())) {
-                        selectedPaths.RemoveSelected(prim.GetStage(), prim.GetPath());
+                    if (selectedPaths.is_selected(prim.GetStage(), prim.GetPath())) {
+                        selectedPaths.remove_selected(prim.GetStage(), prim.GetPath());
                     } else {
-                        selectedPaths.AddSelected(prim.GetStage(), prim.GetPath());
+                        selectedPaths.add_selected(prim.GetStage(), prim.GetPath());
                     }
                 } else {
                     ExecuteAfterDraw<EditorSetSelection>(prim.GetStage(), prim.GetPath());
@@ -277,13 +278,13 @@ static void DrawStageTreeRow(const UsdStageRefPtr &stage, Selection &selectedPat
 
     ImGuiTreeNodeFlags nodeflags = ImGuiTreeNodeFlags_OpenOnArrow;
     std::string stageDisplayName(stage->GetRootLayer()->GetDisplayName());
-    auto unfolded = ImGui::TreeNodeBehavior(IdOf(GetHash(SdfPath::AbsoluteRootPath())), nodeflags, stageDisplayName.c_str());
+    auto unfolded = ImGui::TreeNodeBehavior(IdOf(get_hash(SdfPath::AbsoluteRootPath())), nodeflags, stageDisplayName.c_str());
 
     ImGui::TableSetColumnIndex(2);
     ImGui::SmallButton(ICON_FA_PEN);
     if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
         const UsdPrim &selected =
-            selectedPaths.IsSelectionEmpty(stage) ? stage->GetPseudoRoot() : stage->GetPrimAtPath(selectedPaths.GetAnchorPrimPath(stage));
+            selectedPaths.is_selection_empty(stage) ? stage->GetPseudoRoot() : stage->GetPrimAtPath(selectedPaths.get_anchor_prim_path(stage));
         DrawUsdPrimEditTarget(selected);
         ImGui::EndPopup();
     }
@@ -300,9 +301,9 @@ static void OpenSelectedPaths(const UsdStageRefPtr &stage, Selection &selectedPa
     ImGuiContext &g = *GImGui;
     ImGuiWindow *window = g.CurrentWindow;
     ImGuiStorage *storage = window->DC.StateStorage;
-    for (const auto &path : selectedPaths.GetSelectedPaths(stage)) {
+    for (const auto &path : selectedPaths.get_selected_paths(stage)) {
         for (const auto &element : path.GetParentPath().GetPrefixes()) {
-            ImGuiID id = IdOf(GetHash(element));// This has changed with the optim one
+            ImGuiID id = IdOf(get_hash(element));// This has changed with the optim one
             storage->SetInt(id, true);
         }
     }
@@ -315,7 +316,7 @@ static void TraverseRange(UsdPrimRange &range, std::vector<SdfPath> &paths) {
     ImGuiStorage *storage = window->DC.StateStorage;
     for (auto iter = range.begin(); iter != range.end(); ++iter) {
         const auto &path = iter->GetPath();
-        const ImGuiID pathHash = IdOf(GetHash(path));
+        const ImGuiID pathHash = IdOf(get_hash(path));
         const bool isOpen = storage->GetInt(pathHash, 0) != 0;
         if (!isOpen) {
             iter.PruneChildren();
@@ -343,7 +344,7 @@ static void TraverseOpenedPaths(UsdStageRefPtr stage, std::vector<SdfPath> &path
     ImGuiStorage *storage = window->DC.StateStorage;
     paths.clear();
     const SdfPath &rootPath = SdfPath::AbsoluteRootPath();
-    const bool rootPathIsOpen = storage->GetInt(IdOf(GetHash(rootPath)), 0) != 0;
+    const bool rootPathIsOpen = storage->GetInt(IdOf(get_hash(rootPath)), 0) != 0;
 
     if (rootPathIsOpen) {
         // Stage
@@ -426,7 +427,7 @@ void DrawStageOutliner(UsdStageRefPtr stage, Selection &selectedPaths) {
         ImGui::TableSetupColumn("Type");
 
         // Unfold the selected path
-        const bool selectionHasChanged = selectedPaths.UpdateSelectionHash(stage, lastSelectionHash);
+        const bool selectionHasChanged = selectedPaths.update_selection_hash(stage, lastSelectionHash);
         if (selectionHasChanged) {                  // We could use the imgui id as well instead of a static ??
             OpenSelectedPaths(stage, selectedPaths);// Also we could have a UsdTweakFrame which contains all the changes that happened
                                                     // between the last frame and the new one

@@ -25,7 +25,7 @@
 #include <pxr/usd/usdRender/settings.h>
 
 //#include "Editor.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "modal_dialogs.h"
 #include "file_browser.h"
 #include "sdf_layer_editor.h"
@@ -36,6 +36,7 @@
 #include "table_layouts.h"
 #include "vt_dictionary_editor.h"
 #include "base/usd_helpers.h"
+#include "base/constants.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -80,7 +81,7 @@ struct EditSublayerPath : public ModalDialog {
             SetFileBrowserFilePath(_sublayerPath);
         }
         // Make sure we only use usd layers in the filebrowser
-        SetValidExtensions(GetUsdValidExtensions());
+        SetValidExtensions(get_usd_valid_extensions());
         EnsureFileBrowserDefaultExtension("usd");
     };
 

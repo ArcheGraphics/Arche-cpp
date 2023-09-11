@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "timeline.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include <iostream>
 #include <imgui.h>
 

@@ -4,7 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 //#include "Editor.h"
 #include "launcher_bar.h"
 #include "modal_dialogs.h"

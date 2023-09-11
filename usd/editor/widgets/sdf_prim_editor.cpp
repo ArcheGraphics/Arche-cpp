@@ -23,12 +23,13 @@
 #include <pxr/usd/usd/typed.h>
 #include <pxr/base/plug/registry.h>
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "composition_editor.h"
 #include "file_browser.h"
 #include "base/imgui_helpers.h"
 #include "modal_dialogs.h"
 #include "base/usd_helpers.h"
+#include "base/constants.h"
 #include "edit_list_selector.h"
 #include "sdf_layer_editor.h"
 #include "sdf_prim_editor.h"
@@ -223,9 +224,9 @@ struct CreateRelationDialog : public ModalDialog {
             }
         }
         ImGui::InputText("Target path", &_targetPath);
-        if (ImGui::BeginCombo("Edit list", GetListEditorOperationName(_operation))) {
-            for (int i = 0; i < GetListEditorOperationSize(); ++i) {
-                if (ImGui::Selectable(GetListEditorOperationName(i), false)) {
+        if (ImGui::BeginCombo("Edit list", get_list_editor_operation_name(_operation))) {
+            for (int i = 0; i < get_list_editor_operation_size(); ++i) {
+                if (ImGui::Selectable(get_list_editor_operation_name(i), false)) {
                     _operation = static_cast<SdfListOpType>(i);
                 }
             }
@@ -318,9 +319,9 @@ struct CreateSdfAttributeConnectionDialog : public ModalDialog {
         if (!_attribute)
             return;
         ImGui::Text("Create connection for %s", _attribute->GetPath().GetString().c_str());
-        if (ImGui::BeginCombo("Edit list", GetListEditorOperationName(_operation))) {
-            for (int i = 0; i < GetListEditorOperationSize(); ++i) {
-                if (ImGui::Selectable(GetListEditorOperationName(i), false)) {
+        if (ImGui::BeginCombo("Edit list", get_list_editor_operation_name(_operation))) {
+            for (int i = 0; i < get_list_editor_operation_size(); ++i) {
+                if (ImGui::Selectable(get_list_editor_operation_name(i), false)) {
                     _operation = static_cast<SdfListOpType>(i);
                 }
             }
@@ -429,7 +430,7 @@ void DrawPrimType(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags)
     const auto &allSpecTypes = GetAllSpecTypeNames();
     static int selected = 0;
 
-    if (ComboWithFilter("Prim Type", currentItem, allSpecTypes, &selected, comboFlags)) {
+    if (combo_with_filter("Prim Type", currentItem, allSpecTypes, &selected, comboFlags)) {
         const auto newSelection = allSpecTypes[selected].c_str();
         if (primSpec->GetTypeName() != ClassTokenFromChar(newSelection)) {
             ExecuteAfterDraw(&SdfPrimSpec::SetTypeName, primSpec, ClassTokenFromChar(newSelection));
@@ -478,7 +479,7 @@ static void DrawTfTokenListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
     ImGui::SameLine();
     thread_local std::string itemsString;// avoid reallocating for every element at every frame
     itemsString.clear();
-    for (const TfToken &item : GetSdfListOpItems(proxy, currentList)) {
+    for (const TfToken &item : get_sdf_list_op_items(proxy, currentList)) {
         itemsString.append(item.GetString());
         itemsString.append(" ");// we don't care about the last space, it also helps the user adding a new item
     }
@@ -494,7 +495,7 @@ static void DrawTfTokenListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
                 for (const auto &path : newList) {
                     editList.push_back(TfToken(path));
                 }
-                SetSdfListOpItems(listOp, currentList, editList);
+                set_sdf_list_op_items(listOp, currentList, editList);
                 spec->SetInfo(field, VtValue(listOp));
             }
         };
@@ -513,7 +514,7 @@ static void DrawSdfPathListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
     ImGui::SameLine();
     thread_local std::string itemsString;// avoid reallocating
     itemsString.clear();
-    for (const SdfPath &item : GetSdfListOpItems(proxy, currentList)) {
+    for (const SdfPath &item : get_sdf_list_op_items(proxy, currentList)) {
         itemsString.append(item.GetString());
         itemsString.append(" ");// we don't care about the last space, it also helps the user adding a new item
     }
@@ -525,7 +526,7 @@ static void DrawSdfPathListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
         std::function<void()> updateList = [=]() {
             if (spec) {
                 auto editorProxy = GetPathEditorProxy(spec, field);
-                auto editList = GetSdfListOpItems(editorProxy, currentList);
+                auto editList = get_sdf_list_op_items(editorProxy, currentList);
                 editList.clear();
                 for (const auto &path : newList) {
                     editList.push_back(SdfPath(path));
@@ -588,7 +589,7 @@ struct AttributeRow {};
 template<>
 inline ScopedStyleColor GetRowStyle<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute,
                                                   const Selection &selection, const int &showWhat) {
-    const bool selected = selection.IsSelected(attribute);
+    const bool selected = selection.is_selected(attribute);
     ImVec4 colorSelected = selected ? ImVec4(ColorAttributeSelectedBg) : ImVec4(0.75, 0.60, 0.33, 0.2);
     return ScopedStyleColor(ImGuiCol_HeaderHovered, selected ? colorSelected : ImVec4(ColorTransparent), ImGuiCol_HeaderActive,
                             ImVec4(ColorTransparent), ImGuiCol_Header, colorSelected, ImGuiCol_Text,
@@ -638,7 +639,7 @@ inline void DrawThirdColumn<AttributeRow>(const int rowId, const SdfAttributeSpe
     // Check what to show, this could be stored in a variable ... check imgui
     // For the mini buttons: ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
     ImGui::PushID(rowId);
-    bool selected = selection.IsSelected(attribute);
+    bool selected = selection.is_selected(attribute);
     if (ImGui::Selectable("##select", selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
         ExecuteAfterDraw<EditorSelectAttributePath>(attribute->GetPath());
     }
@@ -872,12 +873,12 @@ void DrawSdfPrimEditor(const SdfPrimSpecHandle &primSpec, const Selection &selec
     DrawPrimSpecRelations(primSpec);
     ImGui::EndChild();
     if (ImGui::IsItemHovered()) {
-        const SdfPath &selectedProperty = selection.GetAnchorPropertyPath(primSpec->GetLayer());
+        const SdfPath &selectedProperty = selection.get_anchor_property_path(primSpec->GetLayer());
         if (selectedProperty != SdfPath()) {
             SdfPropertySpecHandle selectedPropertySpec = primSpec->GetLayer()->GetPropertyAtPath(selectedProperty);
-            AddShortcut<PropertyCopy, ImGuiKey_LeftCtrl, ImGuiKey_C>(selectedPropertySpec);
+            add_shortcut<PropertyCopy, ImGuiKey_LeftCtrl, ImGuiKey_C>(selectedPropertySpec);
         }
-        AddShortcut<PropertyPaste, ImGuiKey_LeftCtrl, ImGuiKey_V>(primSpec);
+        add_shortcut<PropertyPaste, ImGuiKey_LeftCtrl, ImGuiKey_V>(primSpec);
     }
 }
 

@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 
 #include "file_browser.h"
 #include "base/imgui_helpers.h"
+#include "base/constants.h"
 
 namespace clk = std::chrono;
 using DrivesListT = std::vector<std::pair<std::string, std::string>>;

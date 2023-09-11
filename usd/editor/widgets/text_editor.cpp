@@ -5,7 +5,7 @@
 //  property of any third parties.
 
 #include "text_editor.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "base/imgui_helpers.h"
 
 namespace vox {

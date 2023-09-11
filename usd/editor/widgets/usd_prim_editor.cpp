@@ -15,10 +15,11 @@
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 #include "usd_prim_editor.h"
 #include "vt_value_editor.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "modal_dialogs.h"
 #include "base/imgui_helpers.h"
 #include "table_layouts.h"
+#include "base/constants.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

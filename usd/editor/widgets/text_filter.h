@@ -43,7 +43,6 @@ struct TextFilter {
     ImVector<TextRange> Filters;
     int CountGrep;
 
-    bool UseWildcards = false;
     std::function<const char *(const char *, const char *, const char *, const char *)> PatternMatchFunc;
 };
 

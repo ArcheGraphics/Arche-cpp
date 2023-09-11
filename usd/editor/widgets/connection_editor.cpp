@@ -6,7 +6,7 @@
 
 #include "connection_editor.h"
 #include "base/imgui_helpers.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include <pxr/usd/usdShade/nodeGraph.h>
 #include <pxr/usd/usdShade/material.h>
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>

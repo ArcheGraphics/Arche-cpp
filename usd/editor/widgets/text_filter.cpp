@@ -5,6 +5,7 @@
 //  property of any third parties.
 
 #include "text_filter.h"
+#include <imgui_internal.h>
 #include <functional>
 
 namespace vox {
@@ -23,7 +24,7 @@ bool TextFilter::Draw(const char *label, float width) {
         ImGui::SetNextItemWidth(width);
     bool value_changed = ImGui::InputTextWithHint(label, "Search", InputBuf, IM_ARRAYSIZE(InputBuf));
     ImGui::SameLine();
-    if (ImGui::Checkbox("Use wildcard", &UseWildcards) || value_changed)
+    if (value_changed)
         Build();
     return value_changed;
 }
@@ -45,7 +46,7 @@ void TextFilter::TextRange::split(char separator, ImVector<TextRange> *out) cons
 
 void TextFilter::Build() {
 
-    PatternMatchFunc = UseWildcards ? ImStrWildcards : ImStristr;
+    PatternMatchFunc = ImStristr;
 
     Filters.resize(0);
     TextRange input_range(InputBuf, InputBuf + strlen(InputBuf));
@@ -66,14 +67,14 @@ void TextFilter::Build() {
 }
 
 ImGuiID TextFilter ::GetHash() const {
-    return ImHashData(static_cast<const void *>(InputBuf), InputBufSize, UseWildcards ? 1000 : 2000);
+    return ImHashData(static_cast<const void *>(InputBuf), InputBufSize, 2000);
 }
 
 bool TextFilter::PassFilter(const char *text, const char *text_end) const {
     if (Filters.empty())
         return true;
 
-    if (text == NULL)
+    if (text == nullptr)
         text = "";
 
     for (int i = 0; i != Filters.Size; i++) {

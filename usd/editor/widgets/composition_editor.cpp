@@ -4,7 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "composition_editor.h"
 #include "file_browser.h"
 #include "base/imgui_helpers.h"
@@ -12,6 +12,7 @@
 #include "base/usd_helpers.h"
 #include "edit_list_selector.h"
 #include "table_layouts.h"
+#include "base/constants.h"
 
 #include <algorithm>
 #include <iostream>
@@ -496,13 +497,13 @@ void DrawCompositionEditor(const SdfPrimSpecHandle &primSpec) {
     }
 
     auto arcList = GetCompositionArcList(primSpec, CompositionArcItemT());
-    SdfListOpType opList = getEditListChoice(arcList);
+    SdfListOpType opList = GetEditListChoice(arcList);
 
     ImGui::SameLine();
     DrawEditListComboSelector(opList, arcList);
 
     if (BeginTwoColumnsTable("##AssetTypeTable")) {
-        auto editList = GetSdfListOpItems(arcList, opList);
+        auto editList = get_sdf_list_op_items(arcList, opList);
         for (int ind = 0; ind < editList.size(); ind++) {
             const ItemType &item = editList[ind];
             ImGui::PushID(static_cast<int>(TfHash{}(item)));
@@ -575,7 +576,7 @@ inline void DrawAssetPathSummary(std::string &&header, SdfListOpType operation, 
     }
     ImGui::PopID();
     ImGui::SameLine();
-    std::string summary = GetListEditorOperationName(operation);
+    std::string summary = get_list_editor_operation_name(operation);
     summary += " ";
     summary += assetPath.GetAssetPath().empty() ? "" : "@" + assetPath.GetAssetPath() + "@";
     summary += assetPath.GetPrimPath().GetString().empty() ? "" : "<" + assetPath.GetPrimPath().GetString() + ">";
@@ -647,7 +648,7 @@ inline void DrawPathInRow(SdfListOpType operation, const ArcT &assetPath, const 
         ImGui::PushID(buttonId++);                                                                                \
         ImGui::SmallButton(#ABBR_);                                                                               \
         if (ImGui::BeginPopupContextItem(nullptr, buttonFlags)) {                                                 \
-            IterateListEditorItems(primSpec->Get##GETLIST_##List(), Draw##GETLIST_##Summary, primSpec, buttonId); \
+            iterate_list_editor_items(primSpec->Get##GETLIST_##List(), Draw##GETLIST_##Summary, primSpec, buttonId); \
             ImGui::EndPopup();                                                                                    \
         }                                                                                                         \
         ImGui::PopID();                                                                                           \
@@ -673,10 +674,10 @@ void DrawPrimCompositionSummary(const SdfPrimSpecHandle &primSpec) {
     // The idea is to see the relevant informations, and be able to quicly click on them
     // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
     int itemId = 0;
-    IterateListEditorItems(primSpec->GetReferenceList(), DrawPathInRow<SdfReference>, primSpec, &itemId);
-    IterateListEditorItems(primSpec->GetPayloadList(), DrawPathInRow<SdfPayload>, primSpec, &itemId);
-    IterateListEditorItems(primSpec->GetInheritPathList(), DrawPathInRow<SdfInherit>, primSpec, &itemId);
-    IterateListEditorItems(primSpec->GetSpecializesList(), DrawPathInRow<SdfSpecialize>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetReferenceList(), DrawPathInRow<SdfReference>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetPayloadList(), DrawPathInRow<SdfPayload>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetInheritPathList(), DrawPathInRow<SdfInherit>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetSpecializesList(), DrawPathInRow<SdfSpecialize>, primSpec, &itemId);
     ImGui::PopStyleVar();
 }
 

@@ -5,8 +5,9 @@
 //  property of any third parties.
 
 #include "vt_array_editor.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "vt_value_editor.h"
+#include "base/imgui_helpers.h"
 #include <iostream>
 #include <imgui.h>
 #include <pxr/base/gf/matrix2d.h>

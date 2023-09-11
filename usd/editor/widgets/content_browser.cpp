@@ -12,10 +12,11 @@
 #include "base/imgui_helpers.h"
 #include "content_browser.h"
 #include "sdf_layer_editor.h"// for DrawLayerMenuItems
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "text_filter.h"
 #include "modal_dialogs.h"
 #include "file_browser.h"
+#include "base/constants.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

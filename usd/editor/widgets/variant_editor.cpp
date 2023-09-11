@@ -9,8 +9,8 @@
 #include "variant_editor.h"
 #include "base/imgui_helpers.h"
 #include "table_layouts.h"
-
-#include "editor/commands.h"
+#include "base/constants.h"
+#include "commands/commands.h"
 #include "base/usd_helpers.h"
 
 namespace vox {

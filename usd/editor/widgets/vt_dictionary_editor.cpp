@@ -4,9 +4,10 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "vt_dictionary_editor.h"
 #include "vt_value_editor.h"
+#include "base/constants.h"
 #include <string>
 
 #include <pxr/base/vt/dictionary.h>

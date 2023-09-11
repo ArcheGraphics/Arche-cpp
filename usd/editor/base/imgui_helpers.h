@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <vector>
+#include "fonts/IconsFontAwesome5.h"
 
 namespace vox {
 /// One liner for creating multiple calls to ImGui::TableSetupColumn

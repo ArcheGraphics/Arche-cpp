@@ -4,7 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "vt_value_editor.h"
 #include <iostream>
 
@@ -285,7 +285,7 @@ static void DrawSamplesAtTimeCode(const SdfAttributeSpecHandle &attr, SdfTimeSam
 void DrawSdfAttributeEditor(const SdfLayerHandle layer, const Selection &selection) {
     if (!layer)
         return;
-    SdfPath path = selection.GetAnchorPropertyPath(layer);
+    SdfPath path = selection.get_anchor_property_path(layer);
     if (path == SdfPath())
         return;
 

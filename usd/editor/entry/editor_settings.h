@@ -14,7 +14,7 @@
 struct ImGuiTextBuffer;
 
 namespace vox {
-/// EditorSettings contains all the editor variables we want to persist between sessions
+/// EditorSettings contains all the entry variables we want to persist between sessions
 struct EditorSettings {
     EditorSettings(int width, int height);
 
@@ -39,7 +39,7 @@ struct EditorSettings {
     std::string _lastFileBrowserDirectory;
 
     /// Additional plugin paths -  It really belongs to an ApplicationSettings but we want to edit it
-    /// in the editor - This might move in the future
+    /// in the entry - This might move in the future
     std::vector<std::string> _pluginPaths;
 
     /// Blueprints root location on disk

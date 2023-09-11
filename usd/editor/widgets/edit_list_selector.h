@@ -7,6 +7,7 @@
 #pragma once
 
 #include <pxr/usd/sdf/listOp.h>
+#include "base/constants.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -27,7 +28,7 @@ inline SdfListOpType GetEditListChoice(const ListEditorT &proxy) {
     if (opList == -1) {// select the non empty list or explicit
         opList = 0;    // explicit
         for (int i = 0; i < get_list_editor_operation_size(); i++) {
-            if (!GetSdfListOpItems(proxy, i).empty()) {
+            if (!get_sdf_list_op_items(proxy, i).empty()) {
                 opList = i;
                 break;
             }

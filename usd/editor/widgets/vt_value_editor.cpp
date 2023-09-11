@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include "vt_value_editor.h"
+#include "base/constants.h"
 #include <imgui.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>

@@ -23,7 +23,7 @@
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdGeom/gprim.h>
 
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "composition_editor.h"
 //#include "editor.h"
 #include "file_browser.h"
@@ -32,8 +32,9 @@
 #include "modal_dialogs.h"
 #include "sdf_layer_editor.h"
 #include "sdf_prim_editor.h"
-#include "editor/shortcuts.h"
+#include "commands/shortcuts.h"
 #include "base/usd_helpers.h"
+#include "base/constants.h"
 #include "blueprints.h"
 
 namespace vox {
@@ -42,8 +43,8 @@ namespace vox {
 #define IdOf ToImGuiID<3456823, size_t>
 
 static void DrawBlueprintMenus(SdfPrimSpecHandle &primSpec, const std::string &folder) {
-    Blueprints &blueprints = Blueprints::GetInstance();
-    for (const auto &subfolder : blueprints.GetSubFolders(folder)) {
+    Blueprints &blueprints = Blueprints::get_instance();
+    for (const auto &subfolder : blueprints.get_sub_folders(folder)) {
         // TODO should check for name validity
         std::string subFolderName = subfolder.substr(subfolder.find_last_of("/") + 1);
         if (ImGui::BeginMenu(subFolderName.c_str())) {
@@ -51,9 +52,9 @@ static void DrawBlueprintMenus(SdfPrimSpecHandle &primSpec, const std::string &f
             ImGui::EndMenu();
         }
     }
-    for (const auto &item : blueprints.GetItems(folder)) {
+    for (const auto &item : blueprints.get_items(folder)) {
         if (ImGui::MenuItem(item.first.c_str())) {
-            ExecuteAfterDraw<PrimAddBlueprint>(primSpec, FindNextAvailableTokenString(primSpec->GetName()), item.second);
+            ExecuteAfterDraw<PrimAddBlueprint>(primSpec, find_next_available_token_string(primSpec->GetName()), item.second);
         }
     }
 }
@@ -63,12 +64,12 @@ void DrawTreeNodePopup(SdfPrimSpecHandle &primSpec) {
         return;
 
     if (ImGui::MenuItem("Add child")) {
-        ExecuteAfterDraw<PrimNew>(primSpec, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
+        ExecuteAfterDraw<PrimNew>(primSpec, find_next_available_token_string(SdfPrimSpecDefaultName));
     }
     auto parent = primSpec->GetNameParent();
     if (parent) {
         if (ImGui::MenuItem("Add sibling")) {
-            ExecuteAfterDraw<PrimNew>(parent, FindNextAvailableTokenString(primSpec->GetName()));
+            ExecuteAfterDraw<PrimNew>(parent, find_next_available_token_string(primSpec->GetName()));
         }
     }
     if (ImGui::BeginMenu("Add blueprint")) {
@@ -76,7 +77,7 @@ void DrawTreeNodePopup(SdfPrimSpecHandle &primSpec) {
         ImGui::EndMenu();
     }
     if (ImGui::MenuItem("Duplicate")) {
-        ExecuteAfterDraw<PrimDuplicate>(primSpec, FindNextAvailableTokenString(primSpec->GetName()));
+        ExecuteAfterDraw<PrimDuplicate>(primSpec, find_next_available_token_string(primSpec->GetName()));
     }
     if (ImGui::MenuItem("Remove")) {
         ExecuteAfterDraw<PrimRemove>(primSpec);
@@ -128,9 +129,9 @@ inline void DrawTooltip(const char *text) {
 void DrawMiniToolbar(SdfLayerRefPtr layer, const SdfPrimSpecHandle &prim) {
     if (ImGui::Button(ICON_FA_PLUS)) {
         if (prim == SdfPrimSpecHandle()) {
-            ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
+            ExecuteAfterDraw<PrimNew>(layer, find_next_available_token_string(SdfPrimSpecDefaultName));
         } else {
-            ExecuteAfterDraw<PrimNew>(prim, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
+            ExecuteAfterDraw<PrimNew>(prim, find_next_available_token_string(SdfPrimSpecDefaultName));
         }
     }
     DrawTooltip("New child prim");
@@ -138,15 +139,15 @@ void DrawMiniToolbar(SdfLayerRefPtr layer, const SdfPrimSpecHandle &prim) {
     if (ImGui::Button(ICON_FA_PLUS_SQUARE) && prim) {
         auto parent = prim->GetNameParent();
         if (parent) {
-            ExecuteAfterDraw<PrimNew>(parent, FindNextAvailableTokenString(prim->GetName()));
+            ExecuteAfterDraw<PrimNew>(parent, find_next_available_token_string(prim->GetName()));
         } else {
-            ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(prim->GetName()));
+            ExecuteAfterDraw<PrimNew>(layer, find_next_available_token_string(prim->GetName()));
         }
     }
     DrawTooltip("New sibbling prim");
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_CLONE) && prim) {
-        ExecuteAfterDraw<PrimDuplicate>(prim, FindNextAvailableTokenString(prim->GetName()));
+        ExecuteAfterDraw<PrimDuplicate>(prim, find_next_available_token_string(prim->GetName()));
     }
     DrawTooltip("Duplicate");
     ImGui::SameLine();
@@ -186,8 +187,8 @@ static void HandleDragAndDrop(const SdfPrimSpecHandle &primSpec, const Selection
     // src_flags |= ImGuiDragDropFlags_SourceNoPreviewTooltip; // Hide the tooltip
     if (ImGui::BeginDragDropSource(srcFlags)) {
         payload.clear();
-        if (selection.IsSelected(primSpec)) {
-            for (const auto &selectedPath : selection.GetSelectedPaths(primSpec->GetLayer())) {
+        if (selection.is_selected(primSpec)) {
+            for (const auto &selectedPath : selection.get_selected_paths(primSpec->GetLayer())) {
                 payload.push_back(selectedPath);
             }
         } else {
@@ -279,7 +280,7 @@ static void DrawSdfPrimRow(const SdfLayerRefPtr &layer, const SdfPath &primPath,
 
     SdfPrimSpecHandle previousSelectedPrim;
 
-    auto selectedPrim = layer->GetPrimAtPath(selection.GetAnchorPrimPath(layer));// TODO should we have a function for that ?
+    auto selectedPrim = layer->GetPrimAtPath(selection.get_anchor_prim_path(layer));// TODO should we have a function for that ?
     bool primIsVariant = primPath.IsPrimVariantSelectionPath();
 
     ImGui::TableNextRow();
@@ -350,7 +351,7 @@ static void DrawTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &se
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     auto rootPrim = layer->GetPrimAtPath(SdfPath::AbsoluteRootPath());
-    DrawBackgroundSelection(rootPrim, selection, selection.IsSelected(rootPrim));
+    DrawBackgroundSelection(rootPrim, selection, selection.is_selected(rootPrim));
     HandleDragAndDrop(layer, selection);
     ImGui::SetItemAllowOverlap();
     std::string label = std::string(ICON_FA_FILE) + " " + layer->GetDisplayName();
@@ -372,7 +373,7 @@ static void DrawTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &se
             DrawSublayerPathEditDialog(layer, "");
         }
         if (ImGui::MenuItem("Add root prim")) {
-            ExecuteAfterDraw<PrimNew>(layer, FindNextAvailableTokenString(SdfPrimSpecDefaultName));
+            ExecuteAfterDraw<PrimNew>(layer, find_next_available_token_string(SdfPrimSpecDefaultName));
         }
         const char *clipboard = ImGui::GetClipboardText();
         const bool clipboardEmpty = !clipboard || clipboard[0] == 0;
@@ -414,7 +415,7 @@ static void DrawTopNodeLayerRow(const SdfLayerRefPtr &layer, const Selection &se
         ScopedStyleColor highlightButton(ImGuiCol_Button, ImVec4(ColorButtonHighlight));
         ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 160);
         ImGui::SetCursorPosY(selectedPosY);
-        DrawMiniToolbar(layer, layer->GetPrimAtPath(selection.GetAnchorPrimPath(layer)));
+        DrawMiniToolbar(layer, layer->GetPrimAtPath(selection.get_anchor_prim_path(layer)));
     }
 }
 
@@ -466,7 +467,7 @@ void DrawLayerPrimHierarchy(SdfLayerRefPtr layer, const Selection &selection) {
     if (!layer)
         return;
 
-    SdfPrimSpecHandle selectedPrim = layer->GetPrimAtPath(selection.GetAnchorPrimPath(layer));
+    SdfPrimSpecHandle selectedPrim = layer->GetPrimAtPath(selection.get_anchor_prim_path(layer));
     DrawLayerNavigation(layer);
     auto flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY;
 
@@ -510,7 +511,7 @@ void DrawLayerPrimHierarchy(SdfLayerRefPtr layer, const Selection &selection) {
         AddShortcut<PrimCopy, ImGuiKey_LeftCtrl, ImGuiKey_C>(selectedPrim);
         AddShortcut<PrimPaste, ImGuiKey_LeftCtrl, ImGuiKey_V>(selectedPrim);
         AddShortcut<PrimDuplicate, ImGuiKey_LeftCtrl, ImGuiKey_D>(selectedPrim,
-                                                                  FindNextAvailableTokenString(selectedPrim->GetName()));
+                                                                  find_next_available_token_string(selectedPrim->GetName()));
     }
 }
 

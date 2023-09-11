@@ -8,9 +8,10 @@
 #include "sdf_layer_editor.h"
 #include "base/imgui_helpers.h"
 #include "table_layouts.h"
-#include "editor/commands.h"
+#include "commands/commands.h"
 #include "file_browser.h"
 #include "modal_dialogs.h"
+#include "base/constants.h"
 
 namespace vox {
 static void DrawSublayerTreeNodePopupMenu(const SdfLayerRefPtr &layer, const SdfLayerRefPtr &parent, const std::string &layerPath,
