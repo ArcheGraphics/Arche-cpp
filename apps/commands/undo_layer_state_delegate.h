@@ -17,11 +17,10 @@ class SdfCommandGroup;
 
 class UndoRedoLayerStateDelegate : public SdfLayerStateDelegateBase {
 public:
+    static UndoRedoLayerStateDelegateRefPtr create(SdfCommandGroup &undoCommands);
 
-    static UndoRedoLayerStateDelegateRefPtr New(SdfCommandGroup &undoCommands);
-
-    void SetClean();
-    void SetDirty();
+    void set_clean();
+    void set_dirty();
 
 protected:
     explicit UndoRedoLayerStateDelegate(SdfCommandGroup &undoCommands)

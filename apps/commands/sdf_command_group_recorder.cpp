@@ -12,21 +12,21 @@
 namespace vox {
 SdfCommandGroupRecorder::SdfCommandGroupRecorder(SdfCommandGroup &undoCommands, const SdfLayerRefPtr &layer)
     : _undoCommands(undoCommands), _layers({layer}) {
-    SetUndoStateDelegates();
+    set_undo_state_delegates();
 }
 
 SdfCommandGroupRecorder::SdfCommandGroupRecorder(SdfCommandGroup &undoCommands, SdfLayerHandleVector layers)
     : _undoCommands(undoCommands), _layers(std::move(layers)) {
-    SetUndoStateDelegates();
+    set_undo_state_delegates();
 }
 
 SdfCommandGroupRecorder::~SdfCommandGroupRecorder() {
-    UnsetUndoStateDelegates();
+    unset_undo_state_delegates();
 }
 
-void SdfCommandGroupRecorder::SetUndoStateDelegates() {
-    if (_undoCommands.IsEmpty()) {
-        auto stateDelegate = UndoRedoLayerStateDelegate::New(_undoCommands);
+void SdfCommandGroupRecorder::set_undo_state_delegates() {
+    if (_undoCommands.is_empty()) {
+        auto stateDelegate = UndoRedoLayerStateDelegate::create(_undoCommands);
         for (const auto &layer : _layers) {
             if (layer) {
                 _previousDelegates.emplace_back(layer->GetStateDelegate());
@@ -38,7 +38,7 @@ void SdfCommandGroupRecorder::SetUndoStateDelegates() {
     }
 }
 
-void SdfCommandGroupRecorder::UnsetUndoStateDelegates() {
+void SdfCommandGroupRecorder::unset_undo_state_delegates() {
     if (!_layers.empty() && !_previousDelegates.empty()) {
         auto previousDelegateIt = _previousDelegates.begin();
         for (const auto &layer : _layers) {

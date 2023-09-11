@@ -33,7 +33,7 @@ struct PrimNew : public SdfLayerCommand {
 
     ~PrimNew() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer && !_primSpec)
             return false;
         if (_layer) {
@@ -55,12 +55,11 @@ struct PrimNew : public SdfLayerCommand {
 };
 
 struct PrimRemove : public SdfLayerCommand {
-
     explicit PrimRemove(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec) {}
 
     ~PrimRemove() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_primSpec)
             return false;
         auto layer = _primSpec->GetLayer();
@@ -99,7 +98,7 @@ struct PrimCreateListEditorOperation : SdfLayerCommand {
         : _primSpec(primSpec), _operation(operation), _item(std::move(item)) {}
     ~PrimCreateListEditorOperation() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (_primSpec) {
             SdfCommandGroupRecorder recorder(_undoCommands, _primSpec->GetLayer());
             create_list_editor_operation(GetListEditor(), _operation, _item);
@@ -149,7 +148,7 @@ struct PrimReparent : public SdfLayerCommand {
 
     ~PrimReparent() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
         SdfCommandGroupRecorder recorder(_undoCommands, _layer);
@@ -177,7 +176,6 @@ struct PrimReparent : public SdfLayerCommand {
 };
 
 struct PrimCreateAttribute : public SdfLayerCommand {
-
     PrimCreateAttribute(const SdfPrimSpecHandle &owner, std::string name, SdfValueTypeName typeName,
                         SdfVariability variability = SdfVariabilityVarying, bool custom = false, bool createDefault = false)
         : _owner(owner), _name(std::move(name)), _typeName(typeName), _variability(variability),
@@ -185,7 +183,7 @@ struct PrimCreateAttribute : public SdfLayerCommand {
 
     ~PrimCreateAttribute() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_owner)
             return false;
         auto layer = _owner->GetLayer();
@@ -210,7 +208,6 @@ struct PrimCreateAttribute : public SdfLayerCommand {
 };
 
 struct PrimCreateRelationship : public SdfLayerCommand {
-
     PrimCreateRelationship(const SdfPrimSpecHandle &owner, std::string name, SdfVariability variability, bool custom,
                            SdfListOpType operation, std::string targetPath)
         : _owner(owner), _name(std::move(name)), _variability(variability), _custom(custom), _operation(operation),
@@ -218,7 +215,7 @@ struct PrimCreateRelationship : public SdfLayerCommand {
 
     ~PrimCreateRelationship() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_owner)
             return false;
         auto layer = _owner->GetLayer();
@@ -242,7 +239,7 @@ struct PrimCreateRelationship : public SdfLayerCommand {
 struct PrimReorder : public SdfLayerCommand {
     PrimReorder(const SdfPrimSpecHandle &prim, bool up) : _prim(prim), _up(up) {}
     ~PrimReorder() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (!_prim)
             return false;
         auto layer = _prim->GetLayer();
@@ -284,7 +281,7 @@ struct PrimReorder : public SdfLayerCommand {
 struct PrimDuplicate : public SdfLayerCommand {
     PrimDuplicate(const SdfPrimSpecHandle &prim, std::string &newName) : _prim(prim), _newName(newName){};
     ~PrimDuplicate() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prim) {
             SdfCommandGroupRecorder recorder(_undoCommands, _prim->GetLayer());
             return (SdfCopySpec(_prim->GetLayer(), _prim->GetPath(), _prim->GetLayer(),
@@ -301,7 +298,7 @@ struct PrimAddBlueprint : public SdfLayerCommand {
     PrimAddBlueprint(const SdfPrimSpecHandle &prim, std::string &primName, std::string blueprintPath)
         : _prim(prim), _primName(primName), _blueprintPath(std::move(std::move(blueprintPath))){};
     ~PrimAddBlueprint() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prim) {
             // Open a layer and copy the content of it onto this prim
             auto layerSource = SdfLayer::FindOrOpen(_blueprintPath);
@@ -337,7 +334,7 @@ SdfLayerRefPtr CopyPasteCommand::_copyPasteLayer(SdfLayer::CreateAnonymous("Copy
 struct PrimCopy : public CopyPasteCommand {
     explicit PrimCopy(const SdfPrimSpecHandle &prim) : _prim(prim){};
     ~PrimCopy() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prim && _copyPasteLayer) {
             SdfCommandGroupRecorder recorder(_undoCommands, _copyPasteLayer);
             // Ditch root prim
@@ -362,7 +359,7 @@ struct PrimCopy : public CopyPasteCommand {
 struct PrimPaste : public CopyPasteCommand {
     explicit PrimPaste(const SdfPrimSpecHandle &prim) : _prim(prim){};
     ~PrimPaste() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prim && _copyPasteLayer) {
             SdfCommandGroupRecorder recorder(_undoCommands, _prim->GetLayer());
             const SdfPath CopiedPrimRoot = SdfPath::AbsoluteRootPath().AppendChild(GetCopyRoot());
@@ -387,7 +384,7 @@ struct PrimCreateAttributeConnection : public SdfLayerCommand {
     PrimCreateAttributeConnection(const SdfAttributeSpecHandle &attr, SdfListOpType operation, const std::string &connectionEndPoint)
         : _attr(attr), _operation(operation), _connectionEndPoint(connectionEndPoint) {}
     ~PrimCreateAttributeConnection() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_attr) {
             SdfCommandGroupRecorder recorder(_undoCommands, _attr->GetLayer());
             create_list_editor_operation(_attr->GetConnectionPathList(), _operation, _connectionEndPoint);
@@ -405,7 +402,7 @@ struct PrimCreateAttributeConnection : public SdfLayerCommand {
 struct PropertyCopy : public CopyPasteCommand {
     explicit PropertyCopy(const SdfPropertySpecHandle &prop) : _prop(prop){};
     ~PropertyCopy() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prop && _copyPasteLayer) {
             SdfCommandGroupRecorder recorder(_undoCommands, _copyPasteLayer);
             const SdfPath copiedPropertiesRoot = SdfPath::AbsoluteRootPath().AppendChild(GetCopyRoot());
@@ -424,12 +421,12 @@ struct PropertyCopy : public CopyPasteCommand {
     }
     SdfPropertySpecHandle _prop;
 };
-template void ExecuteAfterDraw<PropertyCopy>(SdfPropertySpecHandle prop);
+template void execute_after_draw<PropertyCopy>(SdfPropertySpecHandle prop);
 
 struct PropertyPaste : public CopyPasteCommand {
     explicit PropertyPaste(const SdfPrimSpecHandle &prim) : _prim(prim){};
     ~PropertyPaste() override = default;
-    bool DoIt() override {
+    bool do_it() override {
         if (_prim && _copyPasteLayer) {
             SdfCommandGroupRecorder recorder(_undoCommands, _prim->GetLayer());
             const SdfPath CopiedPropertiesRoot = SdfPath::AbsoluteRootPath().AppendChild(GetCopyRoot());
@@ -449,28 +446,28 @@ struct PropertyPaste : public CopyPasteCommand {
     }
     SdfPrimSpecHandle _prim;
 };
-template void ExecuteAfterDraw<PropertyPaste>(SdfPrimSpecHandle prim);
+template void execute_after_draw<PropertyPaste>(SdfPrimSpecHandle prim);
 
 /// TODO: how to avoid having to write the argument list ? it's the same as the constructor arguments
-template void ExecuteAfterDraw<PrimNew>(SdfLayerRefPtr layer, std::string newName);
-template void ExecuteAfterDraw<PrimNew>(SdfPrimSpecHandle primSpec, std::string newName);
-template void ExecuteAfterDraw<PrimRemove>(SdfPrimSpecHandle primSpec);
-template void ExecuteAfterDraw<PrimReparent>(SdfLayerHandle layer, SdfPath source, SdfPath destination);
-template void ExecuteAfterDraw<PrimReparent>(SdfLayerHandle layer, std::vector<SdfPath> source, SdfPath destination);
-template void ExecuteAfterDraw<PrimCreateReference>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfReference reference);
-template void ExecuteAfterDraw<PrimCreatePayload>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPayload payload);
-template void ExecuteAfterDraw<PrimCreateInherit>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPath inherit);
-template void ExecuteAfterDraw<PrimCreateSpecialize>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPath specialize);
-template void ExecuteAfterDraw<PrimCreateAttribute>(SdfPrimSpecHandle owner, std::string name, SdfValueTypeName typeName,
-                                                    SdfVariability variability, bool custom, bool createDefault);
-template void ExecuteAfterDraw<PrimCreateRelationship>(SdfPrimSpecHandle owner, std::string name, SdfVariability variability,
-                                                       bool custom, SdfListOpType operation, std::string targetPath);
-template void ExecuteAfterDraw<PrimReorder>(SdfPrimSpecHandle owner, bool up);
-template void ExecuteAfterDraw<PrimDuplicate>(SdfPrimSpecHandle prim, std::string newName);
-template void ExecuteAfterDraw<PrimAddBlueprint>(SdfPrimSpecHandle prim, std::string newName, std::string bluePrintPath);
-template void ExecuteAfterDraw<PrimCopy>(SdfPrimSpecHandle prim);
-template void ExecuteAfterDraw<PrimPaste>(SdfPrimSpecHandle prim);
-template void ExecuteAfterDraw<PrimCreateAttributeConnection>(SdfAttributeSpecHandle attr, SdfListOpType operation,
-                                                              std::string connectionEndPoint);
+template void execute_after_draw<PrimNew>(SdfLayerRefPtr layer, std::string newName);
+template void execute_after_draw<PrimNew>(SdfPrimSpecHandle primSpec, std::string newName);
+template void execute_after_draw<PrimRemove>(SdfPrimSpecHandle primSpec);
+template void execute_after_draw<PrimReparent>(SdfLayerHandle layer, SdfPath source, SdfPath destination);
+template void execute_after_draw<PrimReparent>(SdfLayerHandle layer, std::vector<SdfPath> source, SdfPath destination);
+template void execute_after_draw<PrimCreateReference>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfReference reference);
+template void execute_after_draw<PrimCreatePayload>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPayload payload);
+template void execute_after_draw<PrimCreateInherit>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPath inherit);
+template void execute_after_draw<PrimCreateSpecialize>(SdfPrimSpecHandle primSpec, SdfListOpType operation, SdfPath specialize);
+template void execute_after_draw<PrimCreateAttribute>(SdfPrimSpecHandle owner, std::string name, SdfValueTypeName typeName,
+                                                      SdfVariability variability, bool custom, bool createDefault);
+template void execute_after_draw<PrimCreateRelationship>(SdfPrimSpecHandle owner, std::string name, SdfVariability variability,
+                                                         bool custom, SdfListOpType operation, std::string targetPath);
+template void execute_after_draw<PrimReorder>(SdfPrimSpecHandle owner, bool up);
+template void execute_after_draw<PrimDuplicate>(SdfPrimSpecHandle prim, std::string newName);
+template void execute_after_draw<PrimAddBlueprint>(SdfPrimSpecHandle prim, std::string newName, std::string bluePrintPath);
+template void execute_after_draw<PrimCopy>(SdfPrimSpecHandle prim);
+template void execute_after_draw<PrimPaste>(SdfPrimSpecHandle prim);
+template void execute_after_draw<PrimCreateAttributeConnection>(SdfAttributeSpecHandle attr, SdfListOpType operation,
+                                                                std::string connectionEndPoint);
 
 }// namespace vox

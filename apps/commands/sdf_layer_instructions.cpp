@@ -11,7 +11,8 @@
 #include "sdf_layer_instructions.h"
 
 namespace vox {
-static void _CopySpec(const SdfAbstractData &src, SdfAbstractData *dst, const SdfPath &path) {
+namespace {
+void _copy_spec(const SdfAbstractData &src, SdfAbstractData *dst, const SdfPath &path) {
     if (!dst) {
         std::cerr << "ERROR: when copying the destination prim is null at path " << path.GetString() << std::endl;
         return;
@@ -20,11 +21,12 @@ static void _CopySpec(const SdfAbstractData &src, SdfAbstractData *dst, const Sd
     const TfTokenVector &fields = src.List(path);
     TF_FOR_ALL(i, fields) { dst->Set(path, *i, src.Get(path, *i)); }
 }
+}// namespace
 
 UndoRedoDeleteSpec::_SpecCopier::_SpecCopier(SdfAbstractData *dst_) : dst(dst_) {}
 
 bool UndoRedoDeleteSpec::_SpecCopier::VisitSpec(const SdfAbstractData &src, const SdfPath &path) {
-    _CopySpec(src, dst, path);
+    _copy_spec(src, dst, path);
     return true;
 }
 
@@ -36,18 +38,18 @@ UndoRedoDeleteSpec::UndoRedoDeleteSpec(const SdfLayerHandle &layer, const SdfPat
     // This can be really slow on big scenes
     SdfChangeBlock changeBlock;
     _deletedData = TfCreateRefPtr(new SdfData());
-    SdfLayer::TraversalFunction copyFunc = std::bind(&_CopySpec, std::cref(*get_pointer(_layerData)),
+    SdfLayer::TraversalFunction copyFunc = std::bind(&_copy_spec, std::cref(*get_pointer(_layerData)),
                                                      get_pointer(_deletedData), std::placeholders::_1);
     _layer->Traverse(path, copyFunc);
 }
 
-void UndoRedoDeleteSpec::DoIt() {
+void UndoRedoDeleteSpec::do_it() {
     if (_layer && _layer->GetStateDelegate()) {
         _layer->GetStateDelegate()->DeleteSpec(_path, _inert);
     }
 }
 
-void UndoRedoDeleteSpec::UndoIt() {
+void UndoRedoDeleteSpec::undo_it() {
     if (_layer && _layer->GetStateDelegate()) {
         SdfChangeBlock changeBlock;
         _SpecCopier copier(get_pointer(_layerData));

@@ -12,7 +12,7 @@
 namespace vox {
 CommandStack *CommandStack::instance = nullptr;
 
-CommandStack &CommandStack::GetInstance() {
+CommandStack &CommandStack::get_instance() {
     if (!instance) {
         instance = new CommandStack();
     }
@@ -20,14 +20,15 @@ CommandStack &CommandStack::GetInstance() {
 }
 
 CommandStack::CommandStack() = default;
+
 CommandStack::~CommandStack() {
     delete instance;
 }
 
-void CommandStack::ExecuteCommands() {
+void CommandStack::execute_commands() {
     if (lastCmd) {
-        if (lastCmd->DoIt()) {
-            _PushCommand(lastCmd);
+        if (lastCmd->do_it()) {
+            _push_command(lastCmd);
         } else {
             delete lastCmd;
         }
@@ -35,7 +36,7 @@ void CommandStack::ExecuteCommands() {
     }
 }
 
-void CommandStack::_PushCommand(Command *cmd) {
+void CommandStack::_push_command(Command *cmd) {
     if (undoStackPos != undoStack.size()) {
         undoStack.resize(undoStackPos);
     }
@@ -44,83 +45,80 @@ void CommandStack::_PushCommand(Command *cmd) {
 }
 
 struct UndoCommand : public Command {
-
     UndoCommand() = default;
     ~UndoCommand() override = default;
 
     /// Undo the last command in the stack
-    bool DoIt() override;
-    bool UndoIt() override { return false; }
+    bool do_it() override;
+    bool undo_it() override { return false; }
 };
 
 struct RedoCommand : public Command {
-
     RedoCommand() = default;
     ~RedoCommand() override = default;
 
     /// Undo the last command in the stack
-    bool DoIt() override;
-    bool UndoIt() override { return false; }
+    bool do_it() override;
+    bool undo_it() override { return false; }
 };
 
 struct ClearUndoRedoCommand : public Command {
-
     ClearUndoRedoCommand() = default;
     ~ClearUndoRedoCommand() override = default;
 
     /// Undo the last command in the stack
-    bool DoIt() override;
-    bool UndoIt() override { return false; }
+    bool do_it() override;
+    bool undo_it() override { return false; }
 };
 
 // EditorUndo Command
-bool UndoCommand::DoIt() {
-    CommandStack &commandStack = CommandStack::GetInstance();
+bool UndoCommand::do_it() {
+    CommandStack &commandStack = CommandStack::get_instance();
     // TODO : move into stacK ??
     if (commandStack.undoStackPos > 0) {
         commandStack.undoStackPos--;
-        commandStack.undoStack[commandStack.undoStackPos]->UndoIt();
+        commandStack.undoStack[commandStack.undoStackPos]->undo_it();
     }
     return false;// Should never be stored in the stack
 }
-template void ExecuteAfterDraw<UndoCommand>();
+template void execute_after_draw<UndoCommand>();
 
 /// Undo the last command in the stack
 /// Editor Redo command
-bool RedoCommand::DoIt() {
+bool RedoCommand::do_it() {
     // TODO : move into stacK ??
-    CommandStack &commandStack = CommandStack::GetInstance();
+    CommandStack &commandStack = CommandStack::get_instance();
     if (commandStack.undoStackPos < commandStack.undoStack.size()) {
-        commandStack.undoStack[commandStack.undoStackPos]->DoIt();
+        commandStack.undoStack[commandStack.undoStackPos]->do_it();
         commandStack.undoStackPos++;
     }
 
     return false;// Should never be stored in the stack
 }
 
-template void ExecuteAfterDraw<RedoCommand>();
+template void execute_after_draw<RedoCommand>();
 
 /// Undo the last command in the stack
-bool ClearUndoRedoCommand::DoIt() {
-    CommandStack &commandStack = CommandStack::GetInstance();
+bool ClearUndoRedoCommand::do_it() {
+    CommandStack &commandStack = CommandStack::get_instance();
     commandStack.undoStackPos = 0;
     commandStack.undoStack.clear();
     delete commandStack.lastCmd;
     commandStack.lastCmd = nullptr;
     return false;// Should never be stored in the stack
 }
-template void ExecuteAfterDraw<ClearUndoRedoCommand>();
+template void execute_after_draw<ClearUndoRedoCommand>();
 
 /// Undo the last command in the stack
-bool UsdFunctionCall::DoIt() {
-    CommandStack &commandStack = CommandStack::GetInstance();
+bool UsdFunctionCall::do_it() {
+    CommandStack &commandStack = CommandStack::get_instance();
     auto *command = new SdfUndoRedoCommand();
     {
         SdfCommandGroupRecorder recorder(command->_undoCommands, _layer);
         _func();
     }
     // Push this SdfUndoRedoCommand command on the stack
-    commandStack._PushCommand(command);
+    commandStack._push_command(command);
 
     // We don't want to push UsdFunctionCall, as we already pushed
     // a SdfUndoRedoCommand
@@ -134,13 +132,13 @@ UsdFunctionCall::UsdFunctionCall(UsdStageRefPtr stage, std::function<void()> fun
     }
 }
 
-template void ExecuteAfterDraw<UsdFunctionCall>(SdfLayerRefPtr layer, std::function<void()> func);
-template void ExecuteAfterDraw<UsdFunctionCall>(SdfLayerHandle layer, std::function<void()> func);
-template void ExecuteAfterDraw<UsdFunctionCall>(UsdStageRefPtr stage, std::function<void()> func);
+template void execute_after_draw<UsdFunctionCall>(SdfLayerRefPtr layer, std::function<void()> func);
+template void execute_after_draw<UsdFunctionCall>(SdfLayerHandle layer, std::function<void()> func);
+template void execute_after_draw<UsdFunctionCall>(UsdStageRefPtr stage, std::function<void()> func);
 
 // Should go in Commands.cpp ???
 void ExecuteCommands() {
-    CommandStack::GetInstance().ExecuteCommands();
+    CommandStack::get_instance().execute_commands();
 }
 
 }// namespace vox

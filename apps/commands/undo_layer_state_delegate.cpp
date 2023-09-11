@@ -36,27 +36,27 @@ namespace vox {
 
 // TODO: We must have Unit tests for this part of the software !
 
-void UndoMarkStateAsDirty(const SdfLayerHandle &layer) {
+void undo_mark_state_as_dirty(const SdfLayerHandle &layer) {
     if (layer && layer->GetStateDelegate()) {
         // TODO: investigate why the following code does not reset the dirty flag
         SdfLayerStateDelegateBaseRefPtr previousDelegate = layer->GetStateDelegate();
         SdfCommandGroup dummyCommands;
-        auto stateDelegate = UndoRedoLayerStateDelegate::New(dummyCommands);
+        auto stateDelegate = UndoRedoLayerStateDelegate::create(dummyCommands);
         layer->SetStateDelegate(stateDelegate);
-        stateDelegate->SetClean();
+        stateDelegate->set_clean();
         layer->SetStateDelegate(previousDelegate);
     }
 }
 
-UndoRedoLayerStateDelegateRefPtr UndoRedoLayerStateDelegate::New(SdfCommandGroup &instructions) {
+UndoRedoLayerStateDelegateRefPtr UndoRedoLayerStateDelegate::create(SdfCommandGroup &instructions) {
     return TfCreateRefPtr(new UndoRedoLayerStateDelegate(instructions));
 }
 
-void UndoRedoLayerStateDelegate::SetClean() {
+void UndoRedoLayerStateDelegate::set_clean() {
     _dirty = false;
 }
 
-void UndoRedoLayerStateDelegate::SetDirty() {
+void UndoRedoLayerStateDelegate::set_dirty() {
     if (!_dirty) {
         // TODO _undoCommands.AddFunction(std::bind(&UndoMarkStateAsDirty, _layer));
     }
@@ -83,21 +83,21 @@ void UndoRedoLayerStateDelegate::_OnSetField(
     const SdfPath &path,
     const TfToken &fieldName,
     const VtValue &value) {
-    SetDirty();
+    set_dirty();
     const VtValue previousValue = _layer->GetField(path, fieldName);
     const VtValue &newValue = value;
-    _undoCommands.StoreInstruction<UndoRedoSetField>({_layer, path, fieldName, newValue, previousValue});
+    _undoCommands.store_instruction<UndoRedoSetField>({_layer, path, fieldName, newValue, previousValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnSetField(
     const SdfPath &path,
     const TfToken &fieldName,
     const SdfAbstractDataConstValue &value) {
-    SetDirty();
+    set_dirty();
     const VtValue previousValue = _layer->GetField(path, fieldName);
     VtValue newValue;
     value.GetValue(&newValue);
-    _undoCommands.StoreInstruction<UndoRedoSetField>({_layer, path, fieldName, newValue, previousValue});
+    _undoCommands.store_instruction<UndoRedoSetField>({_layer, path, fieldName, newValue, previousValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnSetFieldDictValueByKey(
@@ -105,10 +105,10 @@ void UndoRedoLayerStateDelegate::_OnSetFieldDictValueByKey(
     const TfToken &fieldName,
     const TfToken &keyPath,
     const VtValue &value) {
-    SetDirty();
+    set_dirty();
     const VtValue previousValue = _layer->GetFieldDictValueByKey(path, fieldName, keyPath);// TODO should the instruction retrieve the value instead ?
     const VtValue &newValue = value;
-    _undoCommands.StoreInstruction<UndoRedoSetFieldDictValueByKey>({_layer, path, fieldName, keyPath, newValue, previousValue});
+    _undoCommands.store_instruction<UndoRedoSetFieldDictValueByKey>({_layer, path, fieldName, keyPath, newValue, previousValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnSetFieldDictValueByKey(
@@ -116,86 +116,86 @@ void UndoRedoLayerStateDelegate::_OnSetFieldDictValueByKey(
     const TfToken &fieldName,
     const TfToken &keyPath,
     const SdfAbstractDataConstValue &value) {
-    SetDirty();
+    set_dirty();
     const VtValue previousValue = _layer->GetFieldDictValueByKey(path, fieldName, keyPath);
 
     VtValue newValue;
     value.GetValue(&newValue);
-    _undoCommands.StoreInstruction<UndoRedoSetFieldDictValueByKey>({_layer, path, fieldName, keyPath, newValue, previousValue});
+    _undoCommands.store_instruction<UndoRedoSetFieldDictValueByKey>({_layer, path, fieldName, keyPath, newValue, previousValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnSetTimeSample(
     const SdfPath &path,
     double timeCode,
     const VtValue &value) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoSetTimeSample>({_layer, path, timeCode, value});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoSetTimeSample>({_layer, path, timeCode, value});
 }
 
 void UndoRedoLayerStateDelegate::_OnSetTimeSample(
     const SdfPath &path,
     double timeCode,
     const SdfAbstractDataConstValue &value) {
-    SetDirty();
+    set_dirty();
     VtValue newValue;
     value.GetValue(&newValue);
 
-    _undoCommands.StoreInstruction<UndoRedoSetTimeSample>({_layer, path, timeCode, newValue});
+    _undoCommands.store_instruction<UndoRedoSetTimeSample>({_layer, path, timeCode, newValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnCreateSpec(
     const SdfPath &path,
     SdfSpecType specType,
     bool inert) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoCreateSpec>({_layer, path, specType, inert});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoCreateSpec>({_layer, path, specType, inert});
 }
 
 void UndoRedoLayerStateDelegate::_OnDeleteSpec(
     const SdfPath &path,
     bool inert) {
-    SetDirty();
+    set_dirty();
 
-    _undoCommands.StoreInstruction<UndoRedoDeleteSpec>({_layer, path, inert, _GetLayerData()});
+    _undoCommands.store_instruction<UndoRedoDeleteSpec>({_layer, path, inert, _GetLayerData()});
 }
 
 void UndoRedoLayerStateDelegate::_OnMoveSpec(
     const SdfPath &oldPath,
     const SdfPath &newPath) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoMoveSpec>({_layer, oldPath, newPath});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoMoveSpec>({_layer, oldPath, newPath});
 }
 
 void UndoRedoLayerStateDelegate::_OnPushChild(
     const SdfPath &parentPath,
     const TfToken &fieldName,
     const TfToken &value) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoPushChild<TfToken>>({_layer, parentPath, fieldName, value});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoPushChild<TfToken>>({_layer, parentPath, fieldName, value});
 }
 
 void UndoRedoLayerStateDelegate::_OnPushChild(
     const SdfPath &parentPath,
     const TfToken &fieldName,
     const SdfPath &value) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoPushChild<SdfPath>>({_layer, parentPath, fieldName, value});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoPushChild<SdfPath>>({_layer, parentPath, fieldName, value});
 }
 
 void UndoRedoLayerStateDelegate::_OnPopChild(
     const SdfPath &parentPath,
     const TfToken &fieldName,
     const TfToken &oldValue) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoPopChild<TfToken>>({_layer, parentPath, fieldName, oldValue});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoPopChild<TfToken>>({_layer, parentPath, fieldName, oldValue});
 }
 
 void UndoRedoLayerStateDelegate::_OnPopChild(
     const SdfPath &parentPath,
     const TfToken &fieldName,
     const SdfPath &oldValue) {
-    SetDirty();
-    _undoCommands.StoreInstruction<UndoRedoPopChild<SdfPath>>({_layer, parentPath, fieldName, oldValue});
+    set_dirty();
+    _undoCommands.store_instruction<UndoRedoPopChild<SdfPath>>({_layer, parentPath, fieldName, oldValue});
 }
 
 }// namespace vox

@@ -23,13 +23,13 @@ struct UndoRedoSetField {
     UndoRedoSetField(UndoRedoSetField &&) noexcept = default;
     ~UndoRedoSetField() = default;
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->SetField(_path, _fieldName, _newValue);
         }
     }
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->SetField(_path, _fieldName, _previousValue);
         }
@@ -53,13 +53,13 @@ struct UndoRedoSetFieldDictValueByKey {
     UndoRedoSetFieldDictValueByKey(UndoRedoSetFieldDictValueByKey &&) noexcept = default;
     ~UndoRedoSetFieldDictValueByKey() = default;
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->SetFieldDictValueByKey(_path, _fieldName, _keyPath, _newValue);
         }
     }
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->SetFieldDictValueByKey(_path, _fieldName, _keyPath, _previousValue);
         }
@@ -86,13 +86,13 @@ struct UndoRedoSetTimeSample {
     ~UndoRedoSetTimeSample() = default;
     UndoRedoSetTimeSample(UndoRedoSetTimeSample &&) noexcept = default;
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->SetTimeSample(_path, _timeCode, _newValue);
         }
     }
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             if (_hasTimeSamples && _isKeyFrame) {
                 _layer->GetStateDelegate()->SetTimeSample(_path, _timeCode, _previousValue);
@@ -120,13 +120,13 @@ struct UndoRedoCreateSpec {
     UndoRedoCreateSpec(const SdfLayerHandle &layer, SdfPath path, SdfSpecType specType, bool inert)
         : _layer(layer), _path(std::move(path)), _specType(specType), _inert(inert) {}
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->CreateSpec(_path, _specType, _inert);
         }
     }
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->DeleteSpec(_path, _inert);
         }
@@ -139,7 +139,6 @@ struct UndoRedoCreateSpec {
 };
 
 struct UndoRedoDeleteSpec {
-
     // Need a structure to copy the old data
     struct _SpecCopier : public SdfAbstractDataSpecVisitor {
         explicit _SpecCopier(SdfAbstractData *dst_);
@@ -151,8 +150,8 @@ struct UndoRedoDeleteSpec {
 
     UndoRedoDeleteSpec(const SdfLayerHandle &layer, const SdfPath &path, bool inert, SdfAbstractDataPtr layerData);
 
-    void DoIt();
-    void UndoIt();
+    void do_it();
+    void undo_it();
 
     SdfLayerRefPtr _layer;
     const SdfPath _path;
@@ -164,16 +163,15 @@ struct UndoRedoDeleteSpec {
 };
 
 struct UndoRedoMoveSpec {
-
     UndoRedoMoveSpec(const SdfLayerHandle &layer, SdfPath oldPath, SdfPath newPath)
         : _layer(layer), _oldPath(std::move(oldPath)), _newPath(std::move(newPath)) {}
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->MoveSpec(_oldPath, _newPath);
         }
     };
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->MoveSpec(_newPath, _oldPath);
         }
@@ -189,13 +187,13 @@ struct UndoRedoPushChild {
     UndoRedoPushChild(const SdfLayerHandle &layer, SdfPath parentPath, TfToken fieldName, const ValueT &value)
         : _layer(layer), _parentPath(std::move(parentPath)), _fieldName(std::move(fieldName)), _value(value) {}
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->PopChild(_parentPath, _fieldName, _value);
         }
     }
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->PushChild(_parentPath, _fieldName, _value);
         }
@@ -212,13 +210,13 @@ struct UndoRedoPopChild {
     UndoRedoPopChild(const SdfLayerHandle &layer, SdfPath parentPath, TfToken fieldName, const ValueT &value)
         : _layer(layer), _parentPath(std::move(parentPath)), _fieldName(std::move(fieldName)), _value(value) {}
 
-    void UndoIt() {
+    void undo_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->PushChild(_parentPath, _fieldName, _value);
         }
     }
 
-    void DoIt() {
+    void do_it() {
         if (_layer && _layer->GetStateDelegate()) {
             _layer->GetStateDelegate()->PopChild(_parentPath, _fieldName, _value);
         }

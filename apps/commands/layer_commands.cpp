@@ -22,7 +22,7 @@ struct LayerRemoveSubLayer : public SdfLayerCommand {
 
     ~LayerRemoveSubLayer() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
         SdfCommandGroupRecorder recorder(_undoCommands, _layer);
@@ -37,7 +37,7 @@ struct LayerRemoveSubLayer : public SdfLayerCommand {
     SdfLayerRefPtr _layer;
     std::string _subLayerPath;
 };
-template void ExecuteAfterDraw<LayerRemoveSubLayer>(SdfLayerRefPtr layer, std::string subLayerPath);
+template void execute_after_draw<LayerRemoveSubLayer>(SdfLayerRefPtr layer, std::string subLayerPath);
 
 /// Change layer position in the layer stack, moving up and down
 struct LayerMoveSubLayer : public SdfLayerCommand {
@@ -47,7 +47,7 @@ struct LayerMoveSubLayer : public SdfLayerCommand {
 
     ~LayerMoveSubLayer() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         SdfCommandGroupRecorder recorder(_undoCommands, _layer);
         return _movingUp ? MoveUp() : MoveDown();
     }
@@ -84,7 +84,7 @@ struct LayerMoveSubLayer : public SdfLayerCommand {
     std::string _subLayerPath;
     bool _movingUp;/// Template instead ?
 };
-template void ExecuteAfterDraw<LayerMoveSubLayer>(SdfLayerRefPtr layer, std::string subLayerPath, bool movingUp);
+template void execute_after_draw<LayerMoveSubLayer>(SdfLayerRefPtr layer, std::string subLayerPath, bool movingUp);
 
 /// Rename a sublayer
 struct LayerRenameSubLayer : public SdfLayerCommand {
@@ -94,7 +94,7 @@ struct LayerRenameSubLayer : public SdfLayerCommand {
 
     ~LayerRenameSubLayer() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         SdfCommandGroupRecorder recorder(_undoCommands, _layer);
         if (!_layer)
             return false;
@@ -113,46 +113,46 @@ struct LayerRenameSubLayer : public SdfLayerCommand {
     std::string _oldName;
     std::string _newName;
 };
-template void ExecuteAfterDraw<LayerRenameSubLayer>(SdfLayerRefPtr layer, std::string oldName, std::string newName);
+template void execute_after_draw<LayerRenameSubLayer>(SdfLayerRefPtr layer, std::string oldName, std::string newName);
 
 /// Mute and Unmute seem to keep so additional data outside of Sdf, so they need their own commands
 struct LayerMute : public Command {
     explicit LayerMute(SdfLayerRefPtr layer) : _layer(std::move(layer)) {}
     explicit LayerMute(const SdfLayerHandle &layer) : _layer(layer) {}
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
         _layer->SetMuted(true);
         return true;
     };
-    bool UndoIt() override {
+    bool undo_it() override {
         if (_layer)
             _layer->SetMuted(false);
         return false;
     }
     SdfLayerRefPtr _layer;
 };
-template void ExecuteAfterDraw<LayerMute>(SdfLayerRefPtr layer);
-template void ExecuteAfterDraw<LayerMute>(SdfLayerHandle layer);
+template void execute_after_draw<LayerMute>(SdfLayerRefPtr layer);
+template void execute_after_draw<LayerMute>(SdfLayerHandle layer);
 
 struct LayerUnmute : public Command {
     explicit LayerUnmute(SdfLayerRefPtr layer) : _layer(std::move(layer)) {}
     explicit LayerUnmute(const SdfLayerHandle &layer) : _layer(layer) {}
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
         _layer->SetMuted(false);
         return true;
     };
-    bool UndoIt() override {
+    bool undo_it() override {
         if (_layer)
             _layer->SetMuted(true);
         return false;
     }
     SdfLayerRefPtr _layer;
 };
-template void ExecuteAfterDraw<LayerUnmute>(SdfLayerRefPtr layer);
-template void ExecuteAfterDraw<LayerUnmute>(SdfLayerHandle layer);
+template void execute_after_draw<LayerUnmute>(SdfLayerRefPtr layer);
+template void execute_after_draw<LayerUnmute>(SdfLayerHandle layer);
 
 /* WARNING: this is a brute force and dumb implementation of storing text modification.
  It basically stores the previous and new layer as text in a string. So .... this will eat up the memory
@@ -164,7 +164,7 @@ struct LayerTextEdit : public SdfLayerCommand {
 
     ~LayerTextEdit() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
         SdfCommandGroupRecorder recorder(_undoCommands, _layer);
@@ -175,7 +175,7 @@ struct LayerTextEdit : public SdfLayerCommand {
         //_layer->SetDirty();
     };
 
-    bool UndoIt() override {
+    bool undo_it() override {
         if (!_layer)
             return false;
         return _layer->ImportFromString(_oldText);
@@ -185,13 +185,13 @@ struct LayerTextEdit : public SdfLayerCommand {
     std::string _oldText;
     std::string _newText;
 };
-template void ExecuteAfterDraw<LayerTextEdit>(SdfLayerRefPtr layer, std::string newText);
+template void execute_after_draw<LayerTextEdit>(SdfLayerRefPtr layer, std::string newText);
 
 struct LayerCreateOversFromPath : public SdfLayerCommand {
     LayerCreateOversFromPath(SdfLayerRefPtr layer, std::string path) : _layer(std::move(layer)), _path(std::move(path)) {}
     ~LayerCreateOversFromPath() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (!_layer)
             return false;
 
@@ -219,6 +219,6 @@ struct LayerCreateOversFromPath : public SdfLayerCommand {
     SdfLayerRefPtr _layer;
     std::string _path;
 };
-template void ExecuteAfterDraw<LayerCreateOversFromPath>(SdfLayerRefPtr layer, std::string path);
+template void execute_after_draw<LayerCreateOversFromPath>(SdfLayerRefPtr layer, std::string path);
 
 }// namespace vox

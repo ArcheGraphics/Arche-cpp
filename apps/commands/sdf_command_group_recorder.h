@@ -24,8 +24,8 @@ public:
     ~SdfCommandGroupRecorder();
 
 private:
-    void SetUndoStateDelegates();
-    void UnsetUndoStateDelegates();
+    void set_undo_state_delegates();
+    void unset_undo_state_delegates();
 
     // The _undoCommands is used to make sure we don't change the dele
     SdfCommandGroup &_undoCommands;

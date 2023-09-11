@@ -26,7 +26,7 @@ struct AttributeSet : public SdfLayerCommand {
 
     ~AttributeSet() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (_stage) {
             auto layer = _stage->GetEditTarget().GetLayer();
             if (layer) {
@@ -44,7 +44,7 @@ struct AttributeSet : public SdfLayerCommand {
     VtValue _value;
     UsdTimeCode _timeCode;
 };
-template void ExecuteAfterDraw<AttributeSet>(UsdAttribute attribute, VtValue value, UsdTimeCode currentTime);
+template void execute_after_draw<AttributeSet>(UsdAttribute attribute, VtValue value, UsdTimeCode currentTime);
 
 struct AttributeCreateDefaultValue : public SdfLayerCommand {
     explicit AttributeCreateDefaultValue(const UsdAttribute &attribute)
@@ -52,7 +52,7 @@ struct AttributeCreateDefaultValue : public SdfLayerCommand {
 
     ~AttributeCreateDefaultValue() override = default;
 
-    bool DoIt() override {
+    bool do_it() override {
         if (_stage) {
             auto layer = _stage->GetEditTarget().GetLayer();
             if (layer) {
@@ -76,6 +76,6 @@ struct AttributeCreateDefaultValue : public SdfLayerCommand {
     UsdStageWeakPtr _stage;
     SdfPath _path;
 };
-template void ExecuteAfterDraw<AttributeCreateDefaultValue>(UsdAttribute attribute);
+template void execute_after_draw<AttributeCreateDefaultValue>(UsdAttribute attribute);
 
 }// namespace vox

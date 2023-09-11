@@ -13,7 +13,6 @@
 
 namespace vox {
 struct CommandStack {
-
     // Undo and Redo calls are implemented as commands.
     // We compile them in the CommandStack.cpp unit
     friend struct UndoCommand;
@@ -25,16 +24,15 @@ struct CommandStack {
     friend struct UsdFunctionCall;
     friend class SdfUndoRedoRecorder;
 
-    static CommandStack &GetInstance();
+    static CommandStack &get_instance();
 
-    inline bool HasNextCommand() { return lastCmd != nullptr; }
-    inline void SetNextCommand(Command *command) { lastCmd = command; }
+    inline bool has_next_command() { return lastCmd != nullptr; }
+    inline void set_next_command(Command *command) { lastCmd = command; }
 
     // Execute next command and push it on the stack
-    void ExecuteCommands();
+    void execute_commands();
 
 private:
-
     // The undo stack should ultimately belong to an Editor, not be a global variable
     using UndoStackT = std::vector<std::unique_ptr<Command>>;
     UndoStackT undoStack;
@@ -47,7 +45,7 @@ private:
 
     /// The ProcessCommands function is called after the frame is rendered and displayed and execute the
     /// last command. The command passed here now belongs to this stack
-    void _PushCommand(Command *cmd);
+    void _push_command(Command *cmd);
 
 private:
     CommandStack();
@@ -57,10 +55,10 @@ private:
 
 /// Dispatching Commands.
 template<typename CommandClass, typename... ArgTypes>
-void ExecuteAfterDraw(ArgTypes... arguments) {
-    CommandStack &commandStack = CommandStack::GetInstance();
-    if (!commandStack.HasNextCommand()) {
-        commandStack.SetNextCommand(new CommandClass(arguments...));
+void execute_after_draw(ArgTypes... arguments) {
+    CommandStack &commandStack = CommandStack::get_instance();
+    if (!commandStack.has_next_command()) {
+        commandStack.set_next_command(new CommandClass(arguments...));
     }
 }
 

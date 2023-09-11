@@ -17,21 +17,21 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace vox {
 struct Command {
     virtual ~Command() = default;
-    virtual bool DoIt() = 0;
-    virtual bool UndoIt() { return false; }
+    virtual bool do_it() = 0;
+    virtual bool undo_it() { return false; }
 };
 
 struct SdfLayerCommand : public Command {
     ~SdfLayerCommand() override = default;
-    bool DoIt() override = 0;
-    bool UndoIt() override;
+    bool do_it() override = 0;
+    bool undo_it() override;
     SdfCommandGroup _undoCommands;
 };
 
 // Placeholder command for recorder
 struct SdfUndoRedoCommand : public SdfLayerCommand {
-    bool DoIt() override;
-    bool UndoIt() override;
+    bool do_it() override;
+    bool undo_it() override;
 };
 
 // UsdFunctionCall is a transition command, it internally
@@ -39,15 +39,14 @@ struct SdfUndoRedoCommand : public SdfLayerCommand {
 // and creating a new SdfUndoCommand that will be stored in the stack instead of
 // itself
 struct UsdFunctionCall : public Command {
-
     template<typename LayerT>
     UsdFunctionCall(LayerT layer, std::function<void()> func) : _layer(layer), _func(std::move(func)) {}
 
     ~UsdFunctionCall() override = default;
 
     /// Undo the last command in the stack
-    bool DoIt() override;
-    bool UndoIt() override { return false; }
+    bool do_it() override;
+    bool undo_it() override { return false; }
 
     SdfLayerHandle _layer;
     std::function<void()> _func;

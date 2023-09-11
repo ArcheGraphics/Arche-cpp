@@ -14,42 +14,42 @@
 #include <vector>
 
 namespace vox {
-bool SdfLayerCommand::UndoIt() {
-    _undoCommands.UndoIt();
+bool SdfLayerCommand::undo_it() {
+    _undoCommands.undo_it();
     return false;
 }
 
-bool SdfUndoRedoCommand::UndoIt() {
-    _undoCommands.UndoIt();
+bool SdfUndoRedoCommand::undo_it() {
+    _undoCommands.undo_it();
     return false;
 }
 
-bool SdfUndoRedoCommand::DoIt() {
-    _undoCommands.DoIt();
+bool SdfUndoRedoCommand::do_it() {
+    _undoCommands.do_it();
     return true;
 }
 namespace {
 SdfUndoRedoRecorder *undoRedoRecorder = nullptr;
 }// namespace
 
-void BeginEdition(const SdfLayerRefPtr &layer) {
+void begin_edition(const SdfLayerRefPtr &layer) {
     if (layer) {
         // TODO: check there is no undoRedoRecorder alive
         undoRedoRecorder = new SdfUndoRedoRecorder(layer);
-        undoRedoRecorder->StartRecording();
+        undoRedoRecorder->start_recording();
     }
 }
 ///
-void BeginEdition(const UsdStageRefPtr &stage) {
+void begin_edition(const UsdStageRefPtr &stage) {
     // Get layer
     if (stage) {
-        BeginEdition(stage->GetEditTarget().GetLayer());
+        begin_edition(stage->GetEditTarget().GetLayer());
     }
 }
 
-void EndEdition() {
+void end_edition() {
     if (undoRedoRecorder) {
-        undoRedoRecorder->StopRecording();
+        undoRedoRecorder->stop_recording();
         delete undoRedoRecorder;
         undoRedoRecorder = nullptr;
     }

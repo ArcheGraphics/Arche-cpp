@@ -17,26 +17,26 @@ public:
     template<typename InstructionT>
     explicit InstructionWrapper(InstructionT &&instruction)
         : _ref(std::make_unique<Storage<InstructionT>>(std::forward<InstructionT>(instruction))) {
-        _ref->ShowIt();
+        _ref->show_it();
     }
 
-    void DoIt() const {
-        _ref->DoIt();
+    void do_it() const {
+        _ref->do_it();
     }
 
-    void UndoIt() const {
-        _ref->UndoIt();
+    void undo_it() const {
+        _ref->undo_it();
     }
 
-    void ShowIt() const {
-        _ref->ShowIt();
+    void show_it() const {
+        _ref->show_it();
     }
 
     struct Interface {
         virtual ~Interface() = default;
-        virtual void DoIt() = 0;
-        virtual void UndoIt() = 0;
-        virtual void ShowIt() = 0;
+        virtual void do_it() = 0;
+        virtual void undo_it() = 0;
+        virtual void show_it() = 0;
     };
 
     template<typename InstructionT>
@@ -44,14 +44,16 @@ public:
         explicit Storage(InstructionT &&inst) : _data(std::move(inst)) {
         }
         ~Storage() override = default;
-        void DoIt() override {
-            _data.DoIt();
-        }
-        void UndoIt() override {
-            _data.UndoIt();
+
+        void do_it() override {
+            _data.do_it();
         }
 
-        void ShowIt() override {}
+        void undo_it() override {
+            _data.undo_it();
+        }
+
+        void show_it() override {}
 
         InstructionT _data;
     };
@@ -60,21 +62,20 @@ public:
 };
 
 class SdfCommandGroup {
-
 public:
     SdfCommandGroup() = default;
     ~SdfCommandGroup() = default;
 
     /// Was it recorded
-    [[nodiscard]] bool IsEmpty() const;
-    void Clear();
+    [[nodiscard]] bool is_empty() const;
+    void clear();
 
     /// Run the commands as an undo
-    void DoIt();
-    void UndoIt();
+    void do_it();
+    void undo_it();
 
     template<typename InstructionT>
-    void StoreInstruction(InstructionT);
+    void store_instruction(InstructionT);
 
 private:
     std::vector<InstructionWrapper> _instructions;

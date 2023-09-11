@@ -26,8 +26,8 @@ public:
     }
     ~SdfUndoRedoRecorder();
 
-    void StartRecording();
-    void StopRecording();
+    void start_recording();
+    void stop_recording();
 
 private:
     SdfUndoRedoCommand *_editedCommand;
