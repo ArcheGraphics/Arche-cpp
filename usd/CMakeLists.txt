@@ -99,6 +99,7 @@ set(PROJECT_FILES
         # Editor
         editor/selection.cpp
         editor/blueprints.cpp
+        editor/editor.cpp
         ${BASE_FILES}
         ${COMMAND_FILES}
         ${MANIPULATOR_FILES}

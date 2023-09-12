@@ -37,14 +37,14 @@ public:
     /// Calling Shutdown will stop the main loop
     void shutdown() { _isShutdown = true; }
     bool is_shutdown() const { return _isShutdown; }
-    void request_shutdown();
-    void confirm_shutdown(std::string why);
+    void request_shutdown() const;
+    void confirm_shutdown(const std::string& why);
 
     /// Check if there are some unsaved work, looking at all the layers dirtyness
     bool has_unsaved_work();
 
     /// Sets the current edited layer
-    void set_current_layer(SdfLayerRefPtr layer, bool showContentBrowser = false);
+    void set_current_layer(const SdfLayerRefPtr& layer, bool showContentBrowser = false);
     SdfLayerRefPtr get_current_layer();
     void set_previous_layer();// go backward in the layer history
     void set_next_layer();    // go forward in the layer history
@@ -53,8 +53,8 @@ public:
     /// Using a stage cache to store the stages, seems to work well
     UsdStageRefPtr get_current_stage() { return _currentStage; }
     void set_current_stage(UsdStageCache::Id current);
-    void set_current_stage(UsdStageRefPtr stage);
-    void set_current_edit_target(SdfLayerHandle layer);
+    void set_current_stage(const UsdStageRefPtr& stage);
+    void set_current_edit_target(const SdfLayerHandle& layer);
 
     UsdStageCache &get_stage_cache() { return _stageCache.Get(); }
 
@@ -68,10 +68,10 @@ public:
 
     /// Create a new layer in file path
     void create_new_layer(const std::string &path);
-    void find_or_open_lLayer(const std::string &path);
+    void find_or_open_layer(const std::string &path);
     void create_stage(const std::string &path);
     void open_stage(const std::string &path, bool openLoaded = true);
-    void save_layer_as(SdfLayerRefPtr layer, const std::string &path);
+    void save_layer_as(const SdfLayerRefPtr& layer, const std::string &path);
 
     /// Render the hydra viewport
     void hydra_render();
@@ -97,7 +97,7 @@ public:
     void start_playback() { get_viewport().start_playback(); };
     void stop_playback() { get_viewport().stop_playback(); };
 
-    void show_dialog_save_layer_as(SdfLayerHandle layerToSaveAs);
+    void show_dialog_save_layer_as(const SdfLayerHandle& layerToSaveAs);
 
     // Launcher functions
     const std::vector<std::string> &get_launcher_name_list() const { return _settings.get_launcher_name_list(); }
