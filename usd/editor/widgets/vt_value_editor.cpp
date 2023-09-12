@@ -4,7 +4,6 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <iostream>
 #include <sstream>
 
 #include "vt_value_editor.h"
@@ -32,15 +31,15 @@ VtValue draw_gf_matrix(const std::string &label, const VtValue &value) {
     GfMatrixT mat = value.Get<GfMatrixT>();
     bool valueChanged = false;
     ImGui::PushID(label.c_str());
-    ImGui::InputScalarN("###row0", DataType, mat.data(), Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    ImGui::InputScalarN("###row0", DataType, mat.data(), Cols, nullptr, nullptr, DecimalPrecision, ImGuiInputTextFlags());
     valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-    ImGui::InputScalarN("###row1", DataType, mat.data() + Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    ImGui::InputScalarN("###row1", DataType, mat.data() + Cols, Cols, nullptr, nullptr, DecimalPrecision, ImGuiInputTextFlags());
     valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
     if /* constexpr */ (Rows > 2) {
-        ImGui::InputScalarN("###row2", DataType, mat.data() + 2 * Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+        ImGui::InputScalarN("###row2", DataType, mat.data() + 2 * Cols, Cols, nullptr, nullptr, DecimalPrecision, ImGuiInputTextFlags());
         valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
         if /*constexpr */ (Rows > 3) {
-            ImGui::InputScalarN("###row3", DataType, mat.data() + 3 * Cols, Cols, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+            ImGui::InputScalarN("###row3", DataType, mat.data() + 3 * Cols, Cols, nullptr, nullptr, DecimalPrecision, ImGuiInputTextFlags());
             valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
         }
     }
@@ -48,33 +47,33 @@ VtValue draw_gf_matrix(const std::string &label, const VtValue &value) {
     if (valueChanged) {
         return VtValue(GfMatrixT(mat));
     }
-    return VtValue();
+    return {};
 }
 
 template<typename GfVecT, int DataType, int N, typename CastToT = GfVecT>
 VtValue draw_gf_vec(const std::string &label, const VtValue &value) {
     CastToT buffer(value.Get<GfVecT>());
     constexpr const char *format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
-    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), N, NULL, NULL, format, ImGuiInputTextFlags());
+    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), N, nullptr, nullptr, format, ImGuiInputTextFlags());
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         return VtValue(GfVecT(buffer));
     }
-    return VtValue();
+    return {};
 }
 
 template<typename GfQuatT, int DataType, typename BufferT>
 VtValue draw_gf_quat(const std::string &label, const VtValue &value) {
-    BufferT buffer;
+    BufferT buffer{};
     GfQuatT src = value.Get<GfQuatT>();
     buffer[0] = src.GetReal();
     buffer[1] = src.GetImaginary()[0];
     buffer[2] = src.GetImaginary()[1];
     buffer[3] = src.GetImaginary()[2];
-    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), 4, NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
+    ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), 4, nullptr, nullptr, DecimalPrecision, ImGuiInputTextFlags());
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         return VtValue(GfQuatT(buffer[0], buffer[1], buffer[2], buffer[3]));
     }
-    return VtValue();
+    return {};
 }
 
 VtValue draw_tf_token(const std::string &label, const TfToken &token, const VtValue &allowedTokens) {
@@ -82,7 +81,7 @@ VtValue draw_tf_token(const std::string &label, const TfToken &token, const VtVa
     if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<VtArray<TfToken>>()) {
         VtArray<TfToken> tokensArray = allowedTokens.Get<VtArray<TfToken>>();
         if (ImGui::BeginCombo(label.c_str(), token.GetString().c_str())) {
-            for (auto tk : tokensArray) {
+            for (const auto &tk : tokensArray) {
                 if (ImGui::Selectable(tk.GetString().c_str(), false)) {
                     newToken = tk;
                 }
@@ -101,7 +100,7 @@ VtValue draw_tf_token(const std::string &label, const TfToken &token, const VtVa
 
 VtValue draw_tf_token(const std::string &label, const VtValue &value, const VtValue &allowedTokens) {
     if (value.IsHolding<TfToken>()) {
-        TfToken token = value.Get<TfToken>();
+        const auto &token = value.Get<TfToken>();
         return draw_tf_token(label, token, allowedTokens);
     } else {
         return draw_vt_value(label, value);
@@ -206,7 +205,7 @@ VtValue DrawVtValue(const std::string &label, const VtValue &value) {
             return VtValue(intValue);
         }
     } else if (value.IsHolding<TfToken>()) {
-        TfToken token = value.Get<TfToken>();
+        const auto &token = value.Get<TfToken>();
         return draw_tf_token(label, token);
     } else if (value.IsHolding<std::string>()) {
         std::string stringValue = value.Get<std::string>();
@@ -215,7 +214,7 @@ VtValue DrawVtValue(const std::string &label, const VtValue &value) {
             return VtValue(stringValue);
         }
     } else if (value.IsHolding<SdfAssetPath>()) {
-        SdfAssetPath sdfAssetPath = value.Get<SdfAssetPath>();
+        const auto &sdfAssetPath = value.Get<SdfAssetPath>();
         std::string assetPath = sdfAssetPath.GetAssetPath();
         ImGui::InputText(label.c_str(), &assetPath);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -266,7 +265,7 @@ VtValue DrawVtValue(const std::string &label, const VtValue &value) {
         ss << value;
         ImGui::Text("%s", ss.str().c_str());
     }
-    return VtValue();
+    return {};
 }
 
 VtValue DrawColorValue(const std::string &label, const VtValue &value) {
@@ -285,7 +284,7 @@ VtValue DrawColorValue(const std::string &label, const VtValue &value) {
     } else {
         return DrawVtValue(label, value);
     }
-    return VtValue();
+    return {};
 }
 
 // Return all the value types.
@@ -410,7 +409,7 @@ const std::vector<std::string> &get_all_spec_type_names() {
     static std::vector<std::string> allSpecTypeNames;
     static std::once_flag called_once;
     std::call_once(called_once, [&]() {
-        allSpecTypeNames.push_back("");// empty type
+        allSpecTypeNames.emplace_back("");// empty type
         const TfType baseType = TfType::Find<UsdTyped>();
         std::set<TfType> schemaTypes;
         PlugRegistry::GetAllDerivedTypes(baseType, &schemaTypes);

@@ -4,24 +4,16 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <array>
-#include <cctype>
-#include <iostream>
-#include <sstream>
 #include <stack>
+#include <utility>
 
 #include <pxr/usd/sdf/fileFormat.h>
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/layerUtils.h>
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/schema.h>
-#include <pxr/usd/sdf/types.h>
 #include <pxr/usd/sdf/variantSetSpec.h>
 #include <pxr/usd/sdf/variantSpec.h>
-#include <pxr/usd/usd/prim.h>
-#include <pxr/usd/usd/schemaRegistry.h>
-#include <pxr/usd/usdGeom/camera.h>
-#include <pxr/usd/usdGeom/gprim.h>
 
 #include "commands/commands.h"
 #include "composition_editor.h"
@@ -126,7 +118,7 @@ inline void draw_tooltip(const char *text) {
     }
 }
 
-void draw_mini_toolbar(SdfLayerRefPtr layer, const SdfPrimSpecHandle &prim) {
+void draw_mini_toolbar(const SdfLayerRefPtr& layer, const SdfPrimSpecHandle &prim) {
     if (ImGui::Button(ICON_FA_PLUS)) {
         if (prim == SdfPrimSpecHandle()) {
             execute_after_draw<PrimNew>(layer, find_next_available_token_string(SdfPrimSpecDefaultName));
@@ -221,7 +213,7 @@ static void handle_drag_and_drop(SdfLayerHandle layer, const Selection &selectio
         ImGuiDragDropFlags targetFlags = 0;
         if (const ImGuiPayload *pl = ImGui::AcceptDragDropPayload("DND", targetFlags)) {
             SdfPathVector source(*(SdfPathVector *)pl->Data);
-            execute_after_draw<PrimReparent>(layer, source, SdfPath::AbsoluteRootPath());
+            execute_after_draw<PrimReparent>(std::move(layer), source, SdfPath::AbsoluteRootPath());
         }
         ImGui::EndDragDropTarget();
     }
@@ -233,7 +225,7 @@ static bool draw_tree_node_prim_name(const bool &primIsVariant, SdfPrimSpecHandl
     std::string primSpecName;
     if (primIsVariant) {
         auto variantSelection = primSpec->GetPath().GetVariantSelection();
-        primSpecName = std::string("{") + variantSelection.first.c_str() + ":" + variantSelection.second.c_str() + "}";
+        primSpecName = std::string("{") + variantSelection.first + ":" + variantSelection.second + "}";
     } else {
         primSpecName = primSpec->GetPath().GetName();
     }
@@ -461,7 +453,7 @@ void traverse_opened_paths(const SdfLayerRefPtr &layer, std::vector<SdfPath> &pa
     }
 }
 
-void draw_layer_prim_hierarchy(SdfLayerRefPtr layer, const Selection &selection) {
+void draw_layer_prim_hierarchy(const SdfLayerRefPtr& layer, const Selection &selection) {
     if (!layer)
         return;
 

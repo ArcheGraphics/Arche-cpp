@@ -198,8 +198,8 @@ struct Node {
         OutputsCount = outputs_count;
     }
 
-    ImVec2 get_input_slot_pos(int slot_no) const { return ImVec2(Pos.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1)); }
-    ImVec2 get_output_slot_pos(int slot_no) const { return ImVec2(Pos.x + Size.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1)); }
+    [[nodiscard]] ImVec2 get_input_slot_pos(int slot_no) const { return {Pos.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1)}; }
+    [[nodiscard]] ImVec2 get_output_slot_pos(int slot_no) const { return {Pos.x + Size.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1)}; }
 };
 
 // Store the prim node graphic state: position, color, etc ...
@@ -252,7 +252,7 @@ int _walk_graph(UsdShadeConnectableAPI const &shadeNode,
     // Visit the inputs of this node to ensure they are emitted first.
     const std::vector<UsdShadeInput> shadeNodeInputs = shadeNode.GetInputs();
     int inputIdx = 0;
-    for (UsdShadeInput input : shadeNodeInputs) {
+    for (const UsdShadeInput& input : shadeNodeInputs) {
         TfToken inputName = input.GetBaseName();
         // Find the attribute this input is getting its value from, which might
         // be an output or an input, including possibly itself if not connected

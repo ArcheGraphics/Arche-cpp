@@ -6,12 +6,11 @@
 
 #include "timeline.h"
 #include "commands/commands.h"
-#include <iostream>
 #include <imgui.h>
 
 namespace vox {
 // The easiest version of a timeline: a slider
-void draw_timeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
+void draw_timeline(const UsdStageRefPtr& stage, UsdTimeCode &currentTimeCode) {
     const bool hasStage = stage;
     constexpr int widgetWidth = 80;
     int startTime = hasStage ? static_cast<int>(stage->GetStartTimeCode()) : 0;

@@ -4,11 +4,10 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <iostream>
+#include <utility>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/variantSets.h>
 #include <pxr/usd/usd/primCompositionQuery.h>
-#include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/pcp/node.h>
 #include <pxr/usd/pcp/layerStack.h>
@@ -28,8 +27,8 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace vox {
 /// Very basic ui to create a connection
 struct CreateConnectionDialog : public ModalDialog {
-    CreateConnectionDialog(const UsdAttribute &attribute) : _attribute(attribute){};
-    ~CreateConnectionDialog() override {}
+    explicit CreateConnectionDialog(UsdAttribute attribute) : _attribute(std::move(attribute)){};
+    ~CreateConnectionDialog() override = default;
 
     void draw() override {
         ImGui::Text("Create connection for %s", _attribute.GetPath().GetString().c_str());
@@ -166,12 +165,12 @@ void draw_property_arcs(const UsdProperty &property, UsdTimeCode currentTime) {
 template<typename UsdPropertyT>
 const char *small_button_label();
 template<>
-const char *small_button_label<UsdAttribute>() { return "(a)"; };
+const char *small_button_label<UsdAttribute>() { return "(a)"; }
 template<>
-const char *small_button_label<UsdRelationship>() { return "(r)"; };
+const char *small_button_label<UsdRelationship>() { return "(r)"; }
 
 template<typename UsdPropertyT>
-void draw_menu_clear_authored_values(UsdPropertyT &property){};
+void draw_menu_clear_authored_values(UsdPropertyT &property) {}
 template<>
 void draw_menu_clear_authored_values(UsdAttribute &attribute) {
     if (attribute.IsAuthored()) {
@@ -182,7 +181,7 @@ void draw_menu_clear_authored_values(UsdAttribute &attribute) {
 }
 
 template<typename UsdPropertyT>
-void draw_menu_block_values(UsdPropertyT &property){};
+void draw_menu_block_values(UsdPropertyT &property) {}
 template<>
 void draw_menu_block_values(UsdAttribute &attribute) {
     if (ImGui::MenuItem(ICON_FA_STOP " Block values")) {
@@ -191,7 +190,7 @@ void draw_menu_block_values(UsdAttribute &attribute) {
 }
 
 template<typename UsdPropertyT>
-void draw_menu_remove_property(UsdPropertyT &property){};
+void draw_menu_remove_property(UsdPropertyT &property) {}
 template<>
 void draw_menu_remove_property(UsdAttribute &attribute) {
     if (ImGui::MenuItem(ICON_FA_TRASH " Remove property")) {
@@ -200,7 +199,7 @@ void draw_menu_remove_property(UsdAttribute &attribute) {
 }
 
 template<typename UsdPropertyT>
-void draw_menu_set_key(UsdPropertyT &property, UsdTimeCode currentTime){};
+void draw_menu_set_key(UsdPropertyT &property, UsdTimeCode currentTime) {}
 template<>
 void draw_menu_set_key(UsdAttribute &attribute, UsdTimeCode currentTime) {
     if (attribute.GetVariability() == SdfVariabilityVarying && attribute.HasValue() && ImGui::MenuItem(ICON_FA_KEY " Set key")) {
@@ -227,7 +226,7 @@ void draw_menu_edit_connection(UsdAttribute &attribute) {
 
 // TODO: relationship
 template<typename UsdPropertyT>
-void draw_menu_create_value(UsdPropertyT &property){};
+void draw_menu_create_value(UsdPropertyT &property) {}
 
 template<>
 void draw_menu_create_value(UsdAttribute &attribute) {
@@ -275,7 +274,7 @@ bool draw_variant_sets_combos(UsdPrim &prim) {
 
         ImGui::TableHeadersRow();
 
-        for (auto variantSetName : variantSets.GetNames()) {
+        for (const auto &variantSetName : variantSets.GetNames()) {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
 
@@ -301,7 +300,7 @@ bool draw_variant_sets_combos(UsdPrim &prim) {
             ImGui::TableSetColumnIndex(2);
             ImGui::PushItemWidth(-FLT_MIN);
             if (ImGui::BeginCombo(variantSetName.c_str(), variantSet.GetVariantSelection().c_str())) {
-                for (auto variant : variantSet.GetVariantNames()) {
+                for (const auto &variant : variantSet.GetVariantNames()) {
                     if (ImGui::Selectable(variant.c_str(), false)) {
                         execute_after_draw(&UsdVariantSet::SetVariantSelection, variantSet, variant);
                     }
@@ -381,11 +380,10 @@ void DrawPropertyEditorMenuBar(UsdPrim &prim, int options) {
 }
 
 /// Draws a menu list of all the sublayers, indented to reveal the parenting
-static void draw_edit_target_sub_layers_menu_items(UsdStageWeakPtr stage, SdfLayerHandle layer, int indent = 0) {
+static void draw_edit_target_sub_layers_menu_items(const UsdStageWeakPtr &stage, const SdfLayerHandle &layer, int indent = 0) {
     if (layer) {
         std::vector<std::string> subLayers = layer->GetSubLayerPaths();
-        for (int layerId = 0; layerId < subLayers.size(); ++layerId) {
-            const std::string &subLayerPath = subLayers[layerId];
+        for (const auto &subLayerPath : subLayers) {
             auto subLayer = SdfLayer::FindOrOpenRelativeToLayer(layer, subLayerPath);
             if (!subLayer) {
                 subLayer = SdfLayer::FindOrOpen(subLayerPath);
@@ -423,7 +421,7 @@ bool draw_material_bindings(const UsdPrim &prim) {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, TableRowDefaultHeight);
             ImGui::TableSetColumnIndex(1);
             const std::string &purposeName = purpose.GetString();
-            ImGui::Text("%s", purposeName == "" ? "All purposes" : purposeName.c_str());
+            ImGui::Text("%s", purposeName.empty() ? "All purposes" : purposeName.c_str());
             ImGui::TableSetColumnIndex(2);
             material = materialBindingAPI.ComputeBoundMaterial(purpose);
             if (material) {
@@ -463,7 +461,7 @@ void draw_usd_prim_edit_target(const UsdPrim &prim) {
         auto filter = UsdPrimCompositionQuery::Filter();
         pxr::UsdPrimCompositionQuery arc(prim, filter);
         auto compositionArcs = arc.GetCompositionArcs();
-        for (auto a : compositionArcs) {
+        for (const auto &a : compositionArcs) {
             // NOTE: we can use GetIntroducingLayer() and GetIntroducingPrimPath() to add more information
             if (a.GetTargetNode()) {
                 std::string arcName = a.GetTargetNode().GetLayerStack()->GetIdentifier().rootLayer->GetDisplayName() + " " +
@@ -648,9 +646,9 @@ void draw_usd_prim_properties(UsdPrim &prim, UsdTimeCode currentTime) {
         }                                                                                                              \
     }
 
-GENERATE_XFORMCOMMON_FIELD(Translate, GfVec3d, ImGuiDataType_Double);
-GENERATE_XFORMCOMMON_FIELD(Scale, GfVec3f, ImGuiDataType_Float);
-GENERATE_XFORMCOMMON_FIELD(Pivot, GfVec3f, ImGuiDataType_Float);
+GENERATE_XFORMCOMMON_FIELD(Translate, GfVec3d, ImGuiDataType_Double)
+GENERATE_XFORMCOMMON_FIELD(Scale, GfVec3f, ImGuiDataType_Float)
+GENERATE_XFORMCOMMON_FIELD(Pivot, GfVec3f, ImGuiDataType_Float)
 
 struct XformCommonRotateField {
     static constexpr const char *fieldName = "Rotate";
@@ -673,10 +671,10 @@ bool draw_xforms_common(UsdPrim &prim, UsdTimeCode currentTime) {
     UsdGeomXformCommonAPI xformAPI(prim);
 
     if (xformAPI) {
-        GfVec3d translation;
-        GfVec3f scale;
-        GfVec3f pivot;
-        GfVec3f rotation;
+        GfVec3d translation{};
+        GfVec3f scale{};
+        GfVec3f pivot{};
+        GfVec3f rotation{};
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, currentTime);
 

@@ -5,12 +5,10 @@
 //  property of any third parties.
 
 #include <array>
-#include <iostream>
 
 #include <pxr/usd/kind/registry.h>
 #include <pxr/usd/sdf/attributeSpec.h>
 #include <pxr/usd/sdf/fileFormat.h>
-#include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/layerUtils.h>
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/propertySpec.h>
@@ -20,7 +18,6 @@
 #include <pxr/usd/sdf/variantSpec.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/tokens.h>
-#include <pxr/usd/usd/typed.h>
 #include <pxr/base/plug/registry.h>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -51,7 +48,7 @@ namespace vox {
 // TODO: when a schema has no attribute, the ok button should be disabled
 //       and the name should be empty instead of the widget disappearing
 
-std::vector<std::string> get_prim_spec_property_names(TfToken primTypeName, SdfSpecType filter) {
+std::vector<std::string> get_prim_spec_property_names(const TfToken &primTypeName, SdfSpecType filter) {
     std::vector<std::string> filteredPropNames;
     if (auto *primDefinition = UsdSchemaRegistry::GetInstance().FindConcretePrimDefinition(primTypeName)) {
         for (const auto &propName : primDefinition->GetPropertyNames()) {
@@ -64,13 +61,13 @@ std::vector<std::string> get_prim_spec_property_names(TfToken primTypeName, SdfS
 }
 
 struct CreateAttributeDialog : public ModalDialog {
-    CreateAttributeDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _schemaTypeNames(get_all_spec_type_names()) {
+    explicit CreateAttributeDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _schemaTypeNames(get_all_spec_type_names()) {
         // https://openusd.org/release/api/class_usd_prim_definition.html
         selectedSchemaTypeName = std::find(_schemaTypeNames.begin(), _schemaTypeNames.end(), _sdfPrim->GetTypeName().GetString());
         fill_attribute_names();
         update_with_new_prim_definition();
     };
-    ~CreateAttributeDialog() override {}
+    ~CreateAttributeDialog() override = default;
 
     void update_with_new_prim_definition() {
         if (selectedSchemaTypeName != _schemaTypeNames.end() && _selectedAttributeName != _allAttrNames.end()) {
@@ -102,7 +99,7 @@ struct CreateAttributeDialog : public ModalDialog {
         const char *schemaStr = selectedSchemaTypeName == _schemaTypeNames.end() ? "" : selectedSchemaTypeName->c_str();
         if (ImGui::BeginCombo("From schema", schemaStr)) {
             for (size_t i = 0; i < _schemaTypeNames.size(); i++) {
-                if (_schemaTypeNames[i] != "" && ImGui::Selectable(_schemaTypeNames[i].c_str(), false)) {
+                if (!_schemaTypeNames[i].empty() && ImGui::Selectable(_schemaTypeNames[i].c_str(), false)) {
                     selectedSchemaTypeName = _schemaTypeNames.begin() + i;
                     fill_attribute_names();
                     update_with_new_prim_definition();
@@ -127,9 +124,9 @@ struct CreateAttributeDialog : public ModalDialog {
         }
         ImGui::BeginDisabled(_useSchema);
         if (ImGui::BeginCombo("Type", _typeName.GetAsToken().GetString().c_str())) {
-            for (int i = 0; i < get_all_value_type_names().size(); i++) {
-                if (ImGui::Selectable(get_all_value_type_names()[i].GetAsToken().GetString().c_str(), false)) {
-                    _typeName = get_all_value_type_names()[i];
+            for (auto i : get_all_value_type_names()) {
+                if (ImGui::Selectable(i.GetAsToken().GetString().c_str(), false)) {
+                    _typeName = i;
                 }
             }
             ImGui::EndCombo();
@@ -146,10 +143,10 @@ struct CreateAttributeDialog : public ModalDialog {
             [&]() {
                 execute_after_draw<PrimCreateAttribute>(_sdfPrim, _attributeName, _typeName, _variability, _custom, _createDefault);
             },
-            bool(_attributeName == ""));
+            bool(_attributeName.empty()));
     }
 
-    const char *dialog_id() const override { return "Create attribute"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Create attribute"; }
 
     const SdfPrimSpecHandle &_sdfPrim;
     std::string _attributeName;
@@ -166,12 +163,12 @@ struct CreateAttributeDialog : public ModalDialog {
 };
 
 struct CreateRelationDialog : public ModalDialog {
-    CreateRelationDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _allSchemaNames(get_all_spec_type_names()) {
+    explicit CreateRelationDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _allSchemaNames(get_all_spec_type_names()) {
         _selectedSchemaName = std::find(_allSchemaNames.begin(), _allSchemaNames.end(), _sdfPrim->GetTypeName().GetString());
         fill_relationship_names();
         update_with_new_prim_definition();
     };
-    ~CreateRelationDialog() override {}
+    ~CreateRelationDialog() override = default;
 
     void fill_relationship_names() {
         if (_selectedSchemaName != _allSchemaNames.end()) {
@@ -201,7 +198,7 @@ struct CreateRelationDialog : public ModalDialog {
         const char *schemaStr = _selectedSchemaName == _allSchemaNames.end() ? "" : _selectedSchemaName->c_str();
         if (ImGui::BeginCombo("From schema", schemaStr)) {
             for (size_t i = 0; i < _allSchemaNames.size(); i++) {
-                if (_allSchemaNames[i] != "" && ImGui::Selectable(_allSchemaNames[i].c_str(), false)) {
+                if (!_allSchemaNames[i].empty() && ImGui::Selectable(_allSchemaNames[i].c_str(), false)) {
                     _selectedSchemaName = _allSchemaNames.begin() + i;
                     fill_relationship_names();
                     update_with_new_prim_definition();
@@ -244,9 +241,9 @@ struct CreateRelationDialog : public ModalDialog {
             [=]() {
                 execute_after_draw<PrimCreateRelationship>(_sdfPrim, _relationName, _variability, _custom, _operation, _targetPath);
             },
-            _relationName == "");
+            _relationName.empty());
     }
-    const char *dialog_id() const override { return "Create relationship"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Create relationship"; }
 
     const SdfPrimSpecHandle &_sdfPrim;
     std::string _relationName;
@@ -263,8 +260,8 @@ struct CreateRelationDialog : public ModalDialog {
 
 struct CreateVariantModalDialog : public ModalDialog {
 
-    CreateVariantModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
-    ~CreateVariantModalDialog() override {}
+    explicit CreateVariantModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
+    ~CreateVariantModalDialog() override = default;
 
     void draw() override {
         if (!_primSpec) {
@@ -303,7 +300,7 @@ struct CreateVariantModalDialog : public ModalDialog {
         }
     }
 
-    const char *dialog_id() const override { return "Add variant"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Add variant"; }
 
     SdfPrimSpecHandle _primSpec;
     std::string _variantSet;
@@ -313,8 +310,8 @@ struct CreateVariantModalDialog : public ModalDialog {
 
 /// Very basic ui to create a connection
 struct CreateSdfAttributeConnectionDialog : public ModalDialog {
-    CreateSdfAttributeConnectionDialog(SdfAttributeSpecHandle attribute) : _attribute(attribute){};
-    ~CreateSdfAttributeConnectionDialog() override {}
+    explicit CreateSdfAttributeConnectionDialog(const SdfAttributeSpecHandle &attribute) : _attribute(attribute){};
+    ~CreateSdfAttributeConnectionDialog() override = default;
 
     void draw() override {
         if (!_attribute)
@@ -332,7 +329,7 @@ struct CreateSdfAttributeConnectionDialog : public ModalDialog {
         draw_ok_cancel_modal(
             [&]() { execute_after_draw<PrimCreateAttributeConnection>(_attribute, _operation, _connectionEndPoint); });
     }
-    const char *dialog_id() const override { return "Attribute connection"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Attribute connection"; }
 
     SdfAttributeSpecHandle _attribute;
     std::string _connectionEndPoint;
@@ -345,7 +342,7 @@ void draw_prim_specifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comb
     const std::string specifierName = TfEnum::GetDisplayName(current);
     if (ImGui::BeginCombo("Specifier", specifierName.c_str(), comboFlags)) {
         for (int n = SdfSpecifierDef; n < SdfNumSpecifiers; n++) {
-            const SdfSpecifier displayed = static_cast<SdfSpecifier>(n);
+            const auto displayed = static_cast<SdfSpecifier>(n);
             const bool isSelected = (current == displayed);
             if (ImGui::Selectable(TfEnum::GetDisplayName(displayed).c_str(), isSelected)) {
                 selected = displayed;
@@ -404,7 +401,7 @@ void draw_prim_name(const SdfPrimSpecHandle &primSpec) {
 void draw_prim_kind(const SdfPrimSpecHandle &primSpec) {
     auto primKind = primSpec->GetKind();
     if (ImGui::BeginCombo("Kind", primKind.GetString().c_str())) {
-        for (auto kind : KindRegistry::GetAllKinds()) {
+        for (const auto &kind : KindRegistry::GetAllKinds()) {
             bool isSelected = primKind == kind;
             if (ImGui::Selectable(kind.GetString().c_str(), isSelected)) {
                 execute_after_draw(&SdfPrimSpec::SetKind, primSpec, kind);
@@ -447,14 +444,14 @@ static inline void draw_array_editor_button(T attribute) {
     }
 }
 
-inline SdfPathEditorProxy get_path_editor_proxy(SdfSpecHandle spec, TfToken field) {
+inline SdfPathEditorProxy get_path_editor_proxy(const SdfSpecHandle &spec, const TfToken &field) {
     return SdfGetPathEditorProxy(spec, field);
 }
 
 // This editor is specialized for list editor of tokens in the metadata.
 // TODO: The code is really similar to DrawSdfPathListOneLinerEditor and ideally they should be unified.
-static void draw_tf_token_list_one_liner_editor(SdfSpecHandle spec, TfToken field) {
-    SdfTokenListOp proxy = spec->GetInfo(field).Get<SdfTokenListOp>();
+static void draw_tf_token_list_one_liner_editor(const SdfSpecHandle &spec, const TfToken &field) {
+    auto proxy = spec->GetInfo(field).Get<SdfTokenListOp>();
     SdfListOpType currentList = get_edit_list_choice(proxy);
 
     // Edit list chooser
@@ -474,10 +471,10 @@ static void draw_tf_token_list_one_liner_editor(SdfSpecHandle spec, TfToken fiel
         // TODO: should the following code go in a command ??
         std::function<void()> updateList = [=]() {
             if (spec) {
-                SdfTokenListOp listOp = spec->GetInfo(field).Get<SdfTokenListOp>();
+                auto listOp = spec->GetInfo(field).Get<SdfTokenListOp>();
                 SdfTokenListOp::ItemVector editList;
                 for (const auto &path : newList) {
-                    editList.push_back(TfToken(path));
+                    editList.emplace_back(path);
                 }
                 set_sdf_list_op_items(listOp, currentList, editList);
                 spec->SetInfo(field, VtValue(listOp));
@@ -488,7 +485,7 @@ static void draw_tf_token_list_one_liner_editor(SdfSpecHandle spec, TfToken fiel
 }
 
 // This function is specialized for editing list of paths in a line editor
-static void draw_sdf_path_list_one_liner_editor(SdfSpecHandle spec, TfToken field) {
+static void draw_sdf_path_list_one_liner_editor(const SdfSpecHandle &spec, const TfToken &field) {
     SdfPathEditorProxy proxy = get_path_editor_proxy(spec, field);
     SdfListOpType currentList = get_edit_list_choice(proxy);
 
@@ -749,8 +746,8 @@ inline void draw_third_column<ApiSchemaRow>(const int rowId, const SdfPrimSpecHa
     template<>                                                                                          \
     inline void draw_first_column<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) {     \
         ImGui::PushID(rowId);                                                                           \
-        if (ImGui::Button(ICON_FA_TRASH) && has_edits<ClassName_>(primSpec)) {                           \
-            execute_after_draw(&SdfPrimSpec::ClearField, primSpec, Token_);                               \
+        if (ImGui::Button(ICON_FA_TRASH) && has_edits<ClassName_>(primSpec)) {                          \
+            execute_after_draw(&SdfPrimSpec::ClearField, primSpec, Token_);                             \
         }                                                                                               \
         ImGui::PopID();                                                                                 \
     }

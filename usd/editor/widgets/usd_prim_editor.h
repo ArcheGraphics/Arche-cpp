@@ -12,6 +12,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
 void draw_attribute_value_at_time(UsdAttribute &attribute, UsdTimeCode currentTime = UsdTimeCode::Default());
+
 void draw_usd_prim_properties(UsdPrim &obj, UsdTimeCode currentTime = UsdTimeCode::Default());
 
 /// Should go in TransformEditor.h

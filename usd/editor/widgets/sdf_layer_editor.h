@@ -19,13 +19,13 @@ void draw_sdf_layer_identity(const SdfLayerRefPtr &layer, const SdfPath &);
 void draw_sdf_layer_metadata(const SdfLayerRefPtr &layer);
 
 ///
-void draw_layer_action_popup_menu(SdfLayerHandle layer, bool isStage = false);
+void draw_layer_action_popup_menu(const SdfLayerHandle& layer, bool isStage = false);
 
-void draw_layer_navigation(SdfLayerRefPtr layer);
+void draw_layer_navigation(const SdfLayerRefPtr& layer);
 
-void draw_layer_sublayer_stack(SdfLayerRefPtr layer);
+void draw_layer_sublayer_stack(const SdfLayerRefPtr& layer);
 
-void draw_sdf_layer_editor_menu_bar(SdfLayerRefPtr layer);
+void draw_sdf_layer_editor_menu_bar(const SdfLayerRefPtr& layer);
 
 void draw_sublayer_path_edit_dialog(const SdfLayerRefPtr &layer, const std::string &path);
 

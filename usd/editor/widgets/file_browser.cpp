@@ -33,16 +33,16 @@ inline void localtime_(struct tm *result, const time_t *timep) { localtime_r(tim
 namespace vox {
 namespace {
 /// Browser returned file path, not thread safe
-static std::string filePath;
-static bool fileExists = false;
-static std::vector<std::string> validExts;
-static std::string lineEditBuffer;
-static std::filesystem::path displayedDirectory = std::filesystem::current_path();
-};// namespace
+std::string filePath;
+bool fileExists = false;
+std::vector<std::string> validExts;
+std::string lineEditBuffer;
+std::filesystem::path displayedDirectory = std::filesystem::current_path();
+}// namespace
 
 void set_valid_extensions(const std::vector<std::string> &extensions) { validExts = extensions; }
 
-// Using a timer to avoid querying the filesytem at every frame
+// Using a timer to avoid querying the filesystem at every frame
 static void every_second(const std::function<void()> &deferedFunction) {
     static auto last = clk::steady_clock::now();
     auto now = clk::steady_clock::now();
@@ -58,7 +58,6 @@ inline void convert_to_directory(const std::filesystem::path &path, std::string 
         directory = path_.string();
     } else {
         directory = path.string();
-        ;
     }
 }
 
@@ -81,7 +80,7 @@ static bool draw_navigation_bar(std::filesystem::path &displayedDirectory) {
                 ImGui::OpenPopup("driveslist");
             }
             if (ImGui::BeginPopup("driveslist")) {
-                for (auto driveInfo : drivesList) {
+                for (const auto &driveInfo : drivesList) {
                     const std::string &driveLetter = driveInfo.first;
                     const std::string &driveVolumeName = driveInfo.second;
                     const std::string driveText = driveVolumeName + " (" + driveLetter + ")";
@@ -124,7 +123,7 @@ inline static bool draw_refresh_button() {
 
 static inline bool file_name_starts_with_dot(const std::filesystem::path &path) {
     const std::string &filename = path.filename().string();
-    return filename.size() > 0 && filename[0] == '.';
+    return !filename.empty() && filename[0] == '.';
 }
 
 static bool should_be_displayed(const std::filesystem::directory_entry &p) {
@@ -133,7 +132,7 @@ static bool should_be_displayed(const std::filesystem::directory_entry &p) {
     bool endsWithValidExt = true;
     if (!validExts.empty()) {
         endsWithValidExt = false;
-        for (auto ext : validExts) {// we could stop the loop when the extension is found
+        for (const auto &ext : validExts) {// we could stop the loop when the extension is found
             endsWithValidExt |= filename.extension() == ext;
         }
     }
@@ -206,7 +205,7 @@ void draw_file_browser(int gutterSize) {
         for (auto &item : std::filesystem::directory_iterator(displayedDirectory, std::filesystem::directory_options::skip_permission_denied)) {
             if (should_be_displayed(item)) {
                 directoryContent.push_back(item);
-            };
+            }
         }
         std::sort(directoryContent.begin(), directoryContent.end(), compare_directory_then_file);
         mustUpdateDirectoryContent = false;
@@ -251,7 +250,7 @@ void draw_file_browser(int gutterSize) {
             ImGui::TableHeadersRow();
             int i = 0;
             ImGui::PushID("direntries");
-            for (auto dirEntry : directoryContent) {
+            for (const auto &dirEntry : directoryContent) {
                 const bool isDirectory = dirEntry.is_directory();
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
@@ -280,15 +279,15 @@ void draw_file_browser(int gutterSize) {
                     ImGui::TextColored(ImVec4(0.5, 1.0, 0.5, 1.0), "%s", dirEntry.path().filename().string().c_str());
                 }
                 ImGui::TableSetColumnIndex(2);
-//                try {
-//                    const auto lastModified = last_write_time(dirEntry.path());
-//                    const time_t cftime = decltype(lastModified)::clock::to_time_t(lastModified);
-//                    struct tm lt;// Convert to local time
-//                    localtime_(&lt, &cftime);
-//                    ImGui::Text("%04d/%02d/%02d %02d:%02d", 1900 + lt.tm_year, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min);
-//                } catch (const std::exception &) {
-//                    ImGui::Text("Error reading file");
-//                }
+                //                try {
+                //                    const auto lastModified = last_write_time(dirEntry.path());
+                //                    const time_t cftime = decltype(lastModified)::clock::to_time_t(lastModified);
+                //                    struct tm lt;// Convert to local time
+                //                    localtime_(&lt, &cftime);
+                //                    ImGui::Text("%04d/%02d/%02d %02d:%02d", 1900 + lt.tm_year, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min);
+                //                } catch (const std::exception &) {
+                //                    ImGui::Text("Error reading file");
+                //                }
                 ImGui::TableSetColumnIndex(3);
                 draw_file_size(dirEntry.file_size());
             }

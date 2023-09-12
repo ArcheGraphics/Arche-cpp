@@ -14,15 +14,15 @@ namespace vox {
 /// Very basic ui to create a connection
 struct AddLauncherDialog : public ModalDialog {
 
-    AddLauncherDialog(){};
-    ~AddLauncherDialog() override {}
+    AddLauncherDialog()= default;
+    ~AddLauncherDialog() override = default;
 
     void draw() override {
         ImGui::InputText("Launcher name", &_launcherName);
         ImGui::InputText("Command line", &_commandLine);
         draw_ok_cancel_modal([&]() { execute_after_draw<EditorAddLauncher>(_launcherName, _commandLine); });
     }
-    const char *dialog_id() const override { return "Add launcher"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Add launcher"; }
 
     std::string _launcherName;
     std::string _commandLine;

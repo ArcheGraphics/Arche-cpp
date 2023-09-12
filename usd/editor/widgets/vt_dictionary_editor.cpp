@@ -8,15 +8,14 @@
 #include "vt_dictionary_editor.h"
 #include "vt_value_editor.h"
 #include "base/constants.h"
+#include <memory>
 #include <string>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <pxr/base/vt/dictionary.h>
 
 #include "base/imgui_helpers.h"
-#include "modal_dialogs.h"
 #include "table_layouts.h"
-#include "vt_value_editor.h"
 
 namespace vox {
 static VtValue draw_editable_key_name(const std::string &keyNameSrc, const std::string &typeName, int depth, bool &unfolded) {
@@ -100,7 +99,7 @@ VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictNa
                                    ImVec4(ColorAttributeAuthored));
         if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
             if (ImGui::MenuItem(ICON_FA_PLUS " Add entry")) {
-                modifiedDict.reset(new VtDictionary(dictSource));
+                modifiedDict = std::make_unique<VtDictionary>(dictSource);
                 create_new_entry(*modifiedDict);
             }
             if (ImGui::MenuItem(ICON_FA_TRASH " Clear")) {
@@ -123,15 +122,15 @@ VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictNa
             if (item.second.IsHolding<VtDictionary>()) {
                 VtValue dictResult = draw_dictionary_rows(item.second, item.first, rowId, depth + 1);
                 if (dictResult.IsHolding<VtDictionary>()) {
-                    modifiedDict.reset(new VtDictionary(dictSource));
+                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
                     (*modifiedDict)[item.first] = dictResult.Get<VtDictionary>();
                 } else if (dictResult.IsHolding<std::string>()) {
                     // name is modified, change the key, keep the values
-                    modifiedDict.reset(new VtDictionary(dictSource));
+                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
                     (*modifiedDict)[dictResult.Get<std::string>()] = item.second;
                     modifiedDict->erase(item.first);
                 } else if (dictResult.IsHolding<bool>()) {
-                    modifiedDict.reset(new VtDictionary(dictSource));
+                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
                     modifiedDict->erase(item.first);
                 }
             } else {
@@ -147,19 +146,19 @@ VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictNa
                     if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
                         if (ImGui::BeginMenu(ICON_FA_USER_FRIENDS " Change type")) {
                             if (ImGui::Selectable("dict")) {
-                                modifiedDict.reset(new VtDictionary(dictSource));
+                                modifiedDict = std::make_unique<VtDictionary>(dictSource);
                                 (*modifiedDict)[item.first] = VtDictionary();
                             }
-                            for (int i = 0; i < get_all_value_type_names().size(); i++) {
-                                if (ImGui::Selectable(get_all_value_type_names()[i].GetAsToken().GetString().c_str(), false)) {
-                                    modifiedDict.reset(new VtDictionary(dictSource));
-                                    (*modifiedDict)[item.first] = get_all_value_type_names()[i].GetDefaultValue();
+                            for (auto i : get_all_value_type_names()) {
+                                if (ImGui::Selectable(i.GetAsToken().GetString().c_str(), false)) {
+                                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
+                                    (*modifiedDict)[item.first] = i.GetDefaultValue();
                                 }
                             }
                             ImGui::EndMenu();
                         }
                         if (ImGui::MenuItem(ICON_FA_TRASH " Clear")) {
-                            modifiedDict.reset(new VtDictionary(dictSource));
+                            modifiedDict = std::make_unique<VtDictionary>(dictSource);
                             modifiedDict->erase(item.first);
                         }
                         ImGui::EndPopup();
@@ -171,7 +170,7 @@ VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictNa
                 bool valueUnfolded = false;
                 VtValue editedKeyName = draw_editable_key_name(item.first, item.second.GetTypeName(), depth + 1, valueUnfolded);
                 if (editedKeyName != VtValue()) {
-                    modifiedDict.reset(new VtDictionary(dictSource));
+                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
                     modifiedDict->insert({editedKeyName.Get<std::string>(), item.second});
                     modifiedDict->erase(item.first);
                 }
@@ -180,7 +179,7 @@ VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictNa
                 ImGui::PushItemWidth(-FLT_MIN);
                 VtValue result = draw_vt_value(item.first, item.second);
                 if (result != VtValue()) {
-                    modifiedDict.reset(new VtDictionary(dictSource));
+                    modifiedDict = std::make_unique<VtDictionary>(dictSource);
                     (*modifiedDict)[item.first] = result;
                 }
             }

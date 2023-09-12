@@ -11,8 +11,8 @@ namespace vox {
 // A modal dialog should know how to draw itself
 struct ModalDialog {
     virtual void draw() = 0;
-    virtual ~ModalDialog(){};
-    virtual const char *dialog_id() const = 0;
+    virtual ~ModalDialog()= default;
+    [[nodiscard]] virtual const char *dialog_id() const = 0;
     static void close_modal();
 };
 

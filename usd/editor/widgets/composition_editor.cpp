@@ -14,10 +14,7 @@
 #include "table_layouts.h"
 #include "base/constants.h"
 #include <imgui_stdlib.h>
-#include <algorithm>
-#include <iostream>
 #include <pxr/usd/sdf/payload.h>
-#include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/reference.h>
 
 namespace vox {
@@ -106,8 +103,8 @@ inline void select_arc_type(const SdfPrimSpecHandle &primSpec, const SdfPath &pa
 /// A SdfPath creation UI.
 /// This is used for inherit and specialize
 struct CreateSdfPathModalDialog : public ModalDialog {
-    CreateSdfPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
-    ~CreateSdfPathModalDialog() override {}
+    explicit CreateSdfPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
+    ~CreateSdfPathModalDialog() override = default;
 
     void draw() override {
         if (!_primSpec) {
@@ -131,7 +128,7 @@ struct CreateSdfPathModalDialog : public ModalDialog {
 
     virtual void on_ok_call_back() = 0;
 
-    const char *dialog_id() const override { return "Sdf path"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Sdf path"; }
 
     SdfPrimSpecHandle _primSpec;
     std::string _primPath;
@@ -142,8 +139,8 @@ struct CreateSdfPathModalDialog : public ModalDialog {
 /// target prim path.
 /// This is used by References and Payloads which share the same interface
 struct CreateAssetPathModalDialog : public ModalDialog {
-    CreateAssetPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
-    ~CreateAssetPathModalDialog() override {}
+    explicit CreateAssetPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
+    ~CreateAssetPathModalDialog() override = default;
 
     void draw() override {
         if (!_primSpec) {
@@ -191,9 +188,9 @@ struct CreateAssetPathModalDialog : public ModalDialog {
 
     virtual void on_ok_call_back() = 0;
 
-    const char *dialog_id() const override { return "Asset path"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Asset path"; }
 
-    SdfLayerOffset get_layer_offset() const {
+    [[nodiscard]] SdfLayerOffset get_layer_offset() const {
         return (_timeScale != 1.0 || _timeOffset != 0.0) ? SdfLayerOffset(_timeOffset, _timeScale) : SdfLayerOffset();
     }
 
@@ -210,8 +207,8 @@ struct CreateAssetPathModalDialog : public ModalDialog {
 
 // Inheriting, but could also be done with templates, would the code be cleaner ?
 struct CreateReferenceModalDialog : public CreateAssetPathModalDialog {
-    CreateReferenceModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *dialog_id() const override { return "Create reference"; }
+    explicit CreateReferenceModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
+    [[nodiscard]] const char *dialog_id() const override { return "Create reference"; }
     void on_ok_call_back() override {
         SdfReference reference(_assetPath, SdfPath(_primPath), get_layer_offset());
         execute_after_draw<PrimCreateReference>(_primSpec, _operation, reference);
@@ -219,8 +216,8 @@ struct CreateReferenceModalDialog : public CreateAssetPathModalDialog {
 };
 
 struct CreatePayloadModalDialog : public CreateAssetPathModalDialog {
-    CreatePayloadModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *dialog_id() const override { return "Create payload"; }
+    explicit CreatePayloadModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
+    [[nodiscard]] const char *dialog_id() const override { return "Create payload"; }
     void on_ok_call_back() override {
         SdfPayload payload(_assetPath, SdfPath(_primPath), get_layer_offset());
         execute_after_draw<PrimCreatePayload>(_primSpec, _operation, payload);
@@ -228,14 +225,14 @@ struct CreatePayloadModalDialog : public CreateAssetPathModalDialog {
 };
 
 struct CreateInheritModalDialog : public CreateSdfPathModalDialog {
-    CreateInheritModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *dialog_id() const override { return "Create inherit"; }
+    explicit CreateInheritModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
+    [[nodiscard]] const char *dialog_id() const override { return "Create inherit"; }
     void on_ok_call_back() override { execute_after_draw<PrimCreateInherit>(_primSpec, _operation, SdfPath(_primPath)); }
 };
 
 struct CreateSpecializeModalDialog : public CreateSdfPathModalDialog {
-    CreateSpecializeModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *dialog_id() const override { return "Create specialize"; }
+    explicit CreateSpecializeModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
+    [[nodiscard]] const char *dialog_id() const override { return "Create specialize"; }
     void on_ok_call_back() override { execute_after_draw<PrimCreateSpecialize>(_primSpec, _operation, SdfPath(_primPath)); }
 };
 
@@ -545,14 +542,14 @@ void draw_prim_compositions(const SdfPrimSpecHandle &primSpec) {
 
 template<typename ArcT>
 inline void draw_sdf_path_summary(std::string &&header, SdfListOpType operation, const SdfPath &path,
-                               const SdfPrimSpecHandle &primSpec, int &menuItemId) {
+                                  const SdfPrimSpecHandle &primSpec, int &menuItemId) {
     ScopedStyleColor transparentStyle(ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::PushID(menuItemId++);
     if (ImGui::Button(ICON_FA_TRASH)) {
         remove_arc(primSpec, ArcT(path));
     }
     ImGui::SameLine();
-    std::string summary = path.GetString();
+    const std::string &summary = path.GetString();
     if (ImGui::SmallButton(summary.c_str())) {
         select_arc_type(primSpec, path);
     }
@@ -565,7 +562,7 @@ inline void draw_sdf_path_summary(std::string &&header, SdfListOpType operation,
 
 template<typename AssetPathT>
 inline void draw_asset_path_summary(std::string &&header, SdfListOpType operation, const AssetPathT &assetPath,
-                                 const SdfPrimSpecHandle &primSpec, int &menuItemId) {
+                                    const SdfPrimSpecHandle &primSpec, int &menuItemId) {
     ScopedStyleColor transparentStyle(ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::PushID(menuItemId++);
     if (ImGui::Button(ICON_FA_TRASH)) {
@@ -589,7 +586,7 @@ inline void draw_asset_path_summary(std::string &&header, SdfListOpType operatio
 }
 
 void DrawReferenceSummary(SdfListOpType operation, const SdfReference &assetPath, const SdfPrimSpecHandle &primSpec,
-                            int &menuItemId) {
+                          int &menuItemId) {
     draw_asset_path_summary("References", operation, assetPath, primSpec, menuItemId);
 }
 

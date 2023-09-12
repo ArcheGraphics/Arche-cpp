@@ -95,7 +95,7 @@ static void draw_layer_sublayer_tree_node_buttons(const SdfLayerRefPtr &layer, c
     ImGui::EndDisabled();
 }
 
-static void draw_layer_sublayer_tree(SdfLayerRefPtr layer, SdfLayerRefPtr parent, std::string layerPath, const UsdStageRefPtr &stage,
+static void draw_layer_sublayer_tree(const SdfLayerRefPtr& layer, const SdfLayerRefPtr& parent, const std::string& layerPath, const UsdStageRefPtr &stage,
                                      int nodeID = 0) {
     // Note: layer can be null if it wasn't found
     ImGui::TableNextRow();
@@ -150,7 +150,7 @@ inline void draw_third_column<SublayerRow>(const int rowId, const UsdStageRefPtr
     ImGui::PopID();
 }
 
-void draw_stage_layer_editor(UsdStageRefPtr stage) {
+void draw_stage_layer_editor(const UsdStageRefPtr& stage) {
     if (!stage)
         return;
 

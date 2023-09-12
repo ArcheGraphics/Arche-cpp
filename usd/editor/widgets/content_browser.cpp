@@ -7,7 +7,6 @@
 #include <array>
 #include <memory>
 #include <regex>
-#include <iterator>
 #include <pxr/usd/usd/stage.h>
 #include "base/imgui_helpers.h"
 #include "content_browser.h"
@@ -56,8 +55,8 @@ struct hash<ContentBrowserOptions> {
 
 namespace vox {
 struct SessionLoadModalDialog : public ModalDialog {
-    SessionLoadModalDialog(const UsdStageRefPtr &stage) : _stage(stage){};
-    ~SessionLoadModalDialog() override {}
+    explicit SessionLoadModalDialog(UsdStageRefPtr stage) : _stage(std::move(stage)){};
+    ~SessionLoadModalDialog() override = default;
 
     void draw() override {
         draw_file_browser();
@@ -74,12 +73,12 @@ struct SessionLoadModalDialog : public ModalDialog {
         });
     }
 
-    const char *dialog_id() const override { return "Load session"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Load session"; }
 
     UsdStageRefPtr _stage;
 };
 
-void draw_layer_tooltip(SdfLayerHandle layer) {
+void draw_layer_tooltip(const SdfLayerHandle &layer) {
     ImGui::SetTooltip("%s\n%s", layer->GetRealPath().c_str(), layer->GetIdentifier().c_str());
     auto assetInfo = layer->GetAssetInfo();
     if (!assetInfo.IsEmpty()) {
@@ -94,7 +93,7 @@ void draw_layer_tooltip(SdfLayerHandle layer) {
     }
 }
 
-static bool pass_options_filter(SdfLayerHandle layer, const ContentBrowserOptions &options, bool isStage) {
+static bool pass_options_filter(const SdfLayerHandle &layer, const ContentBrowserOptions &options, bool isStage) {
     if (!options._filterAnonymous) {
         if (layer->IsAnonymous())
             return false;
@@ -138,7 +137,7 @@ static const std::string &layer_name_from_options(const SdfLayerHandle &layer, c
     return layer->GetIdentifier();
 }
 
-static inline void draw_save_button(SdfLayerHandle layer) {
+static inline void draw_save_button(const SdfLayerHandle &layer) {
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
                            layer->IsAnonymous() ? ImVec4(ColorTransparent) : (layer->IsDirty() ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(ColorTransparent)));
     if (ImGui::Button(ICON_FA_SAVE "###Save")) {
@@ -146,7 +145,7 @@ static inline void draw_save_button(SdfLayerHandle layer) {
     }
 }
 
-static inline void draw_select_stage_button(SdfLayerHandle layer, bool isStage, SdfLayerHandle *selectedStage) {
+static inline void draw_select_stage_button(const SdfLayerHandle &layer, bool isStage, SdfLayerHandle *selectedStage) {
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
                            isStage ? ((selectedStage && *selectedStage == layer) ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0)) : ImVec4(ColorTransparent));
     if (ImGui::Button(ICON_FA_DESKTOP "###Stage")) {
@@ -154,7 +153,7 @@ static inline void draw_select_stage_button(SdfLayerHandle layer, bool isStage, 
     }
 }
 
-static inline void draw_layer_description_row(SdfLayerHandle layer, bool isStage, const std::string &layerName,
+static inline void draw_layer_description_row(const SdfLayerHandle &layer, bool isStage, const std::string &layerName,
                                               SdfLayerHandle *selectedLayer, SdfLayerHandle *selectedStage) {
     ScopedStyleColor style(ImGuiCol_Text, isStage ? (selectedStage && *selectedStage == layer ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(1.0, 1.0, 1.0, 1.0)) : ImVec4(0.6, 0.6, 0.6, 1.0));
     bool selected = selectedLayer && *selectedLayer == layer;
@@ -174,8 +173,8 @@ static inline void draw_layer_description_row(SdfLayerHandle layer, bool isStage
 
 inline size_t compute_layer_set_hash(SdfLayerHandleSet &layerSet) {
     size_t seed = 0;
-    for (auto it = layerSet.begin(); it != layerSet.end(); ++it) {
-        seed ^= hash_value(*it) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    for (const auto &it : layerSet) {
+        seed ^= hash_value(it) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
 }
@@ -184,7 +183,7 @@ void draw_layer_set(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerH
                     const ContentBrowserOptions &options, const ImVec2 &listSize = ImVec2(0, -10)) {
 
     static std::vector<SdfLayerHandle> sortedLayerList;
-    static std::vector<SdfLayerHandle>::iterator endOfPartition = sortedLayerList.end();
+    static auto endOfPartition = sortedLayerList.end();
     static size_t pastLayerSetHash = 0;
     static TextFilter filter;
     static size_t pastTextFilterHash;

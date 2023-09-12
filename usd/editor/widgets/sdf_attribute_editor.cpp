@@ -25,13 +25,13 @@ namespace vox {
 /// Dialogs
 
 struct CreateTimeSampleDialog : public ModalDialog {
-    CreateTimeSampleDialog(SdfLayerHandle layer, SdfPath attrPath) : _layer(layer), _attrPath(attrPath) {
+    CreateTimeSampleDialog(const SdfLayerHandle &layer, const SdfPath &attrPath) : _layer(layer), _attrPath(attrPath) {
         auto attr = _layer->GetAttributeAtPath(_attrPath);
         _hasSamples = layer->GetNumTimeSamplesForPath(attrPath) != 0;
         _hasDefault = attr->HasDefaultValue();
         _isArray = attr->GetTypeName().IsArray();
     };
-    ~CreateTimeSampleDialog() override {}
+    ~CreateTimeSampleDialog() override = default;
 
     void draw() override {
         ImGui::InputDouble("Time Code", &_timeCode);
@@ -73,7 +73,7 @@ struct CreateTimeSampleDialog : public ModalDialog {
 };
 
 // we want to keep CreateTimeSampleDialog hidden
-void draw_time_sample_creation_dialog(SdfLayerHandle layer, SdfPath attributePath) {
+void draw_time_sample_creation_dialog(const SdfLayerHandle &layer, const SdfPath &attributePath) {
     draw_modal_dialog<CreateTimeSampleDialog>(layer, attributePath);
 }
 
@@ -84,11 +84,11 @@ struct TypeNameRow {};
 template<>
 inline void draw_second_column<TypeNameRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Attribute type");
-};
+}
 template<>
 inline void draw_third_column<TypeNameRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("%s", attr->GetTypeName().GetAsToken().GetText());
-};
+}
 
 ///
 /// Value Type
@@ -97,11 +97,11 @@ struct ValueTypeRow {};
 template<>
 inline void draw_second_column<ValueTypeRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Value type");
-};
+}
 template<>
 inline void draw_third_column<ValueTypeRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("%s", attr->GetValueType().GetTypeName().c_str());
-};
+}
 
 ///
 /// Display Name
@@ -114,11 +114,11 @@ inline void draw_first_column<DisplayNameRow>(const int rowId, const SdfAttribut
     if (ImGui::Button(ICON_FA_TRASH)) {
         execute_after_draw(&SdfAttributeSpec::SetDisplayName, attr, "");
     }
-};
+}
 template<>
 inline void draw_second_column<DisplayNameRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Display Name");
-};
+}
 template<>
 inline void draw_third_column<DisplayNameRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     std::string displayName = attr->GetDisplayName();
@@ -127,7 +127,7 @@ inline void draw_third_column<DisplayNameRow>(const int rowId, const SdfAttribut
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         execute_after_draw(&SdfAttributeSpec::SetDisplayName, attr, displayName);
     }
-};
+}
 
 ///
 /// Display Group
@@ -140,11 +140,11 @@ inline void draw_first_column<DisplayGroupRow>(const int rowId, const SdfAttribu
     if (ImGui::Button(ICON_FA_TRASH)) {
         execute_after_draw(&SdfAttributeSpec::SetDisplayGroup, attr, "");
     }
-};
+}
 template<>
 inline void draw_second_column<DisplayGroupRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Display Group");
-};
+}
 template<>
 inline void draw_third_column<DisplayGroupRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     std::string displayGroup = attr->GetDisplayGroup();
@@ -153,7 +153,7 @@ inline void draw_third_column<DisplayGroupRow>(const int rowId, const SdfAttribu
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         execute_after_draw(&SdfAttributeSpec::SetDisplayGroup, attr, displayGroup);
     }
-};
+}
 
 ///
 /// Variability
@@ -162,7 +162,7 @@ struct VariabilityRow {};
 template<>
 inline void draw_second_column<VariabilityRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Variability");
-};
+}
 template<>
 inline void draw_third_column<VariabilityRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     int variability = attr->GetVariability();
@@ -173,7 +173,7 @@ inline void draw_third_column<VariabilityRow>(const int rowId, const SdfAttribut
     } else {
         ImGui::Text("Unknown");
     }
-};
+}
 
 ///
 /// Custom property
@@ -182,7 +182,7 @@ struct CustomRow {};
 template<>
 inline void draw_second_column<CustomRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     ImGui::Text("Custom");
-};
+}
 template<>
 inline void draw_third_column<CustomRow>(const int rowId, const SdfAttributeSpecHandle &attr) {
     bool custom = attr->IsCustom();
@@ -191,9 +191,9 @@ inline void draw_third_column<CustomRow>(const int rowId, const SdfAttributeSpec
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         execute_after_draw(&SdfAttributeSpec::SetCustom, attr, custom);
     }
-};
+}
 
-static void DrawSdfAttributeMetadata(SdfAttributeSpecHandle attr) {
+static void DrawSdfAttributeMetadata(const SdfAttributeSpecHandle &attr) {
     int rowId = 0;
     if (begin_three_columns_table("##DrawSdfAttributeMetadata")) {
         setup_three_columns_table(false, "", "Metadata", "Value");
@@ -284,7 +284,7 @@ static void draw_samples_at_time_code(const SdfAttributeSpecHandle &attr, SdfTim
 }
 
 // Work in progress
-void draw_sdf_attribute_editor(const SdfLayerHandle layer, const Selection &selection) {
+void draw_sdf_attribute_editor(const SdfLayerHandle &layer, const Selection &selection) {
     if (!layer)
         return;
     SdfPath path = selection.get_anchor_property_path(layer);

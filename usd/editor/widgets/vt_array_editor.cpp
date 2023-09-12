@@ -5,7 +5,6 @@
 //  property of any third parties.
 
 #include "vt_array_editor.h"
-#include "commands/commands.h"
 #include "vt_value_editor.h"
 #include "base/imgui_helpers.h"
 #include <iostream>
@@ -16,7 +15,6 @@
 #include <pxr/base/gf/matrix3f.h>
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/matrix4f.h>
-#include <pxr/usd/sdf/attributeSpec.h>
 #include <pxr/usd/sdf/propertySpec.h>
 
 namespace vox {

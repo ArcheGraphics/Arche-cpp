@@ -27,7 +27,7 @@ class StageOutlinerDisplayOptions {
 public:
     StageOutlinerDisplayOptions() { compute_prim_flags_predicate(); }
 
-    Usd_PrimFlagsPredicate get_prim_flags_predicate() const { return _displayPredicate; }
+    [[nodiscard]] Usd_PrimFlagsPredicate get_prim_flags_predicate() const { return _displayPredicate; }
 
     void toggle_show_prototypes() { _showPrototypes = !_showPrototypes; }
 
@@ -48,11 +48,11 @@ public:
         compute_prim_flags_predicate();
     }
 
-    bool GetShowPrototypes() const { return _showPrototypes; }
-    bool GetShowInactive() const { return _showInactive; }
-    bool GetShowUnloaded() const { return _showUnloaded; }
-    bool GetShowAbstract() const { return _showAbstract; }
-    bool GetShowUndefined() const { return _showUndefined; }
+    [[nodiscard]] bool get_show_prototypes() const { return _showPrototypes; }
+    [[nodiscard]] bool get_show_inactive() const { return _showInactive; }
+    [[nodiscard]] bool get_show_unloaded() const { return _showUnloaded; }
+    [[nodiscard]] bool get_show_abstract() const { return _showAbstract; }
+    [[nodiscard]] bool get_show_undefined() const { return _showUndefined; }
 
 private:
     // Default is:
@@ -82,7 +82,7 @@ private:
     bool _showPrototypes = true;
 };
 
-static void explore_layer_tree(SdfLayerTreeHandle tree, PcpNodeRef node) {
+static void explore_layer_tree(const SdfLayerTreeHandle& tree, PcpNodeRef node) {
     if (!tree)
         return;
     auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -95,7 +95,7 @@ static void explore_layer_tree(SdfLayerTreeHandle tree, PcpNodeRef node) {
             execute_after_draw<EditorSetSelection>(tree->GetLayer(), obj->GetPath());
         }
     }
-    for (auto subTree : tree->GetChildTrees()) {
+    for (const auto& subTree : tree->GetChildTrees()) {
         explore_layer_tree(subTree, node);
     }
 }
@@ -229,7 +229,7 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     DrawBackgroundSelection(prim, selectedPaths.is_selected(prim.GetStage(), prim.GetPath()));
-    bool unfolded = true;
+    bool unfolded;
     {
         {
             TreeIndenter<StageOutlinerSeed, SdfPath> indenter(prim.GetPath());
@@ -336,7 +336,7 @@ static void TraverseRange(UsdPrimRange &range, std::vector<SdfPath> &paths) {
 }
 
 // Traverse the stage skipping the paths closed by the tree ui.
-static void TraverseOpenedPaths(UsdStageRefPtr stage, std::vector<SdfPath> &paths, StageOutlinerDisplayOptions &displayOptions) {
+static void TraverseOpenedPaths(const UsdStageRefPtr& stage, std::vector<SdfPath> &paths, StageOutlinerDisplayOptions &displayOptions) {
     if (!stage)
         return;
     ImGuiContext &g = *GImGui;
@@ -351,7 +351,7 @@ static void TraverseOpenedPaths(UsdStageRefPtr stage, std::vector<SdfPath> &path
         auto range = UsdPrimRange::Stage(stage, displayOptions.get_prim_flags_predicate());
         TraverseRange(range, paths);
         // Prototypes
-        if (displayOptions.GetShowPrototypes()) {
+        if (displayOptions.get_show_prototypes()) {
             for (const auto &proto : stage->GetPrototypes()) {
                 auto range = UsdPrimRange(proto, displayOptions.get_prim_flags_predicate());
                 TraverseRange(range, paths);
@@ -379,19 +379,19 @@ void DrawStageOutlinerMenuBar(StageOutlinerDisplayOptions &displayOptions) {
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Show")) {
-            if (ImGui::MenuItem("Inactive", nullptr, displayOptions.GetShowInactive())) {
+            if (ImGui::MenuItem("Inactive", nullptr, displayOptions.get_show_inactive())) {
                 displayOptions.toggle_show_inactive();
             }
-            if (ImGui::MenuItem("Undefined", nullptr, displayOptions.GetShowUndefined())) {
+            if (ImGui::MenuItem("Undefined", nullptr, displayOptions.get_show_undefined())) {
                 displayOptions.toggle_show_undefined();
             }
-            if (ImGui::MenuItem("Unloaded", nullptr, displayOptions.GetShowUnloaded())) {
+            if (ImGui::MenuItem("Unloaded", nullptr, displayOptions.get_show_unloaded())) {
                 displayOptions.toggle_show_unloaded();
             }
-            if (ImGui::MenuItem("Abstract", nullptr, displayOptions.GetShowAbstract())) {
+            if (ImGui::MenuItem("Abstract", nullptr, displayOptions.get_show_abstract())) {
                 displayOptions.toggle_show_abstract();
             }
-            if (ImGui::MenuItem("Prototypes", nullptr, displayOptions.GetShowPrototypes())) {
+            if (ImGui::MenuItem("Prototypes", nullptr, displayOptions.get_show_prototypes())) {
                 displayOptions.toggle_show_prototypes();
             }
             ImGui::EndMenu();
@@ -401,17 +401,13 @@ void DrawStageOutlinerMenuBar(StageOutlinerDisplayOptions &displayOptions) {
 }
 
 /// Draw the hierarchy of the stage
-void DrawStageOutliner(UsdStageRefPtr stage, Selection &selectedPaths) {
+void DrawStageOutliner(const UsdStageRefPtr& stage, Selection &selectedPaths) {
     if (!stage)
         return;
 
     static StageOutlinerDisplayOptions displayOptions;
     DrawStageOutlinerMenuBar(displayOptions);
 
-    //ImGui::PushID("StageOutliner");
-    constexpr unsigned int textBufferSize = 512;
-    static char buf[textBufferSize];
-    bool addprimclicked = false;
     auto rootPrim = stage->GetPseudoRoot();
     auto layer = stage->GetSessionLayer();
 

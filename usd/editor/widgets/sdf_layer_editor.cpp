@@ -4,24 +4,13 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <array>
-#include <cctype>
-
-#include <pxr/usd/usd/schemaRegistry.h>
-#include <pxr/usd/usd/prim.h>
 #include <pxr/usd/sdf/layer.h>
-#include <pxr/usd/sdf/layerUtils.h>
 #include <pxr/usd/sdf/fileFormat.h>
 #include <pxr/usd/sdf/primSpec.h>
-#include <pxr/usd/sdf/types.h>
 #include <pxr/usd/sdf/variantSpec.h>
 #include <pxr/usd/sdf/variantSetSpec.h>
 #include <pxr/usd/sdf/schema.h>
 #include <pxr/usd/usdGeom/gprim.h>
-#include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdRender/settings.h>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -30,8 +19,6 @@
 #include "modal_dialogs.h"
 #include "file_browser.h"
 #include "sdf_layer_editor.h"
-#include "sdf_prim_editor.h"
-#include "composition_editor.h"
 #include "base/imgui_helpers.h"
 #include "vt_value_editor.h"
 #include "table_layouts.h"
@@ -40,12 +27,13 @@
 #include "base/constants.h"
 
 #include <filesystem>
+#include <utility>
 namespace fs = std::filesystem;
 
 namespace vox {
 // This is very similar to AddSublayer, they should be merged together
 struct EditSublayerPath : public ModalDialog {
-    EditSublayerPath(const SdfLayerRefPtr &layer, const std::string sublayerPath) : layer(layer), _sublayerPath(sublayerPath) {
+    EditSublayerPath(const SdfLayerRefPtr &layer, std::string sublayerPath) : layer(layer), _sublayerPath(std::move(sublayerPath)) {
         if (!layer) return;
         // We have to setup the filebrowser first, setting the directory and filename it should point to
         // 2 cases:
@@ -91,7 +79,7 @@ struct EditSublayerPath : public ModalDialog {
         auto insertedFilePath = _relative ? get_file_browser_file_path_relative_to(layer->GetRealPath(), _unixify) : filePath;
         if (insertedFilePath.empty()) insertedFilePath = _sublayerPath;
         const bool filePathExits = file_path_exists();
-        const bool relativePathValid = _relative ? insertedFilePath != "" : true;
+        const bool relativePathValid = _relative ? !insertedFilePath.empty() : true;
         ImGui::Checkbox("Use relative path", &_relative);
         ImGui::SameLine();
         ImGui::Checkbox("Unix compatible", &_unixify);
@@ -125,7 +113,7 @@ struct EditSublayerPath : public ModalDialog {
         });
     }
 
-    const char *dialog_id() const override { return "Edit sublayer path"; }
+    [[nodiscard]] const char *dialog_id() const override { return "Edit sublayer path"; }
 
     SdfLayerRefPtr layer;
     std::string _sublayerPath;
@@ -381,7 +369,7 @@ inline void draw_first_column<SublayerPathRow>(const int rowId, const SdfLayerRe
     ImGui::PopID();
 }
 
-void draw_sdf_layer_editor_menu_bar(SdfLayerRefPtr layer) {
+void draw_sdf_layer_editor_menu_bar(const SdfLayerRefPtr &layer) {
     bool enabled = layer;
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("New", enabled)) {
@@ -396,7 +384,7 @@ void draw_sdf_layer_editor_menu_bar(SdfLayerRefPtr layer) {
 }
 
 // TODO that Should move to layerproperty
-void draw_layer_sublayer_stack(SdfLayerRefPtr layer) {
+void draw_layer_sublayer_stack(const SdfLayerRefPtr &layer) {
     if (!layer || layer->GetNumSubLayerPaths() == 0)
         return;
     if (ImGui::CollapsingHeader("Sublayers", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -414,7 +402,7 @@ void draw_layer_sublayer_stack(SdfLayerRefPtr layer) {
     }
 }
 
-void draw_layer_navigation(SdfLayerRefPtr layer) {
+void draw_layer_navigation(const SdfLayerRefPtr &layer) {
     if (!layer)
         return;
     if (ImGui::Button(ICON_FA_ARROW_LEFT)) {
@@ -458,7 +446,7 @@ void draw_layer_navigation(SdfLayerRefPtr layer) {
 }
 
 /// Draw a popup menu with the possible action on a layer
-void draw_layer_action_popup_menu(SdfLayerHandle layer, bool isStage) {
+void draw_layer_action_popup_menu(const SdfLayerHandle &layer, bool isStage) {
     if (!layer)
         return;
 
