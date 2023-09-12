@@ -8,4 +8,6 @@
 
 namespace vox {
 void draw_debug_info();
+
+void draw_debug_ui();
 }// namespace vox
