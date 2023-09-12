@@ -4,7 +4,6 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <iostream>
 #include <utility>
 #include "sdf_command_group_recorder.h"
 #include "undo_layer_state_delegate.h"

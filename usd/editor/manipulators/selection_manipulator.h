@@ -32,7 +32,7 @@ public:
 
 private:
     // Returns true
-    bool is_pickable_path(const class UsdStage &stage, const class SdfPath &path);
+    bool is_pickable_path(const class UsdStage &stage, const class SdfPath &path) const;
     PickMode _pickMode = PickMode::Prim;
 };
 

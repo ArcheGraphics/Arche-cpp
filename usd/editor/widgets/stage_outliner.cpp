@@ -82,7 +82,7 @@ private:
     bool _showPrototypes = true;
 };
 
-static void explore_layer_tree(const SdfLayerTreeHandle& tree, PcpNodeRef node) {
+static void explore_layer_tree(const SdfLayerTreeHandle &tree, PcpNodeRef node) {
     if (!tree)
         return;
     auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -95,7 +95,7 @@ static void explore_layer_tree(const SdfLayerTreeHandle& tree, PcpNodeRef node) 
             execute_after_draw<EditorSetSelection>(tree->GetLayer(), obj->GetPath());
         }
     }
-    for (const auto& subTree : tree->GetChildTrees()) {
+    for (const auto &subTree : tree->GetChildTrees()) {
         explore_layer_tree(subTree, node);
     }
 }
@@ -336,7 +336,7 @@ static void TraverseRange(UsdPrimRange &range, std::vector<SdfPath> &paths) {
 }
 
 // Traverse the stage skipping the paths closed by the tree ui.
-static void TraverseOpenedPaths(const UsdStageRefPtr& stage, std::vector<SdfPath> &paths, StageOutlinerDisplayOptions &displayOptions) {
+static void TraverseOpenedPaths(const UsdStageRefPtr &stage, std::vector<SdfPath> &paths, StageOutlinerDisplayOptions &displayOptions) {
     if (!stage)
         return;
     ImGuiContext &g = *GImGui;
@@ -401,7 +401,7 @@ void DrawStageOutlinerMenuBar(StageOutlinerDisplayOptions &displayOptions) {
 }
 
 /// Draw the hierarchy of the stage
-void DrawStageOutliner(const UsdStageRefPtr& stage, Selection &selectedPaths) {
+void DrawStageOutliner(const UsdStageRefPtr &stage, Selection &selectedPaths) {
     if (!stage)
         return;
 

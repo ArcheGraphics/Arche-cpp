@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <map>
+#include <utility>
 #include "imaging_settings.h"
 #include "widgets/vt_value_editor.h"
 #include "base/imgui_helpers.h"
@@ -77,7 +78,7 @@ const GlfSimpleLightVector &ImagingSettings::get_lights() {
 // This is obviously not thread safe but supposed to work in the main rendering thread
 static std::map<TfToken, TfToken> aovSelection;// a vector might be faster
 
-static void set_aov_selection(UsdImagingGLEngine &renderer, TfToken aov) { aovSelection[renderer.GetCurrentRendererId()] = aov; }
+static void set_aov_selection(UsdImagingGLEngine &renderer, TfToken aov) { aovSelection[renderer.GetCurrentRendererId()] = std::move(aov); }
 
 static TfToken get_aov_selection(UsdImagingGLEngine &renderer) {
     auto aov = aovSelection.find(renderer.GetCurrentRendererId());
@@ -160,14 +161,14 @@ void draw_renderer_selection_list(UsdImagingGLEngine &renderer) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     const auto currentPlugin = renderer.GetCurrentRendererId();
     auto plugins = renderer.GetRendererPlugins();
-    for (int n = 0; n < plugins.size(); n++) {
-        bool is_selected = (currentPlugin == plugins[n]);
-        std::string pluginName = renderer.GetRendererDisplayName(plugins[n]);
+    for (const auto &plugin : plugins) {
+        bool is_selected = (currentPlugin == plugin);
+        std::string pluginName = renderer.GetRendererDisplayName(plugin);
         if (ImGui::Selectable(pluginName.c_str(), is_selected)) {
             // TODO: changing the plugin while metal is still processing will error and crash the app.
             // We could create an ExecuteAferDraw command to defer the change of the plugin
             // after the drawing but there is no certainty as if it will solve the issue.
-            if (!renderer.SetRendererPlugin(plugins[n])) {
+            if (!renderer.SetRendererPlugin(plugin)) {
                 std::cerr << "unable to set default renderer plugin" << std::endl;
             } else {
                 renderer.SetRendererAov(get_aov_selection(renderer));
@@ -219,7 +220,7 @@ void draw_renderer_commands(UsdImagingGLEngine &renderer) {
 void draw_renderer_settings(UsdImagingGLEngine &renderer, ImagingSettings &renderparams) {
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     // Renderer settings
-    for (auto setting : renderer.GetRendererSettingsList()) {
+    for (const auto &setting : renderer.GetRendererSettingsList()) {
         VtValue currentValue = renderer.GetRendererSetting(setting.key);
         VtValue newValue = draw_vt_value(setting.name, currentValue);
         if (newValue != VtValue()) {

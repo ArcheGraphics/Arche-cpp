@@ -4,7 +4,6 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 #include <pxr/usd/sdf/reference.h>
 #include "commands_impl.h"

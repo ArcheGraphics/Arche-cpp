@@ -4,13 +4,9 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "command_stack.h"
 #include "commands_impl.h"
-#include "sdf_command_group.h"
-#include "sdf_command_group_recorder.h"
 #include "sdf_undo_redo_recorder.h"
 #include "undo_layer_state_delegate.h"
-#include <functional>
 #include <vector>
 
 namespace vox {

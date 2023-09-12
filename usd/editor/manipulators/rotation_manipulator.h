@@ -22,7 +22,7 @@ class RotationManipulator : public Manipulator {
 
 public:
     RotationManipulator();
-    ~RotationManipulator();
+    ~RotationManipulator() override;
 
     /// From ViewportEditor
     void on_begin_edition(Viewport &) override;
@@ -50,12 +50,12 @@ private:
     UsdGeomXformCommonAPI _xformAPI;
     UsdGeomXformable _xformable;
 
-    GfVec3d _rotateFrom;
-    GfMatrix4d _rotateMatrixOnBegin;
+    GfVec3d _rotateFrom{};
+    GfMatrix4d _rotateMatrixOnBegin{};
 
-    GfVec3d _planeOrigin3d;   // Global
-    GfVec3d _planeNormal3d;   // TODO rename global
-    GfVec3d _localPlaneNormal;// Local
+    GfVec3d _planeOrigin3d{};   // Global
+    GfVec3d _planeNormal3d{};   // TODO rename global
+    GfVec3d _localPlaneNormal{};// Local
 
     std::vector<GfVec2d> _manipulatorCircles;
     std::vector<ImVec2> _manipulator2dPoints;

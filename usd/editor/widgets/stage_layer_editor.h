@@ -11,5 +11,5 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void draw_stage_layer_editor(const UsdStageRefPtr& stage);
+void draw_stage_layer_editor(const UsdStageRefPtr &stage);
 }// namespace vox

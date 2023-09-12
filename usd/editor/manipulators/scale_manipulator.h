@@ -21,7 +21,6 @@ namespace vox {
 // Scale manipulator
 // This is a almost perfect copy of the position manipulator, this needs to be factored in
 class ScaleManipulator : public Manipulator {
-
 public:
     ScaleManipulator();
     ~ScaleManipulator();
@@ -47,8 +46,8 @@ private:
 
     ManipulatorAxis _selectedAxis;
 
-    GfVec3d _originMouseOnAxis;
-    GfVec3f _scaleOnBegin;
+    GfVec3d _originMouseOnAxis{};
+    GfVec3f _scaleOnBegin{};
     GfLine _axisLine;
 
     UsdGeomXformCommonAPI _xformAPI;

@@ -8,7 +8,6 @@
 
 #include <pxr/imaging/garch/glApi.h>
 #include <pxr/usd/usd/primRange.h>
-#include <pxr/usd/usdGeom/boundable.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdGeom/metrics.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
@@ -130,7 +129,7 @@ void draw_camera_editor(Viewport &viewport) {
 
 Viewport::Viewport(UsdStageRefPtr stage, Selection &selection)
     : _stage(stage),
-      _cameraManipulator({500, 500}), // todo
+      _cameraManipulator({500, 500}),// todo
       _currentEditingState(new MouseHoverManipulator()), _activeManipulator(&_positionManipulator), _selection(selection),
       _textureSize(1, 1), _selectedCameraPath(perspectiveCameraPath), _renderCamera(&_perspectiveCamera) {
 
@@ -528,7 +527,7 @@ void Viewport::set_camera_path(const SdfPath &cameraPath) {
 
 void Viewport::begin_hydra_ui(int width, int height) {
     // Create a ImGui windows to render the gizmos in
-//    ImGui_ImplOpenGL3_NewFrame();
+    //    ImGui_ImplOpenGL3_NewFrame();
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)width, (float)height);
     ImGui::NewFrame();
@@ -612,7 +611,7 @@ void Viewport::render() {
     }
 
     ImGui::Render();
-//    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    //    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     _drawTarget->Unbind();
 }

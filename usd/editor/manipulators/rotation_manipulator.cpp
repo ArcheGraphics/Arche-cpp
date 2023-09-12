@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "commands/commands.h"
-#include "base/constants.h"
 #include "base/geometric_functions.h"
 #include "rotation_manipulator.h"
 #include "viewport.h"
@@ -32,7 +31,7 @@ RotationManipulator::RotationManipulator() : _selectedAxis(None) {
     _manipulator2dPoints.reserve(3 * nbSegments);
 }
 
-RotationManipulator::~RotationManipulator() {}
+RotationManipulator::~RotationManipulator() = default;
 
 static bool intersects_unit_circle(const GfVec3d &planeNormal3d, const GfVec3d &planeOrigin3d, const GfRay &ray, float scale) {
     if (scale == 0)
@@ -92,8 +91,8 @@ void RotationManipulator::on_selection_change(Viewport &viewport) {
 GfMatrix4d RotationManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
         const auto currentTime = get_viewport_time_code(viewport);
-        GfVec3d translation;
-        GfVec3f rotation, scale, pivot;
+        GfVec3d translation{};
+        GfVec3f rotation{}, scale{}, pivot{};
 
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder, currentTime);
@@ -124,9 +123,9 @@ inline static size_t project_half_circle(const std::vector<GfVec2d> &_manipulato
                                          std::vector<ImVec2> &_manipulator2dPoints) {
     int rotateIndex = -1;
     size_t circleBegin = _manipulator2dPoints.size();
-    for (int i = 0; i < _manipulatorCircles.size(); ++i) {
+    for (auto _manipulatorCircle : _manipulatorCircles) {
         const GfVec4d pointInLocalSpace =
-            axis == 0 ? GfVec4d(0.0, _manipulatorCircles[i][0], _manipulatorCircles[i][1], 1.0) : (axis == 1 ? GfVec4d(_manipulatorCircles[i][0], 0.0, _manipulatorCircles[i][1], 1.0) : GfVec4d(_manipulatorCircles[i][0], _manipulatorCircles[i][1], 0.0, 1.0));
+            axis == 0 ? GfVec4d(0.0, _manipulatorCircle[0], _manipulatorCircle[1], 1.0) : (axis == 1 ? GfVec4d(_manipulatorCircle[0], 0.0, _manipulatorCircle[1], 1.0) : GfVec4d(_manipulatorCircle[0], _manipulatorCircle[1], 0.0, 1.0));
         const GfVec4d pointInWorldSpace = GfCompMult(GfVec4d(scale, scale, scale, 1.0), pointInLocalSpace) * toWorld;
         const double dot = GfDot((GfVec4d(cameraPosition[0], cameraPosition[1], cameraPosition[2], 1.0) - manipulatorOrigin),
                                  (pointInWorldSpace - manipulatorOrigin));
@@ -139,7 +138,7 @@ inline static size_t project_half_circle(const std::vector<GfVec2d> &_manipulato
                 rotateIndex = _manipulator2dPoints.size();
             }
         }
-    };
+    }
 
     // Reorder the points so there is no visible straight line. This could also be costly
     if (rotateIndex != -1) {
@@ -148,7 +147,7 @@ inline static size_t project_half_circle(const std::vector<GfVec2d> &_manipulato
         rotateIndex = -1;
     }
     return _manipulator2dPoints.size();
-};
+}
 
 template<int Axis>
 inline ImColor AxisColor(int selectedAxis) {
@@ -226,8 +225,8 @@ void RotationManipulator::on_begin_edition(Viewport &viewport) {
         _rotateFrom = compute_clock_hand_vector(viewport);
 
         // Save the rotation values
-        GfVec3d translation;
-        GfVec3f rotation, scale, pivot;
+        GfVec3d translation{};
+        GfVec3f rotation{}, scale{}, pivot{};
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder,
                                                 get_viewport_time_code(viewport));
@@ -269,8 +268,8 @@ Manipulator *RotationManipulator::on_update(Viewport &viewport) {
         const GfMatrix4d resultingRotation = GfMatrix4d(1.0).SetRotate(deltaRotation) * _rotateMatrixOnBegin;
 
         // Get latest rotation values to give a hint to the decompose function
-        GfVec3d translation;
-        GfVec3f rotation, scale, pivot;
+        GfVec3d translation{};
+        GfVec3f rotation{}, scale{}, pivot{};
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder,
                                                 get_viewport_time_code(viewport));
@@ -298,7 +297,7 @@ Manipulator *RotationManipulator::on_update(Viewport &viewport) {
     }
 
     return this;
-};
+}
 
 void RotationManipulator::on_end_edition(Viewport &) { end_edition(); }
 

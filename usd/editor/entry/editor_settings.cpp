@@ -6,7 +6,6 @@
 
 #include "editor_settings.h"
 
-#include <algorithm>
 #include <imgui.h>// for ImGuiTextBuffer
 
 namespace vox {

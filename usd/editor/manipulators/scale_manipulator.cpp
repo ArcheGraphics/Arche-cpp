@@ -6,10 +6,8 @@
 
 #include "scale_manipulator.h"
 #include "commands/commands.h"
-#include "base/constants.h"
 #include "base/geometric_functions.h"
 #include "viewport.h"
-#include <iostream>
 #include <pxr/base/gf/matrix4f.h>
 
 namespace vox {
@@ -21,7 +19,7 @@ static constexpr GLfloat axisSize = 100.f;
 
 ScaleManipulator::ScaleManipulator() : _selectedAxis(None) {}
 
-ScaleManipulator::~ScaleManipulator() {}
+ScaleManipulator::~ScaleManipulator() = default;
 
 bool ScaleManipulator::is_mouse_over(const Viewport &viewport) {
 
@@ -78,8 +76,8 @@ void ScaleManipulator::on_selection_change(Viewport &viewport) {
 GfMatrix4d ScaleManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
         const auto currentTime = viewport.get_current_time_code();
-        GfVec3d translation;
-        GfVec3f scale, pivot, rotation;
+        GfVec3d translation{};
+        GfVec3f scale{}, pivot{}, rotation{};
         UsdGeomXformCommonAPI::RotationOrder rotOrder;
         _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder, currentTime);
         const auto transMat = GfMatrix4d(1.0).SetTranslate(translation);
@@ -91,7 +89,7 @@ GfMatrix4d ScaleManipulator::compute_manipulator_to_world_transform(const Viewpo
         const GfMatrix4d toManipulator = rotMat * pivotMat * transMat * parentToWorld;
         return toManipulator.GetOrthonormalized();
     }
-    return GfMatrix4d();
+    return {};
 }
 
 template<int Axis>
@@ -146,8 +144,8 @@ void ScaleManipulator::on_draw_frame(const Viewport &viewport) {
 
 void ScaleManipulator::on_begin_edition(Viewport &viewport) {
     // Save original translation values
-    GfVec3d translation;
-    GfVec3f pivot, rotation;
+    GfVec3d translation{};
+    GfVec3f pivot{}, rotation{};
     UsdGeomXformCommonAPI::RotationOrder rotOrder;
     _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &_scaleOnBegin, &pivot, &rotOrder,
                                             viewport.get_current_time_code());
@@ -166,7 +164,7 @@ Manipulator *ScaleManipulator::on_update(Viewport &viewport) {
     }
 
     if (_xformable && _selectedAxis < 3) {
-        GfVec3d mouseOnAxis;
+        GfVec3d mouseOnAxis{};
         project_mouse_on_axis(viewport, mouseOnAxis);
 
         // Get the sign
@@ -174,7 +172,6 @@ Manipulator *ScaleManipulator::on_update(Viewport &viewport) {
         double cur;
         _axisLine.FindClosestPoint(_originMouseOnAxis, &ori);
         _axisLine.FindClosestPoint(mouseOnAxis, &cur);
-        double sign = cur > ori ? 1.0 : -1.0;
 
         GfVec3f scale = _scaleOnBegin;
 
@@ -195,8 +192,8 @@ Manipulator *ScaleManipulator::on_update(Viewport &viewport) {
             bool reset = false;
             auto ops = _xformable.GetOrderedXformOps(&reset);
             if (ops.size() == 1 && ops[0].GetOpType() == UsdGeomXformOp::Type::TypeTransform) {
-                GfVec3d translation;
-                GfVec3f scale_, pivot, rotation;
+                GfVec3d translation{};
+                GfVec3f scale_{}, pivot{}, rotation{};
                 UsdGeomXformCommonAPI::RotationOrder rotOrder;
                 _xformAPI.GetXformVectorsByAccumulation(&translation, &rotation, &scale_, &pivot, &rotOrder,
                                                         get_edition_time_code(viewport));
@@ -208,14 +205,14 @@ Manipulator *ScaleManipulator::on_update(Viewport &viewport) {
         }
     }
     return this;
-};
+}
 
-void ScaleManipulator::on_end_edition(Viewport &) { end_edition(); };
+void ScaleManipulator::on_end_edition(Viewport &) { end_edition(); }
 
 ///
 void ScaleManipulator::project_mouse_on_axis(const Viewport &viewport, GfVec3d &linePoint) {
     if (_xformable && _selectedAxis < 3) {
-        GfVec3d rayPoint;
+        GfVec3d rayPoint{};
         double a = 0;
         double b = 0;
         const auto &frustum = viewport.get_current_camera().GetFrustum();

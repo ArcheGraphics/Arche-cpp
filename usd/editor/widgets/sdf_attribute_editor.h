@@ -12,8 +12,8 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void draw_sdf_attribute_editor(const SdfLayerHandle& layer, const Selection &);
+void draw_sdf_attribute_editor(const SdfLayerHandle &layer, const Selection &);
 
-void draw_time_sample_creation_dialog(const SdfLayerHandle& layer, const SdfPath& attributePath);
+void draw_time_sample_creation_dialog(const SdfLayerHandle &layer, const SdfPath &attributePath);
 
 }// namespace vox

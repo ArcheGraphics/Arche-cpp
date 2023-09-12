@@ -47,8 +47,8 @@ private:
 
     ManipulatorAxis _selectedAxis;
 
-    GfVec3d _originMouseOnAxis;
-    GfVec3d _translationOnBegin;
+    GfVec3d _originMouseOnAxis{};
+    GfVec3d _translationOnBegin{};
     GfLine _axisLine;
 
     UsdGeomXformable _xformable;

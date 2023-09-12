@@ -6,11 +6,9 @@
 
 #include "position_manipulator.h"
 #include "commands/commands.h"
-#include "base/constants.h"
 #include "base/geometric_functions.h"
 #include "viewport.h"
 #include <imgui.h>
-#include <iostream>
 #include <pxr/base/gf/matrix4f.h>
 
 namespace vox {
@@ -37,7 +35,7 @@ static constexpr float axisSize = 100.f;
 
 PositionManipulator::PositionManipulator() : _selectedAxis(None) {}
 
-PositionManipulator::~PositionManipulator() {}
+PositionManipulator::~PositionManipulator() = default;
 
 bool PositionManipulator::is_mouse_over(const Viewport &viewport) {
     if (_xformAPI || _xformable) {
@@ -93,7 +91,7 @@ void PositionManipulator::on_selection_change(Viewport &viewport) {
 GfMatrix4d PositionManipulator::compute_manipulator_to_world_transform(const Viewport &viewport) {
     if (_xformable) {
         const auto currentTime = viewport.get_current_time_code();
-        GfMatrix4d localTransform;
+        GfMatrix4d localTransform{};
         bool resetsXformStack = false;
         _xformable.GetLocalTransformation(&localTransform, &resetsXformStack, currentTime);
         const GfVec3d translation = localTransform.ExtractTranslation();
@@ -105,7 +103,7 @@ GfMatrix4d PositionManipulator::compute_manipulator_to_world_transform(const Vie
         const GfMatrix4d toManipulator = /* pivotMat * */ transMat * parentToWorld;// TODO pivot ?? or not pivot ???
         return toManipulator.GetOrthonormalized();
     }
-    return GfMatrix4d();
+    return {};
 }
 
 inline void DrawArrow(ImDrawList *drawList, ImVec2 ori, ImVec2 tip, const ImVec4 &color, float thickness) {
@@ -170,8 +168,8 @@ void PositionManipulator::on_draw_frame(const Viewport &viewport) {
 
 void PositionManipulator::on_begin_edition(Viewport &viewport) {
     // Save original translation values
-    GfVec3f scale, pivot, rotation;
-    GfMatrix4d localTransform;
+    GfVec3f scale{}, pivot{}, rotation{};
+    GfMatrix4d localTransform{};
     bool resetsXformStack = false;
     _xformable.GetLocalTransformation(&localTransform, &resetsXformStack, viewport.get_current_time_code());
     _translationOnBegin = localTransform.ExtractTranslation();
@@ -190,7 +188,7 @@ Manipulator *PositionManipulator::on_update(Viewport &viewport) {
     }
 
     if (_xformable && _selectedAxis < 3) {
-        GfVec3d mouseOnAxis;
+        GfVec3d mouseOnAxis{};
         project_mouse_on_axis(viewport, mouseOnAxis);
 
         // Get the sign
@@ -215,14 +213,14 @@ Manipulator *PositionManipulator::on_update(Viewport &viewport) {
         }
     }
     return this;
-};
+}
 
 void PositionManipulator::on_end_edition(Viewport &) { end_edition(); };
 
 ///
 void PositionManipulator::project_mouse_on_axis(const Viewport &viewport, GfVec3d &linePoint) {
     if ((_xformAPI || _xformable) && _selectedAxis < 3) {
-        GfVec3d rayPoint;
+        GfVec3d rayPoint{};
         double a = 0;
         double b = 0;
         const auto &frustum = viewport.get_current_camera().GetFrustum();

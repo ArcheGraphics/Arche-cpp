@@ -4,7 +4,6 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/timeCode.h>
 #include <pxr/usd/usdGeom/gprim.h>

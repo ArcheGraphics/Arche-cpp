@@ -118,7 +118,7 @@ inline void draw_tooltip(const char *text) {
     }
 }
 
-void draw_mini_toolbar(const SdfLayerRefPtr& layer, const SdfPrimSpecHandle &prim) {
+void draw_mini_toolbar(const SdfLayerRefPtr &layer, const SdfPrimSpecHandle &prim) {
     if (ImGui::Button(ICON_FA_PLUS)) {
         if (prim == SdfPrimSpecHandle()) {
             execute_after_draw<PrimNew>(layer, find_next_available_token_string(SdfPrimSpecDefaultName));
@@ -453,7 +453,7 @@ void traverse_opened_paths(const SdfLayerRefPtr &layer, std::vector<SdfPath> &pa
     }
 }
 
-void draw_layer_prim_hierarchy(const SdfLayerRefPtr& layer, const Selection &selection) {
+void draw_layer_prim_hierarchy(const SdfLayerRefPtr &layer, const Selection &selection) {
     if (!layer)
         return;
 

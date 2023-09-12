@@ -17,13 +17,13 @@ namespace fs = std::filesystem;
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-std::string PlayblastModalDialog::directory = "";
-std::string PlayblastModalDialog::filenamePrefix = "";
+std::string PlayblastModalDialog::directory;
+std::string PlayblastModalDialog::filenamePrefix;
 int PlayblastModalDialog::start = -1;
 int PlayblastModalDialog::end = -1;
 int PlayblastModalDialog::width = 960;
 
-PlayblastModalDialog::PlayblastModalDialog(UsdStagePtr stage) : _stage(stage) {
+PlayblastModalDialog::PlayblastModalDialog(const UsdStagePtr &stage) : _stage(stage) {
     if (directory.empty()) {
         directory = fs::temp_directory_path().string();// TODO : check it works with macOS and linux
     }
@@ -34,7 +34,7 @@ PlayblastModalDialog::PlayblastModalDialog(UsdStagePtr stage) : _stage(stage) {
         start = static_cast<int>(_stage->GetStartTimeCode());
         end = static_cast<int>(_stage->GetEndTimeCode());
     }
-    // find all camera in the stqge
+    // find all camera in the stage
     if (stage) {
         for (const auto &prim : stage->Traverse()) {
             if (prim.IsA<UsdGeomCamera>()) {
@@ -46,7 +46,7 @@ PlayblastModalDialog::PlayblastModalDialog(UsdStagePtr stage) : _stage(stage) {
     if (!_stageCameras.empty()) {
         _cameraPath = _stageCameras[0];
     }
-};
+}
 
 void PlayblastModalDialog::draw() {
     // Draw available cameras

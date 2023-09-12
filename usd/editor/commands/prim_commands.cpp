@@ -23,7 +23,6 @@
 
 namespace vox {
 struct PrimNew : public SdfLayerCommand {
-
     // Create a root prim
     PrimNew(SdfLayerRefPtr layer, std::string primName) : _primSpec(), _layer(std::move(layer)), _primName(std::move(primName)) {}
 

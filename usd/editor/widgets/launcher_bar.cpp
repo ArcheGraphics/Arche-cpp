@@ -14,7 +14,7 @@ namespace vox {
 /// Very basic ui to create a connection
 struct AddLauncherDialog : public ModalDialog {
 
-    AddLauncherDialog()= default;
+    AddLauncherDialog() = default;
     ~AddLauncherDialog() override = default;
 
     void draw() override {

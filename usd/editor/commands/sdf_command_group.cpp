@@ -4,8 +4,6 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include <memory>
-#include <iostream>
 #include <ranges>
 #include "sdf_command_group.h"
 #include "sdf_layer_instructions.h"

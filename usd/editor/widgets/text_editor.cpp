@@ -12,7 +12,7 @@
 namespace vox {
 // The following include contains the code which writes usd to text, but it's not
 // distributed with the api
-void draw_text_editor(const SdfLayerRefPtr& layer) {
+void draw_text_editor(const SdfLayerRefPtr &layer) {
     static std::string layerText;
     ImGuiIO &io = ImGui::GetIO();
     ImGuiWindow *window = ImGui::GetCurrentWindow();

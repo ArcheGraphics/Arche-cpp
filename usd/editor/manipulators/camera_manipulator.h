@@ -13,7 +13,7 @@
 namespace vox {
 class CameraManipulator : public CameraRig, public Manipulator {
 public:
-    CameraManipulator(const GfVec2i &viewportSize, bool isZUp = false);
+    explicit CameraManipulator(const GfVec2i &viewportSize, bool isZUp = false);
 
     void on_begin_edition(Viewport &) override;
     Manipulator *on_update(Viewport &) override;

@@ -252,7 +252,7 @@ int _walk_graph(UsdShadeConnectableAPI const &shadeNode,
     // Visit the inputs of this node to ensure they are emitted first.
     const std::vector<UsdShadeInput> shadeNodeInputs = shadeNode.GetInputs();
     int inputIdx = 0;
-    for (const UsdShadeInput& input : shadeNodeInputs) {
+    for (const UsdShadeInput &input : shadeNodeInputs) {
         TfToken inputName = input.GetBaseName();
         // Find the attribute this input is getting its value from, which might
         // be an output or an input, including possibly itself if not connected

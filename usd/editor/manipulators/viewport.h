@@ -6,11 +6,6 @@
 
 #pragma once
 
-///
-/// OpenGL/Hydra Viewport and its ImGui Window drawing functions.
-/// This will eventually be split in 2 different files as the code
-/// has grown too much and doing too many thing
-///
 #include <map>
 #include <chrono>
 #include "manipulator.h"
@@ -28,6 +23,11 @@
 #include "imaging_settings.h"
 
 namespace vox {
+///
+/// OpenGL/Hydra Viewport and its ImGui Window drawing functions.
+/// This will eventually be split in 2 different files as the code
+/// has grown too much and doing too many thing
+///
 class Viewport final {
 public:
     Viewport(UsdStageRefPtr stage, Selection &);

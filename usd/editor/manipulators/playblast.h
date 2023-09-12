@@ -24,7 +24,7 @@ namespace vox {
 /// For all of those desirable features we need to extract the code from UsdAppUtilsFrameRecorder into another frame recorder.
 ///
 struct PlayblastModalDialog : public ModalDialog {
-    PlayblastModalDialog(UsdStagePtr stage);
+    PlayblastModalDialog(const UsdStagePtr &stage);
     ~PlayblastModalDialog() override {}
 
     void draw() override;

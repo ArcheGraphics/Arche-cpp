@@ -13,7 +13,7 @@
 #include "fonts/IconsFontAwesome5.h"
 
 namespace vox {
-bool SelectionManipulator::is_pickable_path(const UsdStage &stage, const SdfPath &path) {
+bool SelectionManipulator::is_pickable_path(const UsdStage &stage, const SdfPath &path) const {
     auto prim = stage.GetPrimAtPath(path);
     if (prim.IsPseudoRoot())
         return true;

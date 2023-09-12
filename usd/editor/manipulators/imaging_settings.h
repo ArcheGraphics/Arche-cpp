@@ -15,7 +15,6 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
 struct ImagingSettings : UsdImagingGLRenderParams {
-
     ImagingSettings();
 
     void set_light_position_from_camera(const GfCamera &);
