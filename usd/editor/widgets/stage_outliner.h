@@ -7,11 +7,11 @@
 #pragma once
 
 #include <pxr/usd/usd/stage.h>
-#include "Selection.h"// TODO: ideally we should have only pxr headers here
+#include "selection.h"// TODO: ideally we should have only pxr headers here
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
 // TODO: selected could be multiple Path, we should pass a HdSelection instead
-void DrawStageOutliner(UsdStageRefPtr stage, Selection &selectedPaths);
+void draw_stage_outliner(UsdStageRefPtr stage, Selection &selectedPaths);
 }// namespace vox

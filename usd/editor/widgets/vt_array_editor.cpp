@@ -24,23 +24,23 @@ namespace vox {
 // As a solution we pass the precomputed height of a line. This is not great, but that's the easiest solution for the moment.
 // TODO: fill an issue on the ImGui github
 template<typename ValueT>
-inline int HeightOf() { return 26; }
+inline int height_of() { return 26; }
 template<>
-int HeightOf<GfMatrix4d>() { return HeightOf<double>() * 4; }
+int height_of<GfMatrix4d>() { return height_of<double>() * 4; }
 template<>
-int HeightOf<GfMatrix4f>() { return HeightOf<float>() * 4; }
+int height_of<GfMatrix4f>() { return height_of<float>() * 4; }
 template<>
-int HeightOf<GfMatrix3d>() { return HeightOf<double>() * 3; }
+int height_of<GfMatrix3d>() { return height_of<double>() * 3; }
 template<>
-int HeightOf<GfMatrix3f>() { return HeightOf<float>() * 3; }
+int height_of<GfMatrix3f>() { return height_of<float>() * 3; }
 template<>
-int HeightOf<GfMatrix2d>() { return HeightOf<double>() * 2; }
+int height_of<GfMatrix2d>() { return height_of<double>() * 2; }
 template<>
-int HeightOf<GfMatrix2f>() { return HeightOf<float>() * 2; }
+int height_of<GfMatrix2f>() { return height_of<float>() * 2; }
 
 // Returns true if a modification happened
 template<typename ValueT>
-inline bool DrawVtArray(VtArray<ValueT> &values) {
+inline bool draw_vt_array(VtArray<ValueT> &values) {
     auto arraySize = values.size();
     bool addRow = ImGui::Button(ICON_FA_PLUS "##Add");
 
@@ -57,7 +57,7 @@ inline bool DrawVtArray(VtArray<ValueT> &values) {
         bool moveDown = false;
 
         ImGuiListClipper clipper;
-        clipper.Begin(arraySize, HeightOf<ValueT>());// Normally the clipper deduce the height, but it doesn't work well with big arrays.
+        clipper.Begin(arraySize, height_of<ValueT>());// Normally the clipper deduce the height, but it doesn't work well with big arrays.
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 ImGui::PushID(row);
@@ -82,7 +82,7 @@ inline bool DrawVtArray(VtArray<ValueT> &values) {
                 }
                 ImGui::TableSetColumnIndex(2);
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                auto result = DrawVtValue("##value", VtValue(values[row]));
+                auto result = draw_vt_value("##value", VtValue(values[row]));
                 if (result != VtValue()) {
                     newResult = result;
                     rowToModify = row;
@@ -118,20 +118,20 @@ inline bool DrawVtArray(VtArray<ValueT> &values) {
 }
 
 template<typename ValueT>
-inline VtValue DrawVtValueArrayTyped(const VtValue &value) {
+inline VtValue draw_vt_value_array_typed(const VtValue &value) {
     auto newArray = value.Get<VtArray<ValueT>>();
-    if (DrawVtArray<ValueT>(newArray))
+    if (draw_vt_array<ValueT>(newArray))
         return VtValue(newArray);
     else
         return VtValue();
 }
 
-#define DrawArrayIfHolding(ValueT)                       \
-    if (value.IsHolding<VtArray<ValueT>>()) {            \
-        newValue = DrawVtValueArrayTyped<ValueT>(value); \
+#define DrawArrayIfHolding(ValueT)                           \
+    if (value.IsHolding<VtArray<ValueT>>()) {                \
+        newValue = draw_vt_value_array_typed<ValueT>(value); \
     } else
 
-VtValue DrawVtArrayValue(const VtValue &value) {
+VtValue draw_vt_array_value(const VtValue &value) {
     VtValue newValue;
     if (value.IsArrayValued()) {
         // Ideally we would like to order the conditions test by the probablility
@@ -176,4 +176,4 @@ VtValue DrawVtArrayValue(const VtValue &value) {
     return newValue;
 }
 
-}
+} // namespace vox

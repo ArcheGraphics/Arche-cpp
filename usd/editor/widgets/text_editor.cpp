@@ -7,11 +7,12 @@
 #include "text_editor.h"
 #include "commands/commands.h"
 #include "base/imgui_helpers.h"
+#include <imgui_stdlib.h>
 
 namespace vox {
 // The following include contains the code which writes usd to text, but it's not
 // distributed with the api
-void DrawTextEditor(SdfLayerRefPtr layer) {
+void draw_text_editor(SdfLayerRefPtr layer) {
     static std::string layerText;
     ImGuiIO &io = ImGui::GetIO();
     ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -33,7 +34,7 @@ void DrawTextEditor(SdfLayerRefPtr layer) {
         ImGui::InputTextMultiline("###TextEditor", &layerText, sizeArg,
                                   ImGuiInputTextFlags_None | ImGuiInputTextFlags_NoUndoRedo);
         if (layer && ImGui::IsItemDeactivatedAfterEdit()) {
-            ExecuteAfterDraw<LayerTextEdit>(layer, layerText);
+            execute_after_draw<LayerTextEdit>(layer, layerText);
         }
     }
     ImGui::PopFont();

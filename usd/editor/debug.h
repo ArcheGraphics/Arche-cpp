@@ -6,12 +6,7 @@
 
 #pragma once
 
-#include <pxr/usd/sdf/path.h>
-#include <pxr/usd/sdf/layer.h>
-#include "selection.h"
-
-PXR_NAMESPACE_USING_DIRECTIVE
-
 namespace vox {
-VtValue draw_vt_array_value(const VtValue &value);
+void draw_debug_ui();
+
 }// namespace vox

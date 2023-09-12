@@ -10,6 +10,7 @@
 #include "vt_value_editor.h"
 #include "base/constants.h"
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/vec3i.h>
@@ -27,7 +28,7 @@
 
 namespace vox {
 template<typename GfMatrixT, int DataType, int Rows, int Cols>
-VtValue DrawGfMatrix(const std::string &label, const VtValue &value) {
+VtValue draw_gf_matrix(const std::string &label, const VtValue &value) {
     GfMatrixT mat = value.Get<GfMatrixT>();
     bool valueChanged = false;
     ImGui::PushID(label.c_str());
@@ -51,7 +52,7 @@ VtValue DrawGfMatrix(const std::string &label, const VtValue &value) {
 }
 
 template<typename GfVecT, int DataType, int N, typename CastToT = GfVecT>
-VtValue DrawGfVec(const std::string &label, const VtValue &value) {
+VtValue draw_gf_vec(const std::string &label, const VtValue &value) {
     CastToT buffer(value.Get<GfVecT>());
     constexpr const char *format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
     ImGui::InputScalarN(label.c_str(), DataType, buffer.data(), N, NULL, NULL, format, ImGuiInputTextFlags());
@@ -62,7 +63,7 @@ VtValue DrawGfVec(const std::string &label, const VtValue &value) {
 }
 
 template<typename GfQuatT, int DataType, typename BufferT>
-VtValue DrawGfQuat(const std::string &label, const VtValue &value) {
+VtValue draw_gf_quat(const std::string &label, const VtValue &value) {
     BufferT buffer;
     GfQuatT src = value.Get<GfQuatT>();
     buffer[0] = src.GetReal();
@@ -76,7 +77,7 @@ VtValue DrawGfQuat(const std::string &label, const VtValue &value) {
     return VtValue();
 }
 
-VtValue DrawTfToken(const std::string &label, const TfToken &token, const VtValue &allowedTokens) {
+VtValue draw_tf_token(const std::string &label, const TfToken &token, const VtValue &allowedTokens) {
     VtValue newToken;
     if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<VtArray<TfToken>>()) {
         VtArray<TfToken> tokensArray = allowedTokens.Get<VtArray<TfToken>>();
@@ -98,12 +99,12 @@ VtValue DrawTfToken(const std::string &label, const TfToken &token, const VtValu
     return newToken;
 }
 
-VtValue DrawTfToken(const std::string &label, const VtValue &value, const VtValue &allowedTokens) {
+VtValue draw_tf_token(const std::string &label, const VtValue &value, const VtValue &allowedTokens) {
     if (value.IsHolding<TfToken>()) {
         TfToken token = value.Get<TfToken>();
-        return DrawTfToken(label, token, allowedTokens);
+        return draw_tf_token(label, token, allowedTokens);
     } else {
-        return DrawVtValue(label, value);
+        return draw_vt_value(label, value);
     }
 }
 
@@ -111,35 +112,35 @@ VtValue DrawTfToken(const std::string &label, const VtValue &value, const VtValu
 VtValue DrawVtValue(const std::string &label, const VtValue &value) {
 
     if (value.IsHolding<GfVec3f>()) {
-        return DrawGfVec<GfVec3f, ImGuiDataType_Float, 3>(label, value);
+        return draw_gf_vec<GfVec3f, ImGuiDataType_Float, 3>(label, value);
     } else if (value.IsHolding<GfVec2f>()) {
-        return DrawGfVec<GfVec2f, ImGuiDataType_Float, 2>(label, value);
+        return draw_gf_vec<GfVec2f, ImGuiDataType_Float, 2>(label, value);
     } else if (value.IsHolding<GfVec4f>()) {
-        return DrawGfVec<GfVec4f, ImGuiDataType_Float, 4>(label, value);
+        return draw_gf_vec<GfVec4f, ImGuiDataType_Float, 4>(label, value);
     } else if (value.IsHolding<GfVec3d>()) {
-        return DrawGfVec<GfVec3d, ImGuiDataType_Double, 3>(label, value);
+        return draw_gf_vec<GfVec3d, ImGuiDataType_Double, 3>(label, value);
     } else if (value.IsHolding<GfVec2d>()) {
-        return DrawGfVec<GfVec2d, ImGuiDataType_Double, 2>(label, value);
+        return draw_gf_vec<GfVec2d, ImGuiDataType_Double, 2>(label, value);
     } else if (value.IsHolding<GfVec4d>()) {
-        return DrawGfVec<GfVec4d, ImGuiDataType_Double, 4>(label, value);
+        return draw_gf_vec<GfVec4d, ImGuiDataType_Double, 4>(label, value);
     } else if (value.IsHolding<GfVec4i>()) {
-        return DrawGfVec<GfVec4i, ImGuiDataType_S32, 4>(label, value);
+        return draw_gf_vec<GfVec4i, ImGuiDataType_S32, 4>(label, value);
     } else if (value.IsHolding<GfVec3i>()) {
-        return DrawGfVec<GfVec3i, ImGuiDataType_S32, 3>(label, value);
+        return draw_gf_vec<GfVec3i, ImGuiDataType_S32, 3>(label, value);
     } else if (value.IsHolding<GfVec2i>()) {
-        return DrawGfVec<GfVec2i, ImGuiDataType_S32, 2>(label, value);
+        return draw_gf_vec<GfVec2i, ImGuiDataType_S32, 2>(label, value);
     } else if (value.IsHolding<GfVec2h>()) {
-        return DrawGfVec<GfVec2h, ImGuiDataType_Float, 2, GfVec2f>(label, value);
+        return draw_gf_vec<GfVec2h, ImGuiDataType_Float, 2, GfVec2f>(label, value);
     } else if (value.IsHolding<GfVec3h>()) {
-        return DrawGfVec<GfVec3h, ImGuiDataType_Float, 3, GfVec3f>(label, value);
+        return draw_gf_vec<GfVec3h, ImGuiDataType_Float, 3, GfVec3f>(label, value);
     } else if (value.IsHolding<GfVec4h>()) {
-        return DrawGfVec<GfVec4h, ImGuiDataType_Float, 4, GfVec4f>(label, value);
+        return draw_gf_vec<GfVec4h, ImGuiDataType_Float, 4, GfVec4f>(label, value);
     } else if (value.IsHolding<GfQuatd>()) {
-        return DrawGfQuat<GfQuatd, ImGuiDataType_Double, GfVec4d>(label, value);
+        return draw_gf_quat<GfQuatd, ImGuiDataType_Double, GfVec4d>(label, value);
     } else if (value.IsHolding<GfQuatf>()) {
-        return DrawGfQuat<GfQuatf, ImGuiDataType_Float, GfVec4f>(label, value);
+        return draw_gf_quat<GfQuatf, ImGuiDataType_Float, GfVec4f>(label, value);
     } else if (value.IsHolding<GfQuath>()) {
-        return DrawGfQuat<GfQuath, ImGuiDataType_Float, GfVec4f>(label, value);
+        return draw_gf_quat<GfQuath, ImGuiDataType_Float, GfVec4f>(label, value);
     } else if (value.IsHolding<bool>()) {
         bool isOn = value.Get<bool>();
         if (ImGui::Checkbox(label.c_str(), &isOn)) {
@@ -206,7 +207,7 @@ VtValue DrawVtValue(const std::string &label, const VtValue &value) {
         }
     } else if (value.IsHolding<TfToken>()) {
         TfToken token = value.Get<TfToken>();
-        return DrawTfToken(label, token);
+        return draw_tf_token(label, token);
     } else if (value.IsHolding<std::string>()) {
         std::string stringValue = value.Get<std::string>();
         ImGui::InputText(label.c_str(), &stringValue);
@@ -221,17 +222,17 @@ VtValue DrawVtValue(const std::string &label, const VtValue &value) {
             return VtValue(SdfAssetPath(assetPath));
         }
     } else if (value.IsHolding<GfMatrix4d>()) {// Matrices are in row order
-        return DrawGfMatrix<GfMatrix4d, ImGuiDataType_Double, 4, 4>(label, value);
+        return draw_gf_matrix<GfMatrix4d, ImGuiDataType_Double, 4, 4>(label, value);
     } else if (value.IsHolding<GfMatrix4f>()) {
-        return DrawGfMatrix<GfMatrix4f, ImGuiDataType_Float, 4, 4>(label, value);
+        return draw_gf_matrix<GfMatrix4f, ImGuiDataType_Float, 4, 4>(label, value);
     } else if (value.IsHolding<GfMatrix3d>()) {
-        return DrawGfMatrix<GfMatrix3d, ImGuiDataType_Double, 3, 3>(label, value);
+        return draw_gf_matrix<GfMatrix3d, ImGuiDataType_Double, 3, 3>(label, value);
     } else if (value.IsHolding<GfMatrix3f>()) {
-        return DrawGfMatrix<GfMatrix3f, ImGuiDataType_Float, 3, 3>(label, value);
+        return draw_gf_matrix<GfMatrix3f, ImGuiDataType_Float, 3, 3>(label, value);
     } else if (value.IsHolding<GfMatrix2d>()) {
-        return DrawGfMatrix<GfMatrix2d, ImGuiDataType_Double, 2, 2>(label, value);
+        return draw_gf_matrix<GfMatrix2d, ImGuiDataType_Double, 2, 2>(label, value);
     } else if (value.IsHolding<GfMatrix2f>()) {
-        return DrawGfMatrix<GfMatrix2f, ImGuiDataType_Float, 2, 2>(label, value);
+        return draw_gf_matrix<GfMatrix2f, ImGuiDataType_Float, 2, 2>(label, value);
     }// TODO: Array values should be handled outside DrawVtValue
     else if (value.IsArrayValued() && value.GetArraySize() == 1 && value.IsHolding<VtArray<float>>()) {
         VtArray<float> fltArray = value.Get<VtArray<float>>();
@@ -290,7 +291,7 @@ VtValue DrawColorValue(const std::string &label, const VtValue &value) {
 // Return all the value types.
 // In the next version 22.03 we should be able to use:
 // SdfSchema::GetInstance().GetAllTypes();
-const std::array<SdfValueTypeName, 106> &GetAllValueTypeNames() {
+const std::array<SdfValueTypeName, 106> &get_all_value_type_names() {
     static std::array<SdfValueTypeName, 106> allValueTypeNames = {
         SdfValueTypeNames->Bool,
         SdfValueTypeNames->UChar,
@@ -405,7 +406,7 @@ const std::array<SdfValueTypeName, 106> &GetAllValueTypeNames() {
 // Return all the prim types from the registry.
 // There is no function in USD to simply retrieve the list, this is explained in the forum:
 // https://groups.google.com/g/usd-interest/c/q8asqMYuyeg/m/sRhFTIEfCAAJ
-const std::vector<std::string> &GetAllSpecTypeNames() {
+const std::vector<std::string> &get_all_spec_type_names() {
     static std::vector<std::string> allSpecTypeNames;
     static std::once_flag called_once;
     std::call_once(called_once, [&]() {

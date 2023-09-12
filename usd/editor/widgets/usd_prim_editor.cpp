@@ -13,6 +13,7 @@
 #include <pxr/usd/pcp/node.h>
 #include <pxr/usd/pcp/layerStack.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <imgui_stdlib.h>
 #include "usd_prim_editor.h"
 #include "vt_value_editor.h"
 #include "commands/commands.h"
@@ -26,19 +27,18 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace vox {
 /// Very basic ui to create a connection
 struct CreateConnectionDialog : public ModalDialog {
-
     CreateConnectionDialog(const UsdAttribute &attribute) : _attribute(attribute){};
     ~CreateConnectionDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         ImGui::Text("Create connection for %s", _attribute.GetPath().GetString().c_str());
         ImGui::InputText("Path", &_connectionEndPoint);
-        DrawOkCancelModal([&]() {
-            ExecuteAfterDraw(&UsdAttribute::AddConnection, _attribute, SdfPath(_connectionEndPoint),
-                             UsdListPositionBackOfPrependList);
+        draw_ok_cancel_modal([&]() {
+            execute_after_draw(&UsdAttribute::AddConnection, _attribute, SdfPath(_connectionEndPoint),
+                               UsdListPositionBackOfPrependList);
         });
     }
-    const char *DialogId() const override { return "Attribute connection"; }
+    const char *dialog_id() const override { return "Attribute connection"; }
 
     UsdAttribute _attribute;
     std::string _connectionEndPoint;
@@ -46,59 +46,59 @@ struct CreateConnectionDialog : public ModalDialog {
 
 /// Select and draw the appropriate editor depending on the type, metada and so on.
 /// Returns the modified value or VtValue
-static VtValue DrawAttributeValue(const std::string &label, UsdAttribute &attribute, const VtValue &value) {
+static VtValue draw_attribute_value(const std::string &label, UsdAttribute &attribute, const VtValue &value) {
     // If the attribute is a TfToken, it might have an "allowedTokens" metadata
     // We assume that the attribute is a token if it has allowedToken, but that might not hold true
     VtValue allowedTokens;
     attribute.GetMetadata(TfToken("allowedTokens"), &allowedTokens);
     if (!allowedTokens.IsEmpty()) {
-        return DrawTfToken(label, value, allowedTokens);
+        return draw_tf_token(label, value, allowedTokens);
     }
     //
     if (attribute.GetRoleName() == TfToken("Color")) {
         // TODO: color values can be "dragged" they should be stored between
         // BeginEdition/EndEdition
         // It needs some refactoring to know when the widgets starts and stop edition
-        return DrawColorValue(label, value);
+        return draw_color_value(label, value);
     }
-    return DrawVtValue(label, value);
+    return draw_vt_value(label, value);
 }
 
 template<typename PropertyT>
-static std::string GetDisplayName(const PropertyT &property) {
+static std::string get_display_name(const PropertyT &property) {
     return property.GetNamespace().GetString() + (property.GetNamespace() == TfToken() ? std::string() : std::string(":")) +
            property.GetBaseName().GetString();
 }
 
-void DrawAttributeTypeInfo(const UsdAttribute &attribute) {
+void draw_attribute_type_info(const UsdAttribute &attribute) {
     auto attributeTypeName = attribute.GetTypeName();
     auto attributeRoleName = attribute.GetRoleName();
     ImGui::Text("%s(%s)", attributeRoleName.GetString().c_str(), attributeTypeName.GetAsToken().GetString().c_str());
 }
 
 // Right align is not used at the moment, but keeping the code as this is useful for quick layout testing
-inline void RightAlignNextItem(const char *str) {
+inline void right_align_next_item(const char *str) {
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - ImGui::CalcTextSize(str).x - ImGui::GetScrollX() -
                          2 * ImGui::GetStyle().ItemSpacing.x);
 }
 
-void DrawAttributeDisplayName(const UsdAttribute &attribute) {
-    const std::string displayName = GetDisplayName(attribute);
+void draw_attribute_display_name(const UsdAttribute &attribute) {
+    const std::string displayName = get_display_name(attribute);
     ImGui::Text("%s", displayName.c_str());
 }
 
-void DrawAttributeValueAtTime(UsdAttribute &attribute, UsdTimeCode currentTime) {
-    const std::string attributeLabel = GetDisplayName(attribute);
+void draw_attribute_value_at_time(UsdAttribute &attribute, UsdTimeCode currentTime) {
+    const std::string attributeLabel = get_display_name(attribute);
     VtValue value;
     // TODO: On the lower spec mac, this call appears to be really slow with some attributes
     //       AttributeQuery could be a solution but doesn't update with external data updates
     const bool HasValue = attribute.Get(&value, currentTime);
 
     if (HasValue) {
-        VtValue modified = DrawAttributeValue(attributeLabel, attribute, value);
+        VtValue modified = draw_attribute_value(attributeLabel, attribute, value);
         if (!modified.IsEmpty()) {
-            ExecuteAfterDraw<AttributeSet>(attribute, modified,
-                                           attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
+            execute_after_draw<AttributeSet>(attribute, modified,
+                                             attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
         }
     }
 
@@ -109,7 +109,7 @@ void DrawAttributeValueAtTime(UsdAttribute &attribute, UsdTimeCode currentTime) 
         for (auto &connection : sources) {
             ImGui::PushID(connection.GetString().c_str());
             if (ImGui::Button(ICON_FA_TRASH)) {
-                ExecuteAfterDraw(&UsdAttribute::RemoveConnection, attribute, connection);
+                execute_after_draw(&UsdAttribute::RemoveConnection, attribute, connection);
             }
             ImGui::SameLine();
             ImGui::TextColored(ImVec4(ColorAttributeConnection), ICON_FA_LINK " %s", connection.GetString().c_str());
@@ -122,13 +122,13 @@ void DrawAttributeValueAtTime(UsdAttribute &attribute, UsdTimeCode currentTime) 
     }
 }
 
-void DrawUsdRelationshipDisplayName(const UsdRelationship &relationship) {
-    std::string relationshipName = GetDisplayName(relationship);
+void draw_usd_relationship_display_name(const UsdRelationship &relationship) {
+    std::string relationshipName = get_display_name(relationship);
     ImVec4 attributeNameColor = relationship.IsAuthored() ? ImVec4(ColorAttributeAuthored) : ImVec4(ColorAttributeUnauthored);
     ImGui::TextColored(ImVec4(attributeNameColor), "%s", relationshipName.c_str());
 }
 
-void DrawUsdRelationshipList(const UsdRelationship &relationship) {
+void draw_usd_relationship_list(const UsdRelationship &relationship) {
     SdfPathVector targets;
     // relationship.GetForwardedTargets(&targets);
     // for (const auto &path : targets) {
@@ -140,7 +140,7 @@ void DrawUsdRelationshipList(const UsdRelationship &relationship) {
             for (const auto &path : targets) {
                 ImGui::PushID(path.GetString().c_str());
                 if (ImGui::Button(ICON_FA_TRASH)) {
-                    ExecuteAfterDraw(&UsdRelationship::RemoveTarget, relationship, path);
+                    execute_after_draw(&UsdRelationship::RemoveTarget, relationship, path);
                 }
                 ImGui::SameLine();
                 std::string buffer = path.GetString();
@@ -152,116 +152,116 @@ void DrawUsdRelationshipList(const UsdRelationship &relationship) {
     }
 }
 
-void DrawPropertyArcs(const UsdProperty &property, UsdTimeCode currentTime) {
+void draw_property_arcs(const UsdProperty &property, UsdTimeCode currentTime) {
     SdfPropertySpecHandleVector properties = property.GetPropertyStack(currentTime);
     for (const auto &prop : properties) {
         if (ImGui::MenuItem(prop.GetSpec().GetPath().GetText())) {
-            ExecuteAfterDraw<EditorSelectAttributePath>(prop.GetSpec().GetPath());
+            execute_after_draw<EditorSelectAttributePath>(prop.GetSpec().GetPath());
         }
     }
 }
 
 /// Specialization for DrawPropertyMiniButton, between UsdAttribute and UsdRelashionship
 template<typename UsdPropertyT>
-const char *SmallButtonLabel();
+const char *small_button_label();
 template<>
-const char *SmallButtonLabel<UsdAttribute>() { return "(a)"; };
+const char *small_button_label<UsdAttribute>() { return "(a)"; };
 template<>
-const char *SmallButtonLabel<UsdRelationship>() { return "(r)"; };
+const char *small_button_label<UsdRelationship>() { return "(r)"; };
 
 template<typename UsdPropertyT>
-void DrawMenuClearAuthoredValues(UsdPropertyT &property){};
+void draw_menu_clear_authored_values(UsdPropertyT &property){};
 template<>
-void DrawMenuClearAuthoredValues(UsdAttribute &attribute) {
+void draw_menu_clear_authored_values(UsdAttribute &attribute) {
     if (attribute.IsAuthored()) {
         if (ImGui::MenuItem(ICON_FA_EJECT " Clear values")) {
-            ExecuteAfterDraw(&UsdAttribute::Clear, attribute);
+            execute_after_draw(&UsdAttribute::Clear, attribute);
         }
     }
 }
 
 template<typename UsdPropertyT>
-void DrawMenuBlockValues(UsdPropertyT &property){};
+void draw_menu_block_values(UsdPropertyT &property){};
 template<>
-void DrawMenuBlockValues(UsdAttribute &attribute) {
+void draw_menu_block_values(UsdAttribute &attribute) {
     if (ImGui::MenuItem(ICON_FA_STOP " Block values")) {
-        ExecuteAfterDraw(&UsdAttribute::Block, attribute);
+        execute_after_draw(&UsdAttribute::Block, attribute);
     }
 }
 
 template<typename UsdPropertyT>
-void DrawMenuRemoveProperty(UsdPropertyT &property){};
+void draw_menu_remove_property(UsdPropertyT &property){};
 template<>
-void DrawMenuRemoveProperty(UsdAttribute &attribute) {
+void draw_menu_remove_property(UsdAttribute &attribute) {
     if (ImGui::MenuItem(ICON_FA_TRASH " Remove property")) {
-        ExecuteAfterDraw(&UsdPrim::RemoveProperty, attribute.GetPrim(), attribute.GetName());
+        execute_after_draw(&UsdPrim::RemoveProperty, attribute.GetPrim(), attribute.GetName());
     }
 }
 
 template<typename UsdPropertyT>
-void DrawMenuSetKey(UsdPropertyT &property, UsdTimeCode currentTime){};
+void draw_menu_set_key(UsdPropertyT &property, UsdTimeCode currentTime){};
 template<>
-void DrawMenuSetKey(UsdAttribute &attribute, UsdTimeCode currentTime) {
+void draw_menu_set_key(UsdAttribute &attribute, UsdTimeCode currentTime) {
     if (attribute.GetVariability() == SdfVariabilityVarying && attribute.HasValue() && ImGui::MenuItem(ICON_FA_KEY " Set key")) {
         VtValue value;
         attribute.Get(&value, currentTime);
-        ExecuteAfterDraw<AttributeSet>(attribute, value, currentTime);
+        execute_after_draw<AttributeSet>(attribute, value, currentTime);
     }
 }
 
 // TODO Share the code,
-static void DrawPropertyMiniButton(const char *btnStr, const ImVec4 &btnColor = ImVec4(ColorMiniButtonUnauthored)) {
+static void draw_property_mini_button(const char *btnStr, const ImVec4 &btnColor = ImVec4(ColorMiniButtonUnauthored)) {
     ScopedStyleColor miniButtonStyle(ImGuiCol_Text, btnColor, ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::SmallButton(btnStr);
 }
 
 template<typename UsdPropertyT>
-void DrawMenuEditConnection(UsdPropertyT &property) {}
+void draw_menu_edit_connection(UsdPropertyT &property) {}
 template<>
-void DrawMenuEditConnection(UsdAttribute &attribute) {
+void draw_menu_edit_connection(UsdAttribute &attribute) {
     if (ImGui::MenuItem(ICON_FA_LINK " Create connection")) {
-        DrawModalDialog<CreateConnectionDialog>(attribute);
+        draw_modal_dialog<CreateConnectionDialog>(attribute);
     }
 }
 
 // TODO: relationship
 template<typename UsdPropertyT>
-void DrawMenuCreateValue(UsdPropertyT &property){};
+void draw_menu_create_value(UsdPropertyT &property){};
 
 template<>
-void DrawMenuCreateValue(UsdAttribute &attribute) {
+void draw_menu_create_value(UsdAttribute &attribute) {
     if (!attribute.HasValue()) {
         if (ImGui::MenuItem(ICON_FA_DONATE " Create value")) {
-            ExecuteAfterDraw<AttributeCreateDefaultValue>(attribute);
+            execute_after_draw<AttributeCreateDefaultValue>(attribute);
         }
     }
 }
 
 // Property mini button, should work with UsdProperty, UsdAttribute and UsdRelationShip
 template<typename UsdPropertyT>
-void DrawPropertyMiniButton(UsdPropertyT &property, const UsdEditTarget &editTarget, UsdTimeCode currentTime) {
+void draw_property_mini_button(UsdPropertyT &property, const UsdEditTarget &editTarget, UsdTimeCode currentTime) {
     ImVec4 propertyColor =
         property.IsAuthoredAt(editTarget) ? ImVec4(ColorMiniButtonAuthored) : ImVec4(ColorMiniButtonUnauthored);
-    DrawPropertyMiniButton(SmallButtonLabel<UsdPropertyT>(), propertyColor);
+    draw_property_mini_button(small_button_label<UsdPropertyT>(), propertyColor);
     if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
-        DrawMenuSetKey(property, currentTime);
-        DrawMenuCreateValue(property);
-        DrawMenuClearAuthoredValues(property);
-        DrawMenuBlockValues(property);
-        DrawMenuRemoveProperty(property);
-        DrawMenuEditConnection(property);
+        draw_menu_set_key(property, currentTime);
+        draw_menu_create_value(property);
+        draw_menu_clear_authored_values(property);
+        draw_menu_block_values(property);
+        draw_menu_remove_property(property);
+        draw_menu_edit_connection(property);
         if (ImGui::MenuItem(ICON_FA_COPY " Copy attribute path")) {
             ImGui::SetClipboardText(property.GetPath().GetString().c_str());
         }
         if (ImGui::BeginMenu(ICON_FA_HAND_HOLDING_USD " Select SdfAttribute")) {
-            DrawPropertyArcs(property, currentTime);
+            draw_property_arcs(property, currentTime);
             ImGui::EndMenu();
         }
         ImGui::EndPopup();
     }
 }
 
-bool DrawVariantSetsCombos(UsdPrim &prim) {
+bool draw_variant_sets_combos(UsdPrim &prim) {
     int buttonID = 0;
     if (!prim.HasVariantSets())
         return false;
@@ -285,11 +285,11 @@ bool DrawVariantSetsCombos(UsdPrim &prim) {
             ImVec4 variantColor =
                 variantSet.HasAuthoredVariantSelection() ? ImVec4(ColorMiniButtonAuthored) : ImVec4(ColorMiniButtonUnauthored);
             ImGui::PushID(buttonID++);
-            DrawPropertyMiniButton("(v)", variantColor);
+            draw_property_mini_button("(v)", variantColor);
             ImGui::PopID();
             if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
                 if (ImGui::MenuItem("Clear variant selection")) {
-                    ExecuteAfterDraw(&UsdVariantSet::ClearVariantSelection, variantSet);
+                    execute_after_draw(&UsdVariantSet::ClearVariantSelection, variantSet);
                 }
                 ImGui::EndPopup();
             }
@@ -302,7 +302,7 @@ bool DrawVariantSetsCombos(UsdPrim &prim) {
             if (ImGui::BeginCombo(variantSetName.c_str(), variantSet.GetVariantSelection().c_str())) {
                 for (auto variant : variantSet.GetVariantNames()) {
                     if (ImGui::Selectable(variant.c_str(), false)) {
-                        ExecuteAfterDraw(&UsdVariantSet::SetVariantSelection, variantSet, variant);
+                        execute_after_draw(&UsdVariantSet::SetVariantSelection, variantSet, variant);
                     }
                 }
                 ImGui::EndCombo();
@@ -314,7 +314,7 @@ bool DrawVariantSetsCombos(UsdPrim &prim) {
     return true;
 }
 
-bool DrawAssetInfo(UsdPrim &prim) {
+bool draw_asset_info(UsdPrim &prim) {
     auto assetInfo = prim.GetAssetInfo();
     if (assetInfo.empty())
         return false;
@@ -329,14 +329,14 @@ bool DrawAssetInfo(UsdPrim &prim) {
         TF_FOR_ALL(keyValue, assetInfo) {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
-            DrawPropertyMiniButton("(x)");
+            draw_property_mini_button("(x)");
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%s", keyValue->first.c_str());
             ImGui::TableSetColumnIndex(2);
             ImGui::PushItemWidth(-FLT_MIN);
-            VtValue modified = DrawVtValue(keyValue->first, keyValue->second);
+            VtValue modified = draw_vt_value(keyValue->first, keyValue->second);
             if (!modified.IsEmpty()) {
-                ExecuteAfterDraw(&UsdPrim::SetAssetInfoByKey, prim, TfToken(keyValue->first), modified);
+                execute_after_draw(&UsdPrim::SetAssetInfoByKey, prim, TfToken(keyValue->first), modified);
             }
             ImGui::PopItemWidth();
         }
@@ -380,7 +380,7 @@ void DrawPropertyEditorMenuBar(UsdPrim &prim, int options) {
 }
 
 /// Draws a menu list of all the sublayers, indented to reveal the parenting
-static void DrawEditTargetSubLayersMenuItems(UsdStageWeakPtr stage, SdfLayerHandle layer, int indent = 0) {
+static void draw_edit_target_sub_layers_menu_items(UsdStageWeakPtr stage, SdfLayerHandle layer, int indent = 0) {
     if (layer) {
         std::vector<std::string> subLayers = layer->GetSubLayerPaths();
         for (int layerId = 0; layerId < subLayers.size(); ++layerId) {
@@ -392,20 +392,20 @@ static void DrawEditTargetSubLayersMenuItems(UsdStageWeakPtr stage, SdfLayerHand
             const std::string layerName = std::string(indent, ' ') + (subLayer ? subLayer->GetDisplayName() : subLayerPath);
             if (subLayer) {
                 if (ImGui::MenuItem(layerName.c_str())) {
-                    ExecuteAfterDraw<EditorSetEditTarget>(stage, UsdEditTarget(subLayer));
+                    execute_after_draw<EditorSetEditTarget>(stage, UsdEditTarget(subLayer));
                 }
             } else {
                 ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "%s", layerName.c_str());
             }
 
             ImGui::PushID(layerName.c_str());
-            DrawEditTargetSubLayersMenuItems(stage, subLayer, indent + 4);
+            draw_edit_target_sub_layers_menu_items(stage, subLayer, indent + 4);
             ImGui::PopID();
         }
     }
 }
 
-bool DrawMaterialBindings(const UsdPrim &prim) {
+bool draw_material_bindings(const UsdPrim &prim) {
 #if (PXR_VERSION < 2208)
     return false;
 #else
@@ -440,20 +440,20 @@ bool DrawMaterialBindings(const UsdPrim &prim) {
 }
 
 // Second version of an edit target selector
-void DrawUsdPrimEditTarget(const UsdPrim &prim) {
+void draw_usd_prim_edit_target(const UsdPrim &prim) {
     if (!prim)
         return;
     ScopedStyleColor defaultStyle(DefaultColorStyle);
     if (ImGui::MenuItem("Session layer")) {
-        ExecuteAfterDraw<EditorSetEditTarget>(prim.GetStage(), UsdEditTarget(prim.GetStage()->GetSessionLayer()));
+        execute_after_draw<EditorSetEditTarget>(prim.GetStage(), UsdEditTarget(prim.GetStage()->GetSessionLayer()));
     }
     if (ImGui::MenuItem("Root layer")) {
-        ExecuteAfterDraw<EditorSetEditTarget>(prim.GetStage(), UsdEditTarget(prim.GetStage()->GetRootLayer()));
+        execute_after_draw<EditorSetEditTarget>(prim.GetStage(), UsdEditTarget(prim.GetStage()->GetRootLayer()));
     }
 
     if (ImGui::BeginMenu("Sublayers")) {
         const auto &layer = prim.GetStage()->GetRootLayer();
-        DrawEditTargetSubLayersMenuItems(prim.GetStage(), layer);
+        draw_edit_target_sub_layers_menu_items(prim.GetStage(), layer);
         ImGui::EndMenu();
     }
 
@@ -468,7 +468,7 @@ void DrawUsdPrimEditTarget(const UsdPrim &prim) {
                 std::string arcName = a.GetTargetNode().GetLayerStack()->GetIdentifier().rootLayer->GetDisplayName() + " " +
                                       a.GetTargetNode().GetPath().GetString();
                 if (ImGui::MenuItem(arcName.c_str())) {
-                    ExecuteAfterDraw<EditorSetEditTarget>(
+                    execute_after_draw<EditorSetEditTarget>(
                         prim.GetStage(),
                         UsdEditTarget(a.GetTargetNode().GetLayerStack()->GetIdentifier().rootLayer, a.GetTargetNode()),
                         a.GetTargetNode().GetPath());
@@ -481,7 +481,7 @@ void DrawUsdPrimEditTarget(const UsdPrim &prim) {
 
 // Testing
 // TODO: this is a copied function that needs to be moved in the next release
-static ImVec4 GetPrimColor(const UsdPrim &prim) {
+static ImVec4 get_prim_color(const UsdPrim &prim) {
     if (!prim.IsActive() || !prim.IsLoaded()) {
         return ImVec4(ColorPrimInactive);
     }
@@ -499,7 +499,7 @@ static ImVec4 GetPrimColor(const UsdPrim &prim) {
     return ImVec4(ColorPrimDefault);
 }
 
-void DrawUsdPrimHeader(UsdPrim &prim) {
+void draw_usd_prim_header(UsdPrim &prim) {
     auto editTarget = prim.GetStage()->GetEditTarget();
     const SdfPath targetPath = editTarget.MapToSpecPath(prim.GetPath());
 
@@ -519,15 +519,15 @@ void DrawUsdPrimHeader(UsdPrim &prim) {
         ImGui::Text("Path");
         ImGui::TableSetColumnIndex(2);
         {
-            ScopedStyleColor pathColor(ImGuiCol_Text, GetPrimColor(prim));
+            ScopedStyleColor pathColor(ImGuiCol_Text, get_prim_color(prim));
             ImGui::Text("%s", prim.GetPrimPath().GetString().c_str());
         }
         ImGui::TableNextRow(ImGuiTableRowFlags_None, TableRowDefaultHeight);
         ImGui::TableSetColumnIndex(0);
-        DrawPropertyMiniButton(ICON_FA_PEN);
+        draw_property_mini_button(ICON_FA_PEN);
         ImGuiPopupFlags flags = ImGuiPopupFlags_MouseButtonLeft;
         if (ImGui::BeginPopupContextItem(nullptr, flags)) {
-            DrawUsdPrimEditTarget(prim);
+            draw_usd_prim_edit_target(prim);
             ImGui::EndPopup();
         }
         ImGui::TableSetColumnIndex(1);
@@ -550,8 +550,7 @@ void DrawUsdPrimHeader(UsdPrim &prim) {
     }
 }
 
-void DrawUsdPrimProperties(UsdPrim &prim, UsdTimeCode currentTime) {
-
+void draw_usd_prim_properties(UsdPrim &prim, UsdTimeCode currentTime) {
     DrawPropertyEditorMenuBar(prim, 0);
 
     if (prim) {
@@ -559,25 +558,25 @@ void DrawUsdPrimProperties(UsdPrim &prim, UsdTimeCode currentTime) {
         headerSize.y = TableRowDefaultHeight * 5;// 5 rows (4 + header)
         headerSize.x = -FLT_MIN;                 // expand as much as possible
         ImGui::BeginChild("##Header", headerSize);
-        DrawUsdPrimHeader(prim);
+        draw_usd_prim_header(prim);
         ImGui::EndChild();
         ImGui::Separator();
         ImGui::BeginChild("##Body");
-        if (DrawAssetInfo(prim)) {
+        if (draw_asset_info(prim)) {
             ImGui::Separator();
         }
 
-        if (DrawMaterialBindings(prim)) {
+        if (draw_material_bindings(prim)) {
             ImGui::Separator();
         }
 
         // Draw variant sets
-        if (DrawVariantSetsCombos(prim)) {
+        if (draw_variant_sets_combos(prim)) {
             ImGui::Separator();
         }
 
         // Transforms
-        if (DrawXformsCommon(prim, currentTime)) {
+        if (draw_xforms_common(prim, currentTime)) {
             ImGui::Separator();
         }
 
@@ -595,16 +594,16 @@ void DrawUsdPrimProperties(UsdPrim &prim, UsdTimeCode currentTime) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, TableRowDefaultHeight);
                 ImGui::TableSetColumnIndex(0);
                 ImGui::PushID(miniButtonId++);
-                DrawPropertyMiniButton(attribute, editTarget, currentTime);
+                draw_property_mini_button(attribute, editTarget, currentTime);
                 ImGui::PopID();
 
                 ImGui::TableSetColumnIndex(1);
-                DrawAttributeDisplayName(attribute);
+                draw_attribute_display_name(attribute);
 
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushItemWidth(-FLT_MIN);// Right align and get rid of widget label
                 ImGui::PushID(attribute.GetPath().GetHash());
-                DrawAttributeValueAtTime(attribute, currentTime);
+                draw_attribute_value_at_time(attribute, currentTime);
                 ImGui::PopID();
                 ImGui::PopItemWidth();
                 // TODO: in the hint ???
@@ -617,14 +616,14 @@ void DrawUsdPrimProperties(UsdPrim &prim, UsdTimeCode currentTime) {
 
                 ImGui::TableSetColumnIndex(0);
                 ImGui::PushID(miniButtonId++);
-                DrawPropertyMiniButton(relationship, editTarget, currentTime);
+                draw_property_mini_button(relationship, editTarget, currentTime);
                 ImGui::PopID();
 
                 ImGui::TableSetColumnIndex(1);
-                DrawUsdRelationshipDisplayName(relationship);
+                draw_usd_relationship_display_name(relationship);
 
                 ImGui::TableSetColumnIndex(2);
-                DrawUsdRelationshipList(relationship);
+                draw_usd_relationship_list(relationship);
             }
 
             ImGui::EndTable();
@@ -633,19 +632,19 @@ void DrawUsdPrimProperties(UsdPrim &prim, UsdTimeCode currentTime) {
     }
 }
 
-#define GENERATE_XFORMCOMMON_FIELD(OpName_, OpType_, OpRawType_)                                                     \
-    struct XformCommon##OpName_##Field {                                                                             \
-        static constexpr const char *fieldName = "" #OpName_ "";                                                     \
-    };                                                                                                               \
-    template<>                                                                                                       \
-    inline void DrawThirdColumn<XformCommon##OpName_##Field>(const int rowId, const UsdGeomXformCommonAPI &xformAPI, \
-                                                             const OpType_ &value, const UsdTimeCode &currentTime) { \
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                                                   \
-        OpType_ valueLocal(value[0], value[1], value[2]);                                                            \
-        ImGui::InputScalarN("" #OpName_ "", OpRawType_, valueLocal.data(), 3, nullptr, nullptr, DecimalPrecision);   \
-        if (ImGui::IsItemDeactivatedAfterEdit()) {                                                                   \
-            ExecuteAfterDraw(&UsdGeomXformCommonAPI::Set##OpName_, xformAPI, valueLocal, currentTime);               \
-        }                                                                                                            \
+#define GENERATE_XFORMCOMMON_FIELD(OpName_, OpType_, OpRawType_)                                                       \
+    struct XformCommon##OpName_##Field {                                                                               \
+        static constexpr const char *fieldName = "" #OpName_ "";                                                       \
+    };                                                                                                                 \
+    template<>                                                                                                         \
+    inline void draw_third_column<XformCommon##OpName_##Field>(const int rowId, const UsdGeomXformCommonAPI &xformAPI, \
+                                                               const OpType_ &value, const UsdTimeCode &currentTime) { \
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                                                     \
+        OpType_ valueLocal(value[0], value[1], value[2]);                                                              \
+        ImGui::InputScalarN("" #OpName_ "", OpRawType_, valueLocal.data(), 3, nullptr, nullptr, DecimalPrecision);     \
+        if (ImGui::IsItemDeactivatedAfterEdit()) {                                                                     \
+            execute_after_draw(&UsdGeomXformCommonAPI::Set##OpName_, xformAPI, valueLocal, currentTime);               \
+        }                                                                                                              \
     }
 
 GENERATE_XFORMCOMMON_FIELD(Translate, GfVec3d, ImGuiDataType_Double);
@@ -656,21 +655,20 @@ struct XformCommonRotateField {
     static constexpr const char *fieldName = "Rotate";
 };
 template<>
-inline void DrawThirdColumn<XformCommonRotateField>(const int rowId, const UsdGeomXformCommonAPI &xformAPI,
-                                                    const GfVec3f &rotation, const UsdGeomXformCommonAPI::RotationOrder &rotOrder,
-                                                    const UsdTimeCode &currentTime) {
+inline void draw_third_column<XformCommonRotateField>(const int rowId, const UsdGeomXformCommonAPI &xformAPI,
+                                                      const GfVec3f &rotation, const UsdGeomXformCommonAPI::RotationOrder &rotOrder,
+                                                      const UsdTimeCode &currentTime) {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     GfVec3f rotationf(rotation[0], rotation[1], rotation[2]);
     ImGui::InputScalarN("Rotate", ImGuiDataType_Float, rotationf.data(), 3, nullptr, nullptr, DecimalPrecision);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-        ExecuteAfterDraw(&UsdGeomXformCommonAPI::SetRotate, xformAPI, rotationf, rotOrder, currentTime);
+        execute_after_draw(&UsdGeomXformCommonAPI::SetRotate, xformAPI, rotationf, rotOrder, currentTime);
     }
 }
 
 // Draw a xform common api in a table
 // I am not sure this is really useful
-bool DrawXformsCommon(UsdPrim &prim, UsdTimeCode currentTime) {
-
+bool draw_xforms_common(UsdPrim &prim, UsdTimeCode currentTime) {
     UsdGeomXformCommonAPI xformAPI(prim);
 
     if (xformAPI) {
@@ -682,13 +680,13 @@ bool DrawXformsCommon(UsdPrim &prim, UsdTimeCode currentTime) {
         xformAPI.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, currentTime);
 
         int rowId = 0;
-        if (BeginThreeColumnsTable("##DrawXformsCommon")) {
-            SetupThreeColumnsTable(true, "", "UsdGeomXformCommonAPI", "");
-            DrawThreeColumnsRow<XformCommonTranslateField>(rowId++, xformAPI, translation, currentTime);
-            DrawThreeColumnsRow<XformCommonRotateField>(rowId++, xformAPI, rotation, rotOrder, currentTime);
-            DrawThreeColumnsRow<XformCommonScaleField>(rowId++, xformAPI, scale, currentTime);
-            DrawThreeColumnsRow<XformCommonPivotField>(rowId++, xformAPI, pivot, currentTime);
-            EndThreeColumnsTable();
+        if (begin_three_columns_table("##DrawXformsCommon")) {
+            setup_three_columns_table(true, "", "UsdGeomXformCommonAPI", "");
+            draw_three_columns_row<XformCommonTranslateField>(rowId++, xformAPI, translation, currentTime);
+            draw_three_columns_row<XformCommonRotateField>(rowId++, xformAPI, rotation, rotOrder, currentTime);
+            draw_three_columns_row<XformCommonScaleField>(rowId++, xformAPI, scale, currentTime);
+            draw_three_columns_row<XformCommonPivotField>(rowId++, xformAPI, pivot, currentTime);
+            end_three_columns_table();
         }
         return true;
     }

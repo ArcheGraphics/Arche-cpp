@@ -14,25 +14,25 @@
 #include "base/usd_helpers.h"
 
 namespace vox {
-static void DrawVariantSelectionMiniButton(const SdfPrimSpecHandle &primSpec, const std::string &variantSetName, int &buttonId) {
+static void draw_variant_selection_mini_button(const SdfPrimSpecHandle &primSpec, const std::string &variantSetName, int &buttonId) {
     ScopedStyleColor style(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0), ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::PushID(buttonId++);
     if (ImGui::SmallButton(ICON_UT_DELETE)) {
         // ExecuteAfterDraw(&SdfPrimSpec::BlockVariantSelection, primSpec); // TODO in 21.02
-        ExecuteAfterDraw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSetName, "");
+        execute_after_draw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSetName, "");
     }
     ImGui::PopID();
 }
 
-static void DrawVariantSelectionCombo(const SdfPrimSpecHandle &primSpec, SdfVariantSelectionProxy::const_reference &variantSelection, int &buttonId) {
+static void draw_variant_selection_combo(const SdfPrimSpecHandle &primSpec, SdfVariantSelectionProxy::const_reference &variantSelection, int &buttonId) {
     ImGui::PushID(buttonId++);
     if (ImGui::BeginCombo("Variant selection", variantSelection.second.c_str())) {
         if (ImGui::Selectable("")) {// Empty variant selection
-            ExecuteAfterDraw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSelection.first, "");
+            execute_after_draw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSelection.first, "");
         }
         for (const auto &variantName : primSpec->GetVariantNames(variantSelection.first)) {
             if (ImGui::Selectable(variantName.c_str())) {
-                ExecuteAfterDraw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSelection.first, variantName);
+                execute_after_draw(&SdfPrimSpec::SetVariantSelection, primSpec, variantSelection.first, variantName);
             }
         }
         ImGui::EndCombo();
@@ -40,28 +40,27 @@ static void DrawVariantSelectionCombo(const SdfPrimSpecHandle &primSpec, SdfVari
     ImGui::PopID();
 }
 
-static void DrawVariantSelection(const SdfPrimSpecHandle &primSpec) {
-
+static void draw_variant_selection(const SdfPrimSpecHandle &primSpec) {
     // TODO: we would like to have a list of potential variant we can select and the variant selected
     auto variantSetNameList = primSpec->GetVariantSetNameList();
     auto variantSelections = primSpec->GetVariantSelections();
     if (!variantSelections.empty()) {
         if (ImGui::BeginTable("##DrawPrimVariantSelections", 3, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-            TableSetupColumns("", "Variant selections", "");
+            table_setup_columns("", "Variant selections", "");
             ImGui::PushID(primSpec->GetPath().GetHash());
             ImGui::TableHeadersRow();
             int buttonId = 0;
             for (const auto &variantSelection : variantSelections) {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
-                DrawVariantSelectionMiniButton(primSpec, variantSelection.first, buttonId);
+                draw_variant_selection_mini_button(primSpec, variantSelection.first, buttonId);
 
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("%s", variantSelection.first.c_str());
 
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushItemWidth(-FLT_MIN);
-                DrawVariantSelectionCombo(primSpec, variantSelection, buttonId);
+                draw_variant_selection_combo(primSpec, variantSelection, buttonId);
                 ImGui::PopItemWidth();
             }
             ImGui::PopID();
@@ -76,45 +75,45 @@ struct VariantSetNamesRow {};
 #define VariantSetNamesRowArgs const int rowId, const SdfListOpType &operation, const std::string &variantName, const SdfPrimSpecHandle &primSpec
 
 template<>
-inline void DrawFirstColumn<VariantSetNamesRow>(VariantSetNamesRowArgs) {
+inline void draw_first_column<VariantSetNamesRow>(VariantSetNamesRowArgs) {
     ImGui::PushID(rowId);
     if (ImGui::Button(ICON_UT_DELETE)) {
         if (!primSpec)
             return;
         std::function<void()> removeVariantSetName = [=]() { primSpec->GetVariantSetNameList().RemoveItemEdits(variantName); };
-        ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeVariantSetName);
+        execute_after_draw<UsdFunctionCall>(primSpec->GetLayer(), removeVariantSetName);
     }
     ImGui::PopID();
 }
 template<>
-inline void DrawSecondColumn<VariantSetNamesRow>(VariantSetNamesRowArgs) {
+inline void draw_second_column<VariantSetNamesRow>(VariantSetNamesRowArgs) {
     ImGui::Text("%s", get_list_editor_operation_name(operation));
 }
 template<>
-inline void DrawThirdColumn<VariantSetNamesRow>(VariantSetNamesRowArgs) {
+inline void draw_third_column<VariantSetNamesRow>(VariantSetNamesRowArgs) {
     ImGui::Text("%s", variantName.c_str());
 }
 
-static void DrawVariantSetNamesRow(SdfListOpType operation, const std::string &variantName, const SdfPrimSpecHandle &primSpec,
-                                   int &rowId) {
-    DrawThreeColumnsRow<VariantSetNamesRow>(rowId++, operation, variantName, primSpec);
+static void draw_variant_set_names_row(SdfListOpType operation, const std::string &variantName, const SdfPrimSpecHandle &primSpec,
+                                       int &rowId) {
+    draw_three_columns_row<VariantSetNamesRow>(rowId++, operation, variantName, primSpec);
 }
 
 /// Draw the variantSet names edit list
-static void DrawVariantSetNames(const SdfPrimSpecHandle &primSpec) {
+static void draw_variant_set_names(const SdfPrimSpecHandle &primSpec) {
     auto nameList = primSpec->GetVariantSetNameList();
     int rowId = 0;
-    if (BeginThreeColumnsTable("##DrawPrimVariantSets")) {
-        SetupThreeColumnsTable(false, "", "VariantSet names", "");
+    if (begin_three_columns_table("##DrawPrimVariantSets")) {
+        setup_three_columns_table(false, "", "VariantSet names", "");
         ImGui::PushID(primSpec->GetPath().GetHash());
-        IterateListEditorItems(primSpec->GetVariantSetNameList(), DrawVariantSetNamesRow, primSpec, rowId);
+        iterate_list_editor_items(primSpec->GetVariantSetNameList(), draw_variant_set_names_row, primSpec, rowId);
         ImGui::PopID();
-        EndThreeColumnsTable();
+        end_three_columns_table();
     }
 }
 
 // Draw a table with the variant selections
-void DrawPrimVariants(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_variants(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec)
         return;
     const bool showVariants = !primSpec->GetVariantSelections().empty() || primSpec->HasVariantSetNames();
@@ -124,10 +123,10 @@ void DrawPrimVariants(const SdfPrimSpecHandle &primSpec) {
         // visible variant.
         // The actual variant node can be edited in the layer editor
         if (primSpec->HasVariantSetNames()) {
-            DrawVariantSetNames(primSpec);
+            draw_variant_set_names(primSpec);
         }
 
-        DrawVariantSelection(primSpec);
+        draw_variant_selection(primSpec);
     }
 }
 

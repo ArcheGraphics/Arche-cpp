@@ -13,18 +13,18 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
 /// Draw the full fledged primspec editor
-void DrawSdfPrimEditor(const SdfPrimSpecHandle &primSpec, const Selection &);
+void draw_sdf_prim_editor(const SdfPrimSpecHandle &primSpec, const Selection &);
 
-void DrawPrimKind(const SdfPrimSpecHandle &primSpec);
-void DrawPrimType(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags = 0);
-void DrawPrimSpecifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags = 0);
-void DrawPrimInstanceable(const SdfPrimSpecHandle &primSpec);
-void DrawPrimHidden(const SdfPrimSpecHandle &primSpec);
-void DrawPrimActive(const SdfPrimSpecHandle &primSpec);
-void DrawPrimName(const SdfPrimSpecHandle &primSpec);
+void draw_prim_kind(const SdfPrimSpecHandle &primSpec);
+void draw_prim_type(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags = 0);
+void draw_prim_specifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags = 0);
+void draw_prim_instanceable(const SdfPrimSpecHandle &primSpec);
+void draw_prim_hidden(const SdfPrimSpecHandle &primSpec);
+void draw_prim_active(const SdfPrimSpecHandle &primSpec);
+void draw_prim_name(const SdfPrimSpecHandle &primSpec);
 //void DrawPrimDocumentation(const SdfPrimSpecHandle &primSpec);
 //void DrawPrimComment(const SdfPrimSpecHandle &primSpec);
-void DrawSdfPrimEditorMenuBar(const SdfPrimSpecHandle &primSpec);
-void DrawPrimCreateCompositionMenu(const SdfPrimSpecHandle &primSpec);
+void draw_sdf_prim_editor_menu_bar(const SdfPrimSpecHandle &primSpec);
+void draw_prim_create_composition_menu(const SdfPrimSpecHandle &primSpec);
 
 }// namespace vox

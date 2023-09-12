@@ -12,14 +12,14 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
 /// Draw modal dialogs to add composition on primspec (reference, payload, inherit, specialize)
-void DrawPrimCreateReference(const SdfPrimSpecHandle &primSpec);
-void DrawPrimCreatePayload(const SdfPrimSpecHandle &primSpec);
-void DrawPrimCreateInherit(const SdfPrimSpecHandle &primSpec);
-void DrawPrimCreateSpecialize(const SdfPrimSpecHandle &primSpec);
+void draw_prim_create_reference(const SdfPrimSpecHandle &primSpec);
+void draw_prim_create_payload(const SdfPrimSpecHandle &primSpec);
+void draw_prim_create_inherit(const SdfPrimSpecHandle &primSpec);
+void draw_prim_create_specialize(const SdfPrimSpecHandle &primSpec);
 
 /// Draw multiple tables with the compositions (Reference, Payload, Inherit, Specialize)
-void DrawPrimCompositions(const SdfPrimSpecHandle &primSpec);
+void draw_prim_compositions(const SdfPrimSpecHandle &primSpec);
 
 // Draw a text summary of the composition
-void DrawPrimCompositionSummary(const SdfPrimSpecHandle &primSpec);
+void draw_prim_composition_summary(const SdfPrimSpecHandle &primSpec);
 }// namespace vox

@@ -5,10 +5,10 @@
 //  property of any third parties.
 
 #include "commands/commands.h"
-//#include "Editor.h"
+#include "editor.h"
 #include "launcher_bar.h"
 #include "modal_dialogs.h"
-#include <imgui.h>
+#include <imgui_stdlib.h>
 
 namespace vox {
 /// Very basic ui to create a connection
@@ -17,32 +17,32 @@ struct AddLauncherDialog : public ModalDialog {
     AddLauncherDialog(){};
     ~AddLauncherDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         ImGui::InputText("Launcher name", &_launcherName);
         ImGui::InputText("Command line", &_commandLine);
-        DrawOkCancelModal([&]() { ExecuteAfterDraw<EditorAddLauncher>(_launcherName, _commandLine); });
+        draw_ok_cancel_modal([&]() { execute_after_draw<EditorAddLauncher>(_launcherName, _commandLine); });
     }
-    const char *DialogId() const override { return "Add launcher"; }
+    const char *dialog_id() const override { return "Add launcher"; }
 
     std::string _launcherName;
     std::string _commandLine;
 };
 
-void DrawLauncherBar(Editor *editor) {
+void draw_launcher_bar(Editor *editor) {
     if (!editor)
         return;
 
     if (ImGui::Button("+")) {
-        DrawModalDialog<AddLauncherDialog>();
+        draw_modal_dialog<AddLauncherDialog>();
     }
 
     ImGui::SameLine();
-    for (const auto &commandName : editor->GetLauncherNameList()) {
+    for (const auto &commandName : editor->get_launcher_name_list()) {
         if (ImGui::Button(commandName.c_str())) {
             if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
-                ExecuteAfterDraw<EditorRemoveLauncher>(commandName);
+                execute_after_draw<EditorRemoveLauncher>(commandName);
             } else {
-                ExecuteAfterDraw<EditorRunLauncher>(commandName);
+                execute_after_draw<EditorRunLauncher>(commandName);
             }
         }
         ImGui::SameLine();

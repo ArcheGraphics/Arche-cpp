@@ -14,6 +14,6 @@ namespace vox {
 //
 PXR_NAMESPACE_USING_DIRECTIVE
 
-void DrawConnectionEditor(const UsdPrim &prim);
+void draw_connection_editor(const UsdPrim &prim);
 
 }// namespace vox

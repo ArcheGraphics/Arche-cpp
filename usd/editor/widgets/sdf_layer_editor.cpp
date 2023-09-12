@@ -23,8 +23,8 @@
 #include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdRender/settings.h>
-
-//#include "Editor.h"
+#include <imgui_stdlib.h>
+#include "editor.h"
 #include "commands/commands.h"
 #include "modal_dialogs.h"
 #include "file_browser.h"
@@ -44,7 +44,6 @@ namespace fs = std::filesystem;
 namespace vox {
 // This is very similar to AddSublayer, they should be merged together
 struct EditSublayerPath : public ModalDialog {
-
     EditSublayerPath(const SdfLayerRefPtr &layer, const std::string sublayerPath) : layer(layer), _sublayerPath(sublayerPath) {
         if (!layer) return;
         // We have to setup the filebrowser first, setting the directory and filename it should point to
@@ -59,38 +58,38 @@ struct EditSublayerPath : public ModalDialog {
         //      2.3 name does not point to an existing file
         //           -> set the directory to layer
         fs::path layerPath(layer->GetRealPath());
-        SetFileBrowserDirectory(layerPath.parent_path().string());
+        set_file_browser_directory(layerPath.parent_path().string());
         if (!_sublayerPath.empty()) {
             // Does the file exists ??
             fs::path path(_sublayerPath);
             if (fs::exists(path)) {
                 // Path is global
                 _relative = false;
-                SetFileBrowserDirectory(path.parent_path().string());
-                SetFileBrowserFilePath(path.string());
+                set_file_browser_directory(path.parent_path().string());
+                set_file_browser_file_path(path.string());
             } else {
                 // Try relative to this layer
                 auto relativePath = layerPath.parent_path() / path;
                 auto absolutePath = fs::absolute(relativePath);
                 if (fs::exists(absolutePath) || fs::exists(absolutePath.parent_path())) {
                     _relative = true;
-                    SetFileBrowserDirectory(absolutePath.parent_path().string());
-                    SetFileBrowserFilePath(absolutePath.string());
+                    set_file_browser_directory(absolutePath.parent_path().string());
+                    set_file_browser_file_path(absolutePath.string());
                 }
             }
-            SetFileBrowserFilePath(_sublayerPath);
+            set_file_browser_file_path(_sublayerPath);
         }
         // Make sure we only use usd layers in the filebrowser
-        SetValidExtensions(get_usd_valid_extensions());
-        EnsureFileBrowserDefaultExtension("usd");
+        set_valid_extensions(get_usd_valid_extensions());
+        ensure_file_browser_default_extension("usd");
     };
 
-    void Draw() override {
-        DrawFileBrowser();
-        auto filePath = GetFileBrowserFilePath();
-        auto insertedFilePath = _relative ? GetFileBrowserFilePathRelativeTo(layer->GetRealPath(), _unixify) : filePath;
+    void draw() override {
+        draw_file_browser();
+        auto filePath = get_file_browser_file_path();
+        auto insertedFilePath = _relative ? get_file_browser_file_path_relative_to(layer->GetRealPath(), _unixify) : filePath;
         if (insertedFilePath.empty()) insertedFilePath = _sublayerPath;
-        const bool filePathExits = FilePathExists();
+        const bool filePathExits = file_path_exists();
         const bool relativePathValid = _relative ? insertedFilePath != "" : true;
         ImGui::Checkbox("Use relative path", &_relative);
         ImGui::SameLine();
@@ -111,21 +110,22 @@ struct EditSublayerPath : public ModalDialog {
         }// ... other messages like permission denied, or incorrect extension
         ImGui::SameLine();
         ImGui::Text("%s", insertedFilePath.c_str());
-        DrawOkCancelModal([&]() {
+        draw_ok_cancel_modal([&]() {
             if (!insertedFilePath.empty()) {
                 if (!filePathExits && _createLayer) {
                     SdfLayer::CreateNew(filePath);// TODO: in a command
                 }
                 if (_sublayerPath.empty()) {
-                    ExecuteAfterDraw(&SdfLayer::InsertSubLayerPath, layer, insertedFilePath, 0);
+                    execute_after_draw(&SdfLayer::InsertSubLayerPath, layer, insertedFilePath, 0);
                 } else {
-                    ExecuteAfterDraw<LayerRenameSubLayer>(layer, _sublayerPath, insertedFilePath);
+                    execute_after_draw<LayerRenameSubLayer>(layer, _sublayerPath, insertedFilePath);
                 }
             }
         });
     }
 
-    const char *DialogId() const override { return "Edit sublayer path"; }
+    const char *dialog_id() const override { return "Edit sublayer path"; }
+
     SdfLayerRefPtr layer;
     std::string _sublayerPath;
     bool _createLayer = false;
@@ -133,11 +133,11 @@ struct EditSublayerPath : public ModalDialog {
     bool _unixify = false;
 };
 
-void DrawSublayerPathEditDialog(const SdfLayerRefPtr &layer, const std::string &path) {
-    DrawModalDialog<EditSublayerPath>(layer, path);
+void draw_sublayer_path_edit_dialog(const SdfLayerRefPtr &layer, const std::string &path) {
+    draw_modal_dialog<EditSublayerPath>(layer, path);
 }
 
-void DrawDefaultPrim(const SdfLayerRefPtr &layer) {
+void draw_default_prim(const SdfLayerRefPtr &layer) {
     auto defautPrim = layer->GetDefaultPrim();
     if (ImGui::BeginCombo("Default Prim", defautPrim.GetString().c_str())) {
         bool isSelected = defautPrim == "";
@@ -158,9 +158,9 @@ void DrawDefaultPrim(const SdfLayerRefPtr &layer) {
 
         if (layer->GetDefaultPrim() != defautPrim) {
             if (defautPrim != "") {
-                ExecuteAfterDraw(&SdfLayer::SetDefaultPrim, layer, defautPrim);
+                execute_after_draw(&SdfLayer::SetDefaultPrim, layer, defautPrim);
             } else {
-                ExecuteAfterDraw(&SdfLayer::ClearDefaultPrim, layer);
+                execute_after_draw(&SdfLayer::ClearDefaultPrim, layer);
             }
         }
         ImGui::EndCombo();
@@ -170,7 +170,7 @@ void DrawDefaultPrim(const SdfLayerRefPtr &layer) {
 /// Draw the up axis orientation.
 /// It should normally be set by the stage, not the layer, so the code bellow follows what the api is doing
 /// inside
-void DrawUpAxis(const SdfLayerRefPtr &layer) {
+void draw_up_axis(const SdfLayerRefPtr &layer) {
     VtValue upAxis = layer->GetField(SdfPath::AbsoluteRootPath(), UsdGeomTokens->upAxis);
     std::string upAxisStr("Default");
     if (!upAxis.IsEmpty()) {
@@ -180,41 +180,45 @@ void DrawUpAxis(const SdfLayerRefPtr &layer) {
     if (ImGui::BeginCombo("Up Axis", upAxisStr.c_str())) {
         bool selected = !upAxis.IsEmpty() && upAxis.Get<TfToken>() == UsdGeomTokens->z;
         if (ImGui::Selectable("Z", selected)) {
-            ExecuteAfterDraw(&SdfLayer::SetField<TfToken>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->upAxis,
-                             UsdGeomTokens->z);
+            execute_after_draw(&SdfLayer::SetField<TfToken>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->upAxis,
+                               UsdGeomTokens->z);
         }
         selected = !upAxis.IsEmpty() && upAxis.Get<TfToken>() == UsdGeomTokens->y;
         if (ImGui::Selectable("Y", selected)) {
-            ExecuteAfterDraw(&SdfLayer::SetField<TfToken>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->upAxis,
-                             UsdGeomTokens->y);
+            execute_after_draw(&SdfLayer::SetField<TfToken>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->upAxis,
+                               UsdGeomTokens->y);
         }
         ImGui::EndCombo();
     }
 }
 
-void DrawLayerMetersPerUnit(const SdfLayerRefPtr &layer) {
-    VtValue metersPerUnit = layer->HasField(SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit) ? layer->GetField(SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit) : VtValue(1.0);// Should be the default value
-    VtValue result = DrawVtValue("Meters per unit", metersPerUnit);
+void draw_layer_meters_per_unit(const SdfLayerRefPtr &layer) {
+    VtValue metersPerUnit = layer->HasField(SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit) ?
+                                layer->GetField(SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit) :
+                                VtValue(1.0);// Should be the default value
+    VtValue result = draw_vt_value("Meters per unit", metersPerUnit);
     if (result != VtValue()) {
-        ExecuteAfterDraw(&SdfLayer::SetField<VtValue>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit, result);
+        execute_after_draw(&SdfLayer::SetField<VtValue>, layer, SdfPath::AbsoluteRootPath(), UsdGeomTokens->metersPerUnit, result);
     }
 }
 
-void DrawRenderSettingsPrimPath(const SdfLayerRefPtr &layer) {
-    VtValue renderSettingsPrimPath = layer->HasField(SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath) ? layer->GetField(SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath) : VtValue("");
-    VtValue result = DrawVtValue("Render Settings Prim Path", renderSettingsPrimPath);
+void draw_render_settings_prim_path(const SdfLayerRefPtr &layer) {
+    VtValue renderSettingsPrimPath = layer->HasField(SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath) ?
+                                         layer->GetField(SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath) :
+                                         VtValue("");
+    VtValue result = draw_vt_value("Render Settings Prim Path", renderSettingsPrimPath);
     if (result != VtValue()) {
-        ExecuteAfterDraw(&SdfLayer::SetField<VtValue>, layer, SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath, result);
+        execute_after_draw(&SdfLayer::SetField<VtValue>, layer, SdfPath::AbsoluteRootPath(), UsdRenderTokens->renderSettingsPrimPath, result);
     }
 }
 
-#define GENERATE_DRAW_FUNCTION(Name_, Type_, Label_)               \
-    void DrawLayer##Name_(const SdfLayerRefPtr &layer) {           \
-        auto value = layer->Get##Name_();                          \
-        ImGui::Input##Type_(Label_, &value);                       \
-        if (ImGui::IsItemDeactivatedAfterEdit()) {                 \
-            ExecuteAfterDraw(&SdfLayer::Set##Name_, layer, value); \
-        }                                                          \
+#define GENERATE_DRAW_FUNCTION(Name_, Type_, Label_)                 \
+    void DrawLayer##Name_(const SdfLayerRefPtr &layer) {             \
+        auto value = layer->Get##Name_();                            \
+        ImGui::Input##Type_(Label_, &value);                         \
+        if (ImGui::IsItemDeactivatedAfterEdit()) {                   \
+            execute_after_draw(&SdfLayer::Set##Name_, layer, value); \
+        }                                                            \
     }
 
 GENERATE_DRAW_FUNCTION(StartTimeCode, Double, "Start Time Code");
@@ -254,7 +258,7 @@ struct LayerFilenameRow {
 };
 
 template<>
-inline void DrawThirdColumn<LayerFilenameRow>(const int rowId, const SdfPath &path) {
+inline void draw_third_column<LayerFilenameRow>(const int rowId, const SdfPath &path) {
     if (path == SdfPath() || path == SdfPath::AbsoluteRootPath()) {
         ImGui::Text("Layer root");
     } else {
@@ -268,19 +272,19 @@ struct LayerIdentityRow {
 };
 
 template<>
-inline void DrawThirdColumn<LayerIdentityRow>(const int rowId, const SdfLayerRefPtr &owner) {
+inline void draw_third_column<LayerIdentityRow>(const int rowId, const SdfLayerRefPtr &owner) {
     ImGui::Text("%s", owner->GetIdentifier().c_str());
 }
 
-GENERATE_METADATA_FIELD(LayerFieldDefaultPrim, SdfFieldKeys->DefaultPrim, DrawDefaultPrim, "Default prim");
-GENERATE_METADATA_FIELD(LayerFieldUpAxis, UsdGeomTokens->upAxis, DrawUpAxis, "Up axis");
+GENERATE_METADATA_FIELD(LayerFieldDefaultPrim, SdfFieldKeys->DefaultPrim, draw_default_prim, "Default prim");
+GENERATE_METADATA_FIELD(LayerFieldUpAxis, UsdGeomTokens->upAxis, draw_up_axis, "Up axis");
 GENERATE_METADATA_FIELD(LayerFieldStartTimeCode, SdfFieldKeys->StartTimeCode, DrawLayerStartTimeCode, "Start timecode");
 GENERATE_METADATA_FIELD(LayerFieldEndTimeCode, SdfFieldKeys->EndTimeCode, DrawLayerEndTimeCode, "End timecode");
 GENERATE_METADATA_FIELD(LayerFieldFramesPerSecond, SdfFieldKeys->FramesPerSecond, DrawLayerFramesPerSecond, "Frames per second");
 GENERATE_METADATA_FIELD(LayerFieldFramePrecision, SdfFieldKeys->FramePrecision, DrawLayerFramePrecision, "Frame precision");
 GENERATE_METADATA_FIELD(LayerFieldTimeCodesPerSecond, SdfFieldKeys->TimeCodesPerSecond, DrawLayerTimeCodesPerSecond, "TimeCodes per second");
-GENERATE_METADATA_FIELD(LayerFieldMetersPerUnit, UsdGeomTokens->metersPerUnit, DrawLayerMetersPerUnit, "Meters per unit");
-GENERATE_METADATA_FIELD(LayerFieldRenderSettingsPrimPath, UsdRenderTokens->renderSettingsPrimPath, DrawRenderSettingsPrimPath, "Render Settings Prim Path");
+GENERATE_METADATA_FIELD(LayerFieldMetersPerUnit, UsdGeomTokens->metersPerUnit, draw_layer_meters_per_unit, "Meters per unit");
+GENERATE_METADATA_FIELD(LayerFieldRenderSettingsPrimPath, UsdRenderTokens->renderSettingsPrimPath, draw_render_settings_prim_path, "Render Settings Prim Path");
 GENERATE_METADATA_FIELD(LayerFieldDocumentation, SdfFieldKeys->Documentation, DrawLayerDocumentation, "Documentation");
 GENERATE_METADATA_FIELD(LayerFieldComment, SdfFieldKeys->Comment, DrawLayerComment, "Comment");
 
@@ -288,11 +292,11 @@ void DrawSdfLayerIdentity(const SdfLayerRefPtr &layer, const SdfPath &path) {
     if (!layer)
         return;
     int rowId = 0;
-    if (BeginThreeColumnsTable("##DrawLayerHeader")) {
-        SetupThreeColumnsTable(true, "", "Identity", "Value");
-        DrawThreeColumnsRow<LayerIdentityRow>(rowId++, layer);
-        DrawThreeColumnsRow<LayerFilenameRow>(rowId++, path);
-        EndThreeColumnsTable();
+    if (begin_three_columns_table("##DrawLayerHeader")) {
+        setup_three_columns_table(true, "", "Identity", "Value");
+        draw_three_columns_row<LayerIdentityRow>(rowId++, layer);
+        draw_three_columns_row<LayerFilenameRow>(rowId++, path);
+        end_three_columns_table();
     }
 }
 
@@ -301,22 +305,22 @@ void DrawSdfLayerMetadata(const SdfLayerRefPtr &layer) {
         return;
     int rowId = 0;
     if (ImGui::CollapsingHeader("Core Metadata", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (BeginThreeColumnsTable("##DrawLayerMetadata")) {
+        if (begin_three_columns_table("##DrawLayerMetadata")) {
             // SetupFieldValueTableColumns(true, "", "Metadata");
-            DrawThreeColumnsRow<LayerFieldDefaultPrim>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldUpAxis>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldMetersPerUnit>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldStartTimeCode>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldEndTimeCode>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldFramesPerSecond>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldFramePrecision>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldTimeCodesPerSecond>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldRenderSettingsPrimPath>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldDocumentation>(rowId++, layer);
-            DrawThreeColumnsRow<LayerFieldComment>(rowId++, layer);
-            DrawThreeColumnsDictionaryEditor<SdfPrimSpec>(rowId, layer->GetPseudoRoot(), SdfFieldKeys->CustomData);
-            DrawThreeColumnsDictionaryEditor<SdfPrimSpec>(rowId, layer->GetPseudoRoot(), SdfFieldKeys->AssetInfo);
-            EndThreeColumnsTable();
+            draw_three_columns_row<LayerFieldDefaultPrim>(rowId++, layer);
+            draw_three_columns_row<LayerFieldUpAxis>(rowId++, layer);
+            draw_three_columns_row<LayerFieldMetersPerUnit>(rowId++, layer);
+            draw_three_columns_row<LayerFieldStartTimeCode>(rowId++, layer);
+            draw_three_columns_row<LayerFieldEndTimeCode>(rowId++, layer);
+            draw_three_columns_row<LayerFieldFramesPerSecond>(rowId++, layer);
+            draw_three_columns_row<LayerFieldFramePrecision>(rowId++, layer);
+            draw_three_columns_row<LayerFieldTimeCodesPerSecond>(rowId++, layer);
+            draw_three_columns_row<LayerFieldRenderSettingsPrimPath>(rowId++, layer);
+            draw_three_columns_row<LayerFieldDocumentation>(rowId++, layer);
+            draw_three_columns_row<LayerFieldComment>(rowId++, layer);
+            draw_three_columns_dictionary_editor<SdfPrimSpec>(rowId, layer->GetPseudoRoot(), SdfFieldKeys->CustomData);
+            draw_three_columns_dictionary_editor<SdfPrimSpec>(rowId, layer->GetPseudoRoot(), SdfFieldKeys->AssetInfo);
+            end_three_columns_table();
         }
     }
 }
@@ -325,10 +329,10 @@ static void DrawSubLayerActionPopupMenu(const SdfLayerRefPtr &layer, const std::
     auto subLayer = SdfLayer::FindOrOpenRelativeToLayer(layer, path);
     if (subLayer) {
         if (ImGui::MenuItem("Open as Stage")) {
-            ExecuteAfterDraw<EditorOpenStage>(subLayer->GetRealPath());
+            execute_after_draw<EditorOpenStage>(subLayer->GetRealPath());
         }
         if (ImGui::MenuItem("Open as Layer")) {
-            ExecuteAfterDraw<EditorFindOrOpenLayer>(subLayer->GetRealPath());
+            execute_after_draw<EditorFindOrOpenLayer>(subLayer->GetRealPath());
         }
     } else {
         ImGui::Text("Unable to resolve layer path");
@@ -340,13 +344,13 @@ struct SublayerPathRow {
 };
 
 template<>
-inline void DrawSecondColumn<SublayerPathRow>(const int rowId, const SdfLayerRefPtr &layer, const std::string &path) {
+inline void draw_second_column<SublayerPathRow>(const int rowId, const SdfLayerRefPtr &layer, const std::string &path) {
     std::string newPath(path);
     ImGui::PushID(rowId);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 3 * 28);
     ImGui::InputText("##sublayername", &newPath);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-        ExecuteAfterDraw<LayerRenameSubLayer>(layer, path, newPath);
+        execute_after_draw<LayerRenameSubLayer>(layer, path, newPath);
     }
     if (ImGui::BeginPopupContextItem("sublayer")) {
         DrawSubLayerActionPopupMenu(layer, path);
@@ -354,35 +358,35 @@ inline void DrawSecondColumn<SublayerPathRow>(const int rowId, const SdfLayerRef
     }
     ImGui::SameLine();
     if (ImGui::SmallButton(ICON_FA_FILE)) {
-        DrawSublayerPathEditDialog(layer, path);
+        draw_sublayer_path_edit_dialog(layer, path);
     }
     ImGui::SameLine();
     if (ImGui::SmallButton(ICON_FA_ARROW_UP)) {
-        ExecuteAfterDraw<LayerMoveSubLayer>(layer, path, true);
+        execute_after_draw<LayerMoveSubLayer>(layer, path, true);
     }
     ImGui::SameLine();
     if (ImGui::SmallButton(ICON_FA_ARROW_DOWN)) {
-        ExecuteAfterDraw<LayerMoveSubLayer>(layer, path, false);
+        execute_after_draw<LayerMoveSubLayer>(layer, path, false);
     }
     ImGui::PopID();
 }
 
 template<>
-inline void DrawFirstColumn<SublayerPathRow>(const int rowId, const SdfLayerRefPtr &layer, const std::string &path) {
+inline void draw_first_column<SublayerPathRow>(const int rowId, const SdfLayerRefPtr &layer, const std::string &path) {
     ImGui::PushID(rowId);
     if (ImGui::SmallButton(ICON_FA_TRASH)) {
-        ExecuteAfterDraw<LayerRemoveSubLayer>(layer, path);
+        execute_after_draw<LayerRemoveSubLayer>(layer, path);
     }
     ImGui::PopID();
 }
 
-void DrawSdfLayerEditorMenuBar(SdfLayerRefPtr layer) {
+void draw_sdf_layer_editor_menu_bar(SdfLayerRefPtr layer) {
     bool enabled = layer;
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("New", enabled)) {
             if (ImGui::MenuItem("Sublayer path")) {
                 std::string newName = "sublayer_" + std::to_string(layer->GetNumSubLayerPaths() + 1) + ".usd";
-                ExecuteAfterDraw(&SdfLayer::InsertSubLayerPath, layer, newName, 0);// TODO find proper name that is not in the list of sublayer
+                execute_after_draw(&SdfLayer::InsertSubLayerPath, layer, newName, 0);// TODO find proper name that is not in the list of sublayer
             }
             ImGui::EndMenu();
         }
@@ -391,44 +395,44 @@ void DrawSdfLayerEditorMenuBar(SdfLayerRefPtr layer) {
 }
 
 // TODO that Should move to layerproperty
-void DrawLayerSublayerStack(SdfLayerRefPtr layer) {
+void draw_layer_sublayer_stack(SdfLayerRefPtr layer) {
     if (!layer || layer->GetNumSubLayerPaths() == 0)
         return;
     if (ImGui::CollapsingHeader("Sublayers", ImGuiTreeNodeFlags_DefaultOpen)) {
         int rowId = 0;
         bool hasUpdate = false;
-        if (BeginTwoColumnsTable("##DrawLayerSublayerStack")) {
-            SetupTwoColumnsTable(false, "", "Sublayers");
+        if (begin_two_columns_table("##DrawLayerSublayerStack")) {
+            setup_two_columns_table(false, "", "Sublayers");
             auto subLayersProxy = layer->GetSubLayerPaths();
             for (int i = 0; i < layer->GetNumSubLayerPaths(); ++i) {
                 const std::string &path = subLayersProxy[i];
-                DrawTwoColumnsRow<SublayerPathRow>(rowId++, layer, path);
+                draw_two_columns_row<SublayerPathRow>(rowId++, layer, path);
             }
-            EndTwoColumnsTable();
+            end_two_columns_table();
         }
     }
 }
 
-void DrawLayerNavigation(SdfLayerRefPtr layer) {
+void draw_layer_navigation(SdfLayerRefPtr layer) {
     if (!layer)
         return;
     if (ImGui::Button(ICON_FA_ARROW_LEFT)) {
-        ExecuteAfterDraw<EditorSetPreviousLayer>();
+        execute_after_draw<EditorSetPreviousLayer>();
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_ARROW_RIGHT)) {
-        ExecuteAfterDraw<EditorSetNextLayer>();
+        execute_after_draw<EditorSetNextLayer>();
     }
     ImGui::SameLine();
     {
         ScopedStyleColor layerIsDirtyColor(ImGuiCol_Text,
                                            layer->IsDirty() ? ImGui::GetColorU32(ImGuiCol_Text) : ImU32(ImColor{ColorGreyish}));
         if (ImGui::Button(ICON_FA_REDO_ALT)) {
-            ExecuteAfterDraw(&SdfLayer::Reload, layer, false);
+            execute_after_draw(&SdfLayer::Reload, layer, false);
         }
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_SAVE)) {
-            ExecuteAfterDraw(&SdfLayer::Save, layer, false);
+            execute_after_draw(&SdfLayer::Save, layer, false);
         }
     }
     ImGui::SameLine();
@@ -439,7 +443,7 @@ void DrawLayerNavigation(SdfLayerRefPtr layer) {
         ScopedStyleColor textBackground(ImGuiCol_Header, ImU32(ImColor{ColorPrimHasComposition}));
         ImGui::Selectable("##LayerNavigation");
         if (ImGui::BeginPopupContextItem()) {
-            DrawLayerActionPopupMenu(layer);
+            draw_layer_action_popup_menu(layer);
             ImGui::EndPopup();
         }
         ImGui::SameLine();
@@ -453,31 +457,31 @@ void DrawLayerNavigation(SdfLayerRefPtr layer) {
 }
 
 /// Draw a popup menu with the possible action on a layer
-void DrawLayerActionPopupMenu(SdfLayerHandle layer, bool isStage) {
+void draw_layer_action_popup_menu(SdfLayerHandle layer, bool isStage) {
     if (!layer)
         return;
 
     if (!layer->IsAnonymous() && ImGui::MenuItem("Reload")) {
-        ExecuteAfterDraw(&SdfLayer::Reload, layer, false);
+        execute_after_draw(&SdfLayer::Reload, layer, false);
     }
     if (!isStage && ImGui::MenuItem("Open as Stage")) {
-        ExecuteAfterDraw<EditorOpenStage>(layer->GetRealPath());
+        execute_after_draw<EditorOpenStage>(layer->GetRealPath());
     }
     if (layer->IsDirty() && !layer->IsAnonymous() && ImGui::MenuItem("Save layer")) {
-        ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+        execute_after_draw(&SdfLayer::Save, layer, true);
     }
     if (ImGui::MenuItem("Save layer as")) {
-        ExecuteAfterDraw<EditorSaveLayerAs>(layer);
+        execute_after_draw<EditorSaveLayerAs>(layer);
     }
 
     ImGui::Separator();
 
     // Not sure how safe this is with the undo/redo
     if (layer->IsMuted() && ImGui::MenuItem("Unmute")) {
-        ExecuteAfterDraw<LayerUnmute>(layer);
+        execute_after_draw<LayerUnmute>(layer);
     }
     if (!layer->IsMuted() && ImGui::MenuItem("Mute")) {
-        ExecuteAfterDraw<LayerMute>(layer);
+        execute_after_draw<LayerMute>(layer);
     }
 
     ImGui::Separator();

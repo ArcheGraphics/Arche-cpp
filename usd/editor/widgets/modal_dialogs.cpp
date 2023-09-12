@@ -12,12 +12,12 @@ namespace vox {
 // Stack of modal dialogs
 std::vector<ModalDialog *> modalDialogStack;
 
-void _PushModalDialog(ModalDialog *modal) { modalDialogStack.push_back(modal); }
+void _push_modal_dialog(ModalDialog *modal) { modalDialogStack.push_back(modal); }
 
 bool modalOpenTriggered = false;
 bool modalCloseTriggered = false;
 
-bool ShouldOpenModal() {
+bool should_open_modal() {
     if (modalDialogStack.empty()) {
         return false;
     } else if (modalOpenTriggered) {
@@ -28,12 +28,12 @@ bool ShouldOpenModal() {
     }
 }
 
-void ModalDialog::CloseModal() {
+void ModalDialog::close_modal() {
     modalCloseTriggered = true;// Delete the dialog at the next frame;
     ImGui::CloseCurrentPopup();// this is called in the draw function
 }
 
-void CheckCloseModal() {
+void check_close_modal() {
     if (modalCloseTriggered) {
         modalCloseTriggered = false;
         delete modalDialogStack.back();
@@ -41,24 +41,24 @@ void CheckCloseModal() {
     }
 }
 
-void ForceCloseCurrentModal() {
+void force_close_current_modal() {
     if (!modalDialogStack.empty()) {
-        modalDialogStack.back()->CloseModal();
-        CheckCloseModal();
+        modalDialogStack.back()->close_modal();
+        check_close_modal();
     }
 }
 
-static void BeginPopupModalRecursive(const std::vector<ModalDialog *> &modals, int index) {
+static void begin_popup_modal_recursive(const std::vector<ModalDialog *> &modals, int index) {
     if (index < modals.size()) {
         ModalDialog *modal = modals[index];
         if (index == modals.size() - 1) {
-            if (ShouldOpenModal()) {
-                ImGui::OpenPopup(modal->DialogId());
+            if (should_open_modal()) {
+                ImGui::OpenPopup(modal->dialog_id());
             }
         }
-        if (ImGui::BeginPopupModal(modal->DialogId())) {
-            modal->Draw();
-            BeginPopupModalRecursive(modals, index + 1);
+        if (ImGui::BeginPopupModal(modal->dialog_id())) {
+            modal->draw();
+            begin_popup_modal_recursive(modals, index + 1);
             ImGui::EndPopup();
         }
     }
@@ -67,23 +67,23 @@ static void BeginPopupModalRecursive(const std::vector<ModalDialog *> &modals, i
 //
 // DrawCurrentModal will check if there is anything to action
 // like closing or draw ... it should really be called ProcessModalDialogs
-void DrawCurrentModal() {
-    CheckCloseModal();
-    BeginPopupModalRecursive(modalDialogStack, 0);
+void draw_current_modal() {
+    check_close_modal();
+    begin_popup_modal_recursive(modalDialogStack, 0);
 }
 
-void DrawOkCancelModal(const std::function<void()> &onOk, bool disableOk) {
+void draw_ok_cancel_modal(const std::function<void()> &onOk, bool disableOk) {
     // Align right
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetWindowWidth() - 3 * ImGui::CalcTextSize(" Cancel ").x -
                          ImGui::GetScrollX() - 2 * ImGui::GetStyle().ItemSpacing.x);
     if (ImGui::Button(" Cancel ")) {
-        modalDialogStack.back()->CloseModal();
+        modalDialogStack.back()->close_modal();
     }
     ImGui::SameLine();
     ImGui::BeginDisabled(disableOk);
     if (ImGui::Button("   Ok   ")) {
         onOk();
-        modalDialogStack.back()->CloseModal();
+        modalDialogStack.back()->close_modal();
     }
     ImGui::EndDisabled();
 }

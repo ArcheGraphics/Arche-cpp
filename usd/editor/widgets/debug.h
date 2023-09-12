@@ -7,5 +7,5 @@
 #pragma once
 
 namespace vox {
-void DrawDebugInfo();
+void draw_debug_info();
 }// namespace vox

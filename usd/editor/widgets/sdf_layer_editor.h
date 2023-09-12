@@ -11,20 +11,20 @@
 
 namespace vox {
 //
-void DrawSdfLayerIdentity(const SdfLayerRefPtr &layer, const SdfPath &);
+void draw_sdf_layer_identity(const SdfLayerRefPtr &layer, const SdfPath &);
 
 //
-void DrawSdfLayerMetadata(const SdfLayerRefPtr &layer);
+void draw_sdf_layer_metadata(const SdfLayerRefPtr &layer);
 
 ///
-void DrawLayerActionPopupMenu(SdfLayerHandle layer, bool isStage = false);
+void draw_layer_action_popup_menu(SdfLayerHandle layer, bool isStage = false);
 
-void DrawLayerNavigation(SdfLayerRefPtr layer);
+void draw_layer_navigation(SdfLayerRefPtr layer);
 
-void DrawLayerSublayerStack(SdfLayerRefPtr layer);
+void draw_layer_sublayer_stack(SdfLayerRefPtr layer);
 
-void DrawSdfLayerEditorMenuBar(SdfLayerRefPtr layer);
+void draw_sdf_layer_editor_menu_bar(SdfLayerRefPtr layer);
 
-void DrawSublayerPathEditDialog(const SdfLayerRefPtr &layer, const std::string &path);
+void draw_sublayer_path_edit_dialog(const SdfLayerRefPtr &layer, const std::string &path);
 
 }// namespace vox

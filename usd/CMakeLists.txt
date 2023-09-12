@@ -102,7 +102,7 @@ set(PROJECT_FILES
         ${BASE_FILES}
         ${COMMAND_FILES}
         ${MANIPULATOR_FILES}
-#        ${WIDGETS_FILES}
+        ${WIDGETS_FILES}
         ${FONT_FILES}
         ${EDITOR_FILES}
 )

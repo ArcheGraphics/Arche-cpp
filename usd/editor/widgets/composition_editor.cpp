@@ -13,7 +13,7 @@
 #include "edit_list_selector.h"
 #include "table_layouts.h"
 #include "base/constants.h"
-
+#include <imgui_stdlib.h>
 #include <algorithm>
 #include <iostream>
 #include <pxr/usd/sdf/payload.h>
@@ -51,68 +51,67 @@ struct ArcListItemTrait<SdfSpecialize> {
     typedef SdfPath type;
 };
 
-static bool HasComposition(const SdfPrimSpecHandle &primSpec) {
+static bool has_composition(const SdfPrimSpecHandle &primSpec) {
     return primSpec->HasReferences() || primSpec->HasPayloads() || primSpec->HasInheritPaths() || primSpec->HasSpecializes();
 }
 
-inline SdfReferencesProxy GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfReference &val) {
+inline SdfReferencesProxy get_composition_arc_list(const SdfPrimSpecHandle &primSpec, const SdfReference &val) {
     return primSpec->GetReferenceList();
 }
 
-inline SdfPayloadsProxy GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) {
+inline SdfPayloadsProxy get_composition_arc_list(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) {
     return primSpec->GetPayloadList();
 }
 
-inline SdfInheritsProxy GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) {
+inline SdfInheritsProxy get_composition_arc_list(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) {
     return primSpec->GetInheritPathList();
 }
 
-inline SdfSpecializesProxy GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) {
+inline SdfSpecializesProxy get_composition_arc_list(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) {
     return primSpec->GetSpecializesList();
 }
 
-inline void ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfReference &val) {
+inline void clear_arc_list(const SdfPrimSpecHandle &primSpec, const SdfReference &val) {
     return primSpec->ClearReferenceList();
 }
 
-inline void ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) {
+inline void clear_arc_list(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) {
     return primSpec->ClearPayloadList();
 }
 
-inline void ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) {
+inline void clear_arc_list(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) {
     return primSpec->ClearInheritPathList();
 }
 
-inline void ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) {
+inline void clear_arc_list(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) {
     return primSpec->ClearSpecializesList();
 }
 
-inline void SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfReference &ref) {
+inline void select_arc_type(const SdfPrimSpecHandle &primSpec, const SdfReference &ref) {
     auto realPath = ref.GetAssetPath().empty() ? primSpec->GetLayer()->GetRealPath() : primSpec->GetLayer()->ComputeAbsolutePath(ref.GetAssetPath());
     auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
-    ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, ref.GetPrimPath());
+    execute_after_draw<EditorSetSelection>(layerOrOpen, ref.GetPrimPath());
 }
 
-inline void SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfPayload &pay) {
+inline void select_arc_type(const SdfPrimSpecHandle &primSpec, const SdfPayload &pay) {
     auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(pay.GetAssetPath());
     auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
-    ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, pay.GetPrimPath());
+    execute_after_draw<EditorSetSelection>(layerOrOpen, pay.GetPrimPath());
 }
 
-inline void SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfPath &path) {
-    ExecuteAfterDraw<EditorSetSelection>(primSpec->GetLayer(), path);
+inline void select_arc_type(const SdfPrimSpecHandle &primSpec, const SdfPath &path) {
+    execute_after_draw<EditorSetSelection>(primSpec->GetLayer(), path);
 }
 
 /// A SdfPath creation UI.
 /// This is used for inherit and specialize
 struct CreateSdfPathModalDialog : public ModalDialog {
-
     CreateSdfPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
     ~CreateSdfPathModalDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         if (!_primSpec) {
-            CloseModal();
+            close_modal();
             return;
         }
         // TODO: We will probably want to browse in the scene hierarchy to select the path
@@ -127,12 +126,12 @@ struct CreateSdfPathModalDialog : public ModalDialog {
             ImGui::EndCombo();
         }
         ImGui::InputText("Target prim path", &_primPath);
-        DrawOkCancelModal([=]() { OnOkCallBack(); });
+        draw_ok_cancel_modal([=]() { on_ok_call_back(); });
     }
 
-    virtual void OnOkCallBack() = 0;
+    virtual void on_ok_call_back() = 0;
 
-    const char *DialogId() const override { return "Sdf path"; }
+    const char *dialog_id() const override { return "Sdf path"; }
 
     SdfPrimSpecHandle _primSpec;
     std::string _primPath;
@@ -143,13 +142,12 @@ struct CreateSdfPathModalDialog : public ModalDialog {
 /// target prim path.
 /// This is used by References and Payloads which share the same interface
 struct CreateAssetPathModalDialog : public ModalDialog {
-
     CreateAssetPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
     ~CreateAssetPathModalDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         if (!_primSpec) {
-            CloseModal();
+            close_modal();
             return;
         }
         ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
@@ -168,14 +166,14 @@ struct CreateAssetPathModalDialog : public ModalDialog {
             ImGui::OpenPopup("Asset path browser");
         }
         if (ImGui::BeginPopupModal("Asset path browser")) {
-            DrawFileBrowser();
+            draw_file_browser();
             ImGui::Checkbox("Use relative path", &_relative);
             ImGui::Checkbox("Unix compatible", &_unixify);
             if (ImGui::Button("Use selected file")) {
                 if (_relative) {
-                    _assetPath = GetFileBrowserFilePathRelativeTo(_primSpec->GetLayer()->GetRealPath(), _unixify);
+                    _assetPath = get_file_browser_file_path_relative_to(_primSpec->GetLayer()->GetRealPath(), _unixify);
                 } else {
-                    _assetPath = GetFileBrowserFilePath();
+                    _assetPath = get_file_browser_file_path();
                 }
                 ImGui::CloseCurrentPopup();
             }
@@ -188,14 +186,14 @@ struct CreateAssetPathModalDialog : public ModalDialog {
         ImGui::InputText("Target prim path", &_primPath);
         ImGui::InputDouble("Layer time offset", &_timeOffset);
         ImGui::InputDouble("Layer time scale", &_timeScale);
-        DrawOkCancelModal([=]() { OnOkCallBack(); });
+        draw_ok_cancel_modal([=]() { on_ok_call_back(); });
     }
 
-    virtual void OnOkCallBack() = 0;
+    virtual void on_ok_call_back() = 0;
 
-    const char *DialogId() const override { return "Asset path"; }
+    const char *dialog_id() const override { return "Asset path"; }
 
-    SdfLayerOffset GetLayerOffset() const {
+    SdfLayerOffset get_layer_offset() const {
         return (_timeScale != 1.0 || _timeOffset != 0.0) ? SdfLayerOffset(_timeOffset, _timeScale) : SdfLayerOffset();
     }
 
@@ -213,79 +211,79 @@ struct CreateAssetPathModalDialog : public ModalDialog {
 // Inheriting, but could also be done with templates, would the code be cleaner ?
 struct CreateReferenceModalDialog : public CreateAssetPathModalDialog {
     CreateReferenceModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create reference"; }
-    void OnOkCallBack() override {
-        SdfReference reference(_assetPath, SdfPath(_primPath), GetLayerOffset());
-        ExecuteAfterDraw<PrimCreateReference>(_primSpec, _operation, reference);
+    const char *dialog_id() const override { return "Create reference"; }
+    void on_ok_call_back() override {
+        SdfReference reference(_assetPath, SdfPath(_primPath), get_layer_offset());
+        execute_after_draw<PrimCreateReference>(_primSpec, _operation, reference);
     }
 };
 
 struct CreatePayloadModalDialog : public CreateAssetPathModalDialog {
     CreatePayloadModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create payload"; }
-    void OnOkCallBack() override {
-        SdfPayload payload(_assetPath, SdfPath(_primPath), GetLayerOffset());
-        ExecuteAfterDraw<PrimCreatePayload>(_primSpec, _operation, payload);
+    const char *dialog_id() const override { return "Create payload"; }
+    void on_ok_call_back() override {
+        SdfPayload payload(_assetPath, SdfPath(_primPath), get_layer_offset());
+        execute_after_draw<PrimCreatePayload>(_primSpec, _operation, payload);
     }
 };
 
 struct CreateInheritModalDialog : public CreateSdfPathModalDialog {
     CreateInheritModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create inherit"; }
-    void OnOkCallBack() override { ExecuteAfterDraw<PrimCreateInherit>(_primSpec, _operation, SdfPath(_primPath)); }
+    const char *dialog_id() const override { return "Create inherit"; }
+    void on_ok_call_back() override { execute_after_draw<PrimCreateInherit>(_primSpec, _operation, SdfPath(_primPath)); }
 };
 
 struct CreateSpecializeModalDialog : public CreateSdfPathModalDialog {
     CreateSpecializeModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create specialize"; }
-    void OnOkCallBack() override { ExecuteAfterDraw<PrimCreateSpecialize>(_primSpec, _operation, SdfPath(_primPath)); }
+    const char *dialog_id() const override { return "Create specialize"; }
+    void on_ok_call_back() override { execute_after_draw<PrimCreateSpecialize>(_primSpec, _operation, SdfPath(_primPath)); }
 };
 
-void DrawPrimCreateReference(const SdfPrimSpecHandle &primSpec) { DrawModalDialog<CreateReferenceModalDialog>(primSpec); }
-void DrawPrimCreatePayload(const SdfPrimSpecHandle &primSpec) { DrawModalDialog<CreatePayloadModalDialog>(primSpec); }
-void DrawPrimCreateInherit(const SdfPrimSpecHandle &primSpec) { DrawModalDialog<CreateInheritModalDialog>(primSpec); }
-void DrawPrimCreateSpecialize(const SdfPrimSpecHandle &primSpec) { DrawModalDialog<CreateSpecializeModalDialog>(primSpec); }
+void draw_prim_create_reference(const SdfPrimSpecHandle &primSpec) { draw_modal_dialog<CreateReferenceModalDialog>(primSpec); }
+void draw_prim_create_payload(const SdfPrimSpecHandle &primSpec) { draw_modal_dialog<CreatePayloadModalDialog>(primSpec); }
+void draw_prim_create_inherit(const SdfPrimSpecHandle &primSpec) { draw_modal_dialog<CreateInheritModalDialog>(primSpec); }
+void draw_prim_create_specialize(const SdfPrimSpecHandle &primSpec) { draw_modal_dialog<CreateSpecializeModalDialog>(primSpec); }
 
 static SdfListOpType opList = SdfListOpTypeExplicit;
 
 template<typename ArcT>
-void DrawArcCreationDialog(const SdfPrimSpecHandle &primSpec, SdfListOpType opList);
+void draw_arc_creation_dialog(const SdfPrimSpecHandle &primSpec, SdfListOpType opList);
 template<>
-void DrawArcCreationDialog<SdfReference>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
-    DrawModalDialog<CreateReferenceModalDialog>(primSpec);
+void draw_arc_creation_dialog<SdfReference>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
+    draw_modal_dialog<CreateReferenceModalDialog>(primSpec);
 }
 template<>
-void DrawArcCreationDialog<SdfPayload>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
-    DrawModalDialog<CreatePayloadModalDialog>(primSpec);
+void draw_arc_creation_dialog<SdfPayload>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
+    draw_modal_dialog<CreatePayloadModalDialog>(primSpec);
 }
 template<>
-void DrawArcCreationDialog<SdfInherit>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
-    DrawModalDialog<CreateInheritModalDialog>(primSpec);
+void draw_arc_creation_dialog<SdfInherit>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
+    draw_modal_dialog<CreateInheritModalDialog>(primSpec);
 }
 
 template<>
-void DrawArcCreationDialog<SdfSpecialize>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
-    DrawModalDialog<CreateSpecializeModalDialog>(primSpec);
+void draw_arc_creation_dialog<SdfSpecialize>(const SdfPrimSpecHandle &primSpec, SdfListOpType opList) {
+    draw_modal_dialog<CreateSpecializeModalDialog>(primSpec);
 }
 template<typename ArcT>
-inline void RemoveArc(const SdfPrimSpecHandle &primSpec, const ArcT &arc) {
+inline void remove_arc(const SdfPrimSpecHandle &primSpec, const ArcT &arc) {
     std::function<void()> removeItem = [=]() {
-        GetCompositionArcList(primSpec, arc).RemoveItemEdits(arc);
+        get_composition_arc_list(primSpec, arc).RemoveItemEdits(arc);
         // Also clear the arc list if there are no more items
-        if (GetCompositionArcList(primSpec, arc).HasKeys()) {
-            ClearArcList(primSpec, arc);
+        if (get_composition_arc_list(primSpec, arc).HasKeys()) {
+            clear_arc_list(primSpec, arc);
         }
     };
-    ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), removeItem);
+    execute_after_draw<UsdFunctionCall>(primSpec->GetLayer(), removeItem);
 }
 
 ///
 template<typename ArcT>
-void DrawSdfPathMenuItems(const SdfPrimSpecHandle &primSpec, const SdfPath &path) {
+void draw_sdf_path_menu_items(const SdfPrimSpecHandle &primSpec, const SdfPath &path) {
     if (ImGui::MenuItem("Remove")) {
         if (!primSpec)
             return;
-        RemoveArc(primSpec, ArcT(path));
+        remove_arc(primSpec, ArcT(path));
     }
     if (ImGui::MenuItem("Copy path")) {
         ImGui::SetClipboardText(path.GetString().c_str());
@@ -294,21 +292,20 @@ void DrawSdfPathMenuItems(const SdfPrimSpecHandle &primSpec, const SdfPath &path
 
 /// Draw the menu items for AssetPaths (SdfReference and SdfPayload)
 template<typename AssetPathT>
-void DrawAssetPathMenuItems(const SdfPrimSpecHandle &primSpec, const AssetPathT &assetPath) {
-
+void draw_asset_path_menu_items(const SdfPrimSpecHandle &primSpec, const AssetPathT &assetPath) {
     if (ImGui::MenuItem("Select Arc")) {
         auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(assetPath.GetAssetPath());
-        ExecuteAfterDraw<EditorFindOrOpenLayer>(realPath);
+        execute_after_draw<EditorFindOrOpenLayer>(realPath);
     }
     if (ImGui::MenuItem("Open as Stage")) {
         auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(assetPath.GetAssetPath());
-        ExecuteAfterDraw<EditorOpenStage>(realPath);
+        execute_after_draw<EditorOpenStage>(realPath);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Remove")) {
         if (!primSpec)
             return;
-        RemoveArc(primSpec, assetPath);
+        remove_arc(primSpec, assetPath);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Copy asset path")) {
@@ -317,7 +314,7 @@ void DrawAssetPathMenuItems(const SdfPrimSpecHandle &primSpec, const AssetPathT 
 }
 
 template<typename InheritOrSpecialize>
-InheritOrSpecialize DrawSdfPathEditor(const SdfPrimSpecHandle &primSpec, const InheritOrSpecialize &arc, ImVec2 outerSize) {
+InheritOrSpecialize draw_sdf_path_editor(const SdfPrimSpecHandle &primSpec, const InheritOrSpecialize &arc, ImVec2 outerSize) {
     InheritOrSpecialize updatedArc;
     std::string updatedPath = arc.GetString();
     constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths |
@@ -337,8 +334,8 @@ InheritOrSpecialize DrawSdfPathEditor(const SdfPrimSpecHandle &primSpec, const I
 
 // Works with SdfReference and SdfPayload
 template<typename ReferenceOrPayloadT>
-ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const SdfPrimSpecHandle &primSpec, const ReferenceOrPayloadT &ref,
-                                                 ImVec2 outerSize) {
+ReferenceOrPayloadT draw_reference_or_payload_editor(const SdfPrimSpecHandle &primSpec, const ReferenceOrPayloadT &ref,
+                                                     ImVec2 outerSize) {
     ReferenceOrPayloadT ret;
     std::string updatedPath = ref.GetAssetPath();
     std::string targetPath = ref.GetPrimPath().GetString();
@@ -368,7 +365,7 @@ ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const SdfPrimSpecHandle &primSp
         // TODO more operation on the path: unixify, make relative, etc
         if (ImGui::BeginPopupContextItem("sublayer")) {
             ImGui::Text("%s", updatedPath.c_str());
-            DrawAssetPathMenuItems(primSpec, ref);
+            draw_asset_path_menu_items(primSpec, ref);
             ImGui::EndPopup();
         }
         ImGui::SameLine();
@@ -406,41 +403,41 @@ ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const SdfPrimSpecHandle &primSp
     return ret;
 }
 
-inline SdfReference DrawCompositionArcEditor(const SdfPrimSpecHandle &primSpec, const SdfReference &arc, ImVec2 outerSize) {
-    return DrawReferenceOrPayloadEditor(primSpec, arc, outerSize);
+inline SdfReference draw_composition_arc_editor(const SdfPrimSpecHandle &primSpec, const SdfReference &arc, ImVec2 outerSize) {
+    return draw_reference_or_payload_editor(primSpec, arc, outerSize);
 }
 
-inline SdfPayload DrawCompositionArcEditor(const SdfPrimSpecHandle &primSpec, const SdfPayload &arc, ImVec2 outerSize) {
-    return DrawReferenceOrPayloadEditor(primSpec, arc, outerSize);
+inline SdfPayload draw_composition_arc_editor(const SdfPrimSpecHandle &primSpec, const SdfPayload &arc, ImVec2 outerSize) {
+    return draw_reference_or_payload_editor(primSpec, arc, outerSize);
 }
 
-inline SdfInherit DrawCompositionArcEditor(const SdfPrimSpecHandle &primSpec, const SdfInherit &arc, ImVec2 outerSize) {
-    return DrawSdfPathEditor(primSpec, arc, outerSize);
+inline SdfInherit draw_composition_arc_editor(const SdfPrimSpecHandle &primSpec, const SdfInherit &arc, ImVec2 outerSize) {
+    return draw_sdf_path_editor(primSpec, arc, outerSize);
 }
 
-inline SdfSpecialize DrawCompositionArcEditor(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &arc, ImVec2 outerSize) {
-    return DrawSdfPathEditor(primSpec, arc, outerSize);
+inline SdfSpecialize draw_composition_arc_editor(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &arc, ImVec2 outerSize) {
+    return draw_sdf_path_editor(primSpec, arc, outerSize);
 }
 
 template<typename CompositionArcT>
-void DrawCompositionArcRow(int rowId, const SdfPrimSpecHandle &primSpec, const CompositionArcT &arc, const SdfListOpType &op) {
+void draw_composition_arc_row(int rowId, const SdfPrimSpecHandle &primSpec, const CompositionArcT &arc, const SdfListOpType &op) {
     // Arbitrary outer size for the reference editor
     using ItemType = typename ArcListItemTrait<CompositionArcT>::type;
     const float regionAvailable = ImGui::GetWindowWidth() - 3 * 28 - 20;// 28 to account for buttons, 20 is arbitrary
     ImVec2 outerSize(regionAvailable, TableRowDefaultHeight);
-    CompositionArcT updatedArc = DrawCompositionArcEditor(primSpec, arc, outerSize);
+    CompositionArcT updatedArc = draw_composition_arc_editor(primSpec, arc, outerSize);
     if (updatedArc != CompositionArcT()) {
         std::function<void()> updateReferenceFun = [=]() {
-            auto arcList = GetCompositionArcList(primSpec, arc);
+            auto arcList = get_composition_arc_list(primSpec, arc);
             auto editList = get_sdf_list_op_items(arcList, op);
             editList[rowId] = updatedArc;
         };
-        ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), updateReferenceFun);
+        execute_after_draw<UsdFunctionCall>(primSpec->GetLayer(), updateReferenceFun);
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_ARROW_UP)) {
         std::function<void()> moveUp = [=]() {
-            auto arcList = GetCompositionArcList(primSpec, arc);
+            auto arcList = get_composition_arc_list(primSpec, arc);
             auto editList = get_sdf_list_op_items(arcList, op);
             if (rowId >= 1) {// std::swap doesn't compile here
                 auto it = editList[rowId];
@@ -449,12 +446,12 @@ void DrawCompositionArcRow(int rowId, const SdfPrimSpecHandle &primSpec, const C
                 editList.insert(editList.begin() + rowId - 1, tmp);
             }
         };
-        ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), moveUp);
+        execute_after_draw<UsdFunctionCall>(primSpec->GetLayer(), moveUp);
     }
     ImGui::SameLine();
     if (ImGui::Button(ICON_FA_ARROW_DOWN)) {
         std::function<void()> moveDown = [=]() {
-            auto arcList = GetCompositionArcList(primSpec, arc);
+            auto arcList = get_composition_arc_list(primSpec, arc);
             auto editList = get_sdf_list_op_items(arcList, op);
             if (rowId < editList.size() - 1) {// std::swap doesn't compile here
                 auto it = editList[rowId];
@@ -463,25 +460,25 @@ void DrawCompositionArcRow(int rowId, const SdfPrimSpecHandle &primSpec, const C
                 editList.insert(editList.begin() + rowId + 1, tmp);
             }
         };
-        ExecuteAfterDraw<UsdFunctionCall>(primSpec->GetLayer(), moveDown);
+        execute_after_draw<UsdFunctionCall>(primSpec->GetLayer(), moveDown);
     }
 }
 
 struct CompositionArcRow {};// Rany of SdfReference SdfPayload SdfInherit and SdfSpecialize
 
-#define GENERATE_ARC_DRAW_CODE(ClassName_)                                                                               \
-    template<>                                                                                                           \
-    inline void DrawFirstColumn<CompositionArcRow>(int rowId, const SdfPrimSpecHandle &primSpec, const ClassName_ &arc,  \
-                                                   const SdfListOpType &chosenList) {                                    \
-        if (ImGui::Button(ICON_FA_TRASH)) {                                                                              \
-            RemoveArc(primSpec, arc);                                                                                    \
-        }                                                                                                                \
-    }                                                                                                                    \
-                                                                                                                         \
-    template<>                                                                                                           \
-    inline void DrawSecondColumn<CompositionArcRow>(int rowId, const SdfPrimSpecHandle &primSpec, const ClassName_ &arc, \
-                                                    const SdfListOpType &chosenList) {                                   \
-        DrawCompositionArcRow(rowId, primSpec, arc, chosenList);                                                         \
+#define GENERATE_ARC_DRAW_CODE(ClassName_)                                                                                 \
+    template<>                                                                                                             \
+    inline void draw_first_column<CompositionArcRow>(int rowId, const SdfPrimSpecHandle &primSpec, const ClassName_ &arc,  \
+                                                     const SdfListOpType &chosenList) {                                    \
+        if (ImGui::Button(ICON_FA_TRASH)) {                                                                                \
+            remove_arc(primSpec, arc);                                                                                     \
+        }                                                                                                                  \
+    }                                                                                                                      \
+                                                                                                                           \
+    template<>                                                                                                             \
+    inline void draw_second_column<CompositionArcRow>(int rowId, const SdfPrimSpecHandle &primSpec, const ClassName_ &arc, \
+                                                      const SdfListOpType &chosenList) {                                   \
+        draw_composition_arc_row(rowId, primSpec, arc, chosenList);                                                        \
     }
 GENERATE_ARC_DRAW_CODE(SdfReference)
 GENERATE_ARC_DRAW_CODE(SdfPayload)
@@ -493,30 +490,30 @@ void DrawCompositionEditor(const SdfPrimSpecHandle &primSpec) {
     using ItemType = typename ArcListItemTrait<CompositionArcItemT>::type;
 
     if (ImGui::Button(ICON_FA_PLUS)) {
-        DrawArcCreationDialog<CompositionArcItemT>(primSpec, opList);
+        draw_arc_creation_dialog<CompositionArcItemT>(primSpec, opList);
     }
 
-    auto arcList = GetCompositionArcList(primSpec, CompositionArcItemT());
-    SdfListOpType opList = GetEditListChoice(arcList);
+    auto arcList = get_composition_arc_list(primSpec, CompositionArcItemT());
+    SdfListOpType opList = get_edit_list_choice(arcList);
 
     ImGui::SameLine();
-    DrawEditListComboSelector(opList, arcList);
+    draw_edit_list_combo_selector(opList, arcList);
 
-    if (BeginTwoColumnsTable("##AssetTypeTable")) {
+    if (begin_two_columns_table("##AssetTypeTable")) {
         auto editList = get_sdf_list_op_items(arcList, opList);
         for (int ind = 0; ind < editList.size(); ind++) {
             const ItemType &item = editList[ind];
             ImGui::PushID(static_cast<int>(TfHash{}(item)));
             const CompositionArcItemT arcItem(item);// Sadly we have to copy here,
-            DrawTwoColumnsRow<CompositionArcRow>(ind, primSpec, arcItem, opList);
+            draw_two_columns_row<CompositionArcRow>(ind, primSpec, arcItem, opList);
             ImGui::PopID();
         }
-        EndTwoColumnsTable();
+        end_two_columns_table();
     }
 }
 
 void DrawPrimCompositions(const SdfPrimSpecHandle &primSpec) {
-    if (!primSpec || !HasComposition(primSpec))
+    if (!primSpec || !has_composition(primSpec))
         return;
     if (ImGui::CollapsingHeader("Composition", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::BeginTabBar("##CompositionType")) {
@@ -552,15 +549,15 @@ inline void DrawSdfPathSummary(std::string &&header, SdfListOpType operation, co
     ScopedStyleColor transparentStyle(ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::PushID(menuItemId++);
     if (ImGui::Button(ICON_FA_TRASH)) {
-        RemoveArc(primSpec, ArcT(path));
+        remove_arc(primSpec, ArcT(path));
     }
     ImGui::SameLine();
     std::string summary = path.GetString();
     if (ImGui::SmallButton(summary.c_str())) {
-        SelectArcType(primSpec, path);
+        select_arc_type(primSpec, path);
     }
     if (ImGui::BeginPopupContextItem()) {
-        DrawSdfPathMenuItems<ArcT>(primSpec, path);
+        draw_sdf_path_menu_items<ArcT>(primSpec, path);
         ImGui::EndPopup();
     }
     ImGui::PopID();
@@ -572,7 +569,7 @@ inline void DrawAssetPathSummary(std::string &&header, SdfListOpType operation, 
     ScopedStyleColor transparentStyle(ImGuiCol_Button, ImVec4(ColorTransparent));
     ImGui::PushID(menuItemId++);
     if (ImGui::Button(ICON_FA_TRASH)) {
-        RemoveArc(primSpec, assetPath);
+        remove_arc(primSpec, assetPath);
     }
     ImGui::PopID();
     ImGui::SameLine();
@@ -582,80 +579,80 @@ inline void DrawAssetPathSummary(std::string &&header, SdfListOpType operation, 
     summary += assetPath.GetPrimPath().GetString().empty() ? "" : "<" + assetPath.GetPrimPath().GetString() + ">";
     ImGui::PushID(menuItemId++);
     if (ImGui::Button(summary.c_str())) {
-        SelectArcType(primSpec, assetPath);
+        select_arc_type(primSpec, assetPath);
     }
     if (ImGui::BeginPopupContextItem("###AssetPathMenuItems")) {
-        DrawAssetPathMenuItems(primSpec, assetPath);
+        draw_asset_path_menu_items(primSpec, assetPath);
         ImGui::EndPopup();
     }
     ImGui::PopID();
 }
 
-void DrawReferenceSummary(SdfListOpType operation, const SdfReference &assetPath, const SdfPrimSpecHandle &primSpec,
-                          int &menuItemId) {
+void draw_reference_summary(SdfListOpType operation, const SdfReference &assetPath, const SdfPrimSpecHandle &primSpec,
+                            int &menuItemId) {
     DrawAssetPathSummary("References", operation, assetPath, primSpec, menuItemId);
 }
 
-void DrawPayloadSummary(SdfListOpType operation, const SdfPayload &assetPath, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
+void draw_payload_summary(SdfListOpType operation, const SdfPayload &assetPath, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
     DrawAssetPathSummary("Payloads", operation, assetPath, primSpec, menuItemId);
 }
 
-void DrawInheritPathSummary(SdfListOpType operation, const SdfPath &path, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
+void draw_inherit_path_summary(SdfListOpType operation, const SdfPath &path, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
     DrawSdfPathSummary<SdfInherit>("Inherits", operation, path, primSpec, menuItemId);
 }
 
-void DrawSpecializesSummary(SdfListOpType operation, const SdfPath &path, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
+void draw_specializes_summary(SdfListOpType operation, const SdfPath &path, const SdfPrimSpecHandle &primSpec, int &menuItemId) {
     DrawSdfPathSummary<SdfSpecialize>("Specializes", operation, path, primSpec, menuItemId);
 }
 
-inline std::string GetArcSummary(const SdfReference &arc) { return arc.IsInternal() ? arc.GetPrimPath().GetString() : arc.GetAssetPath(); }
-inline std::string GetArcSummary(const SdfPayload &arc) { return arc.GetAssetPath(); }
-inline std::string GetArcSummary(const SdfPath &arc) { return arc.GetString(); }
+inline std::string get_arc_summary(const SdfReference &arc) { return arc.IsInternal() ? arc.GetPrimPath().GetString() : arc.GetAssetPath(); }
+inline std::string get_arc_summary(const SdfPayload &arc) { return arc.GetAssetPath(); }
+inline std::string get_arc_summary(const SdfPath &arc) { return arc.GetString(); }
 
-inline void DrawArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, const SdfReference &ref) {
-    DrawAssetPathMenuItems(primSpec, ref);
+inline void draw_arc_type_menu_items(const SdfPrimSpecHandle &primSpec, const SdfReference &ref) {
+    draw_asset_path_menu_items(primSpec, ref);
 }
-inline void DrawArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, const SdfPayload &pay) {
-    DrawAssetPathMenuItems(primSpec, pay);
+inline void draw_arc_type_menu_items(const SdfPrimSpecHandle &primSpec, const SdfPayload &pay) {
+    draw_asset_path_menu_items(primSpec, pay);
 }
-inline void DrawArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, const SdfInherit &inh) {
-    DrawSdfPathMenuItems<SdfInherit>(primSpec, inh);
+inline void draw_arc_type_menu_items(const SdfPrimSpecHandle &primSpec, const SdfInherit &inh) {
+    draw_sdf_path_menu_items<SdfInherit>(primSpec, inh);
 }
-inline void DrawArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &spe) {
-    DrawSdfPathMenuItems<SdfSpecialize>(primSpec, spe);
+inline void draw_arc_type_menu_items(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &spe) {
+    draw_sdf_path_menu_items<SdfSpecialize>(primSpec, spe);
 }
 
 template<typename ArcT>
-inline void DrawPathInRow(SdfListOpType operation, const ArcT &assetPath, const SdfPrimSpecHandle &primSpec, int *itemId) {
+inline void draw_path_in_row(SdfListOpType operation, const ArcT &assetPath, const SdfPrimSpecHandle &primSpec, int *itemId) {
     std::string path;
-    path += GetArcSummary(assetPath);
+    path += get_arc_summary(assetPath);
     ImGui::PushID((*itemId)++);
     ImGui::SameLine();
     if (ImGui::Button(path.c_str())) {
-        SelectArcType(primSpec, assetPath);
+        select_arc_type(primSpec, assetPath);
     }
     if (ImGui::BeginPopupContextItem("###AssetPathMenuItems")) {
-        DrawArcTypeMenuItems(primSpec, assetPath);
+        draw_arc_type_menu_items(primSpec, assetPath);
         ImGui::EndPopup();
     }
     ImGui::PopID();
 }
 
-#define CREATE_COMPOSITION_BUTTON(NAME_, ABBR_, GETLIST_)                                                         \
-    if (primSpec->Has##NAME_##s()) {                                                                              \
-        if (buttonId > 0)                                                                                         \
-            ImGui::SameLine();                                                                                    \
-        ImGui::PushID(buttonId++);                                                                                \
-        ImGui::SmallButton(#ABBR_);                                                                               \
-        if (ImGui::BeginPopupContextItem(nullptr, buttonFlags)) {                                                 \
+#define CREATE_COMPOSITION_BUTTON(NAME_, ABBR_, GETLIST_)                                                            \
+    if (primSpec->Has##NAME_##s()) {                                                                                 \
+        if (buttonId > 0)                                                                                            \
+            ImGui::SameLine();                                                                                       \
+        ImGui::PushID(buttonId++);                                                                                   \
+        ImGui::SmallButton(#ABBR_);                                                                                  \
+        if (ImGui::BeginPopupContextItem(nullptr, buttonFlags)) {                                                    \
             iterate_list_editor_items(primSpec->Get##GETLIST_##List(), Draw##GETLIST_##Summary, primSpec, buttonId); \
-            ImGui::EndPopup();                                                                                    \
-        }                                                                                                         \
-        ImGui::PopID();                                                                                           \
+            ImGui::EndPopup();                                                                                       \
+        }                                                                                                            \
+        ImGui::PopID();                                                                                              \
     }
 
 void DrawPrimCompositionSummary(const SdfPrimSpecHandle &primSpec) {
-    if (!primSpec || !HasComposition(primSpec))
+    if (!primSpec || !has_composition(primSpec))
         return;
     ScopedStyleColor transparentStyle(ImGuiCol_Button, ImVec4(ColorTransparent));
 
@@ -674,10 +671,10 @@ void DrawPrimCompositionSummary(const SdfPrimSpecHandle &primSpec) {
     // The idea is to see the relevant informations, and be able to quicly click on them
     // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
     int itemId = 0;
-    iterate_list_editor_items(primSpec->GetReferenceList(), DrawPathInRow<SdfReference>, primSpec, &itemId);
-    iterate_list_editor_items(primSpec->GetPayloadList(), DrawPathInRow<SdfPayload>, primSpec, &itemId);
-    iterate_list_editor_items(primSpec->GetInheritPathList(), DrawPathInRow<SdfInherit>, primSpec, &itemId);
-    iterate_list_editor_items(primSpec->GetSpecializesList(), DrawPathInRow<SdfSpecialize>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetReferenceList(), draw_path_in_row<SdfReference>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetPayloadList(), draw_path_in_row<SdfPayload>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetInheritPathList(), draw_path_in_row<SdfInherit>, primSpec, &itemId);
+    iterate_list_editor_items(primSpec->GetSpecializesList(), draw_path_in_row<SdfSpecialize>, primSpec, &itemId);
     ImGui::PopStyleVar();
 }
 

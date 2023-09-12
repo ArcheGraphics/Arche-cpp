@@ -198,8 +198,8 @@ struct Node {
         OutputsCount = outputs_count;
     }
 
-    ImVec2 GetInputSlotPos(int slot_no) const { return ImVec2(Pos.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1)); }
-    ImVec2 GetOutputSlotPos(int slot_no) const { return ImVec2(Pos.x + Size.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1)); }
+    ImVec2 get_input_slot_pos(int slot_no) const { return ImVec2(Pos.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1)); }
+    ImVec2 get_output_slot_pos(int slot_no) const { return ImVec2(Pos.x + Size.x, Pos.y + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1)); }
 };
 
 // Store the prim node graphic state: position, color, etc ...
@@ -220,9 +220,9 @@ struct NodeLink {
 // Stores the number of node per depth
 static std::vector<int> nodeLayout = {};
 
-int _WalkGraph(UsdShadeConnectableAPI const &shadeNode,
-               _PathSet &visitedNodes,
-               ImVector<Node *> &nodes, ImVector<NodeLink> &links, int depth) {
+int _walk_graph(UsdShadeConnectableAPI const &shadeNode,
+                _PathSet &visitedNodes,
+                ImVector<Node *> &nodes, ImVector<NodeLink> &links, int depth) {
 
     if (!shadeNode) {
         return 0;
@@ -262,7 +262,7 @@ int _WalkGraph(UsdShadeConnectableAPI const &shadeNode,
         if (attrType == UsdShadeAttributeType::Output) {
             // If it is an output on a shading node we visit the node and also
             // create a relationship in the network
-            int outputIdx = _WalkGraph(UsdShadeConnectableAPI(attr.GetPrim()), visitedNodes, nodes, links, depth + 1);
+            int outputIdx = _walk_graph(UsdShadeConnectableAPI(attr.GetPrim()), visitedNodes, nodes, links, depth + 1);
             // TODO : link this input to the output
             if (outputIdx)
                 links.push_back(NodeLink(nodeId, inputIdx, outputIdx, 0));
@@ -283,7 +283,7 @@ int _WalkGraph(UsdShadeConnectableAPI const &shadeNode,
     return nodeId;
 }
 
-void BuildNodeGraph(const UsdPrim &prim, ImVector<Node *> &nodes, ImVector<NodeLink> &links) {
+void build_node_graph(const UsdPrim &prim, ImVector<Node *> &nodes, ImVector<NodeLink> &links) {
     UsdShadeMaterial material(prim);
     nodeLayout.clear();
     nodes.clear();// TODO: how do we keep the position of the nodes ???
@@ -302,7 +302,7 @@ void BuildNodeGraph(const UsdPrim &prim, ImVector<Node *> &nodes, ImVector<NodeL
     if (UsdShadeShader surface = material.ComputeSurfaceSource(contextVector)) {
         static _PathSet visitedNodes;
         visitedNodes.clear();
-        _WalkGraph(UsdShadeConnectableAPI(surface), visitedNodes, nodes, links, 0);
+        _walk_graph(UsdShadeConnectableAPI(surface), visitedNodes, nodes, links, 0);
     }
 }
 
@@ -358,7 +358,7 @@ static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
     //        }
     //    }
 
-    BuildNodeGraph(lastMaterialPrim, nodes, links);
+    build_node_graph(lastMaterialPrim, nodes, links);
     // Draw a list of nodes on the left side
     bool open_context_menu = false;
     int node_hovered_in_list = -1;
@@ -407,8 +407,8 @@ static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
         NodeLink *link = &links[link_idx];
         Node *node_inp = nodes[link->InputIdx];
         Node *node_out = nodes[link->OutputIdx];
-        ImVec2 p1 = offset + node_inp->GetInputSlotPos(link->InputSlot);
-        ImVec2 p2 = offset + node_out->GetOutputSlotPos(link->OutputSlot);
+        ImVec2 p1 = offset + node_inp->get_input_slot_pos(link->InputSlot);
+        ImVec2 p2 = offset + node_out->get_output_slot_pos(link->OutputSlot);
         draw_list->AddBezierCubic(p1, p1 + ImVec2(-50, 0), p2 + ImVec2(+50, 0), p2, IM_COL32(200, 200, 100, 255), 3.0f);
     }
 
@@ -449,7 +449,7 @@ static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
         draw_list->ChannelsSetCurrent(0);// Background
         ImGui::SetCursorScreenPos(node_rect_min);
         if (ImGui::InvisibleButton("node", node->Size)) {
-            ExecuteAfterDraw<EditorSetSelection>(prim.GetStage(), node->Path);
+            execute_after_draw<EditorSetSelection>(prim.GetStage(), node->Path);
         }
         if (ImGui::IsItemHovered()) {
             node_hovered_in_scene = node->ID;
@@ -464,9 +464,9 @@ static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
         draw_list->AddRectFilled(node_rect_min, node_rect_max, node_bg_color, 4.0f);
         draw_list->AddRect(node_rect_min, node_rect_max, IM_COL32(100, 100, 100, 255), 4.0f);
         for (int slot_idx = 0; slot_idx < node->InputsCount; slot_idx++)
-            draw_list->AddCircleFilled(offset + node->GetInputSlotPos(slot_idx), NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
+            draw_list->AddCircleFilled(offset + node->get_input_slot_pos(slot_idx), NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
         for (int slot_idx = 0; slot_idx < node->OutputsCount; slot_idx++)
-            draw_list->AddCircleFilled(offset + node->GetOutputSlotPos(slot_idx), NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
+            draw_list->AddCircleFilled(offset + node->get_output_slot_pos(slot_idx), NODE_SLOT_RADIUS, IM_COL32(150, 150, 150, 150));
 
         ImGui::PopID();
     }

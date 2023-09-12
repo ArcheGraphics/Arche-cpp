@@ -11,5 +11,5 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void DrawTimeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode);
+void draw_timeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode);
 }// namespace vox

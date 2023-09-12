@@ -15,15 +15,15 @@ namespace vox {
 */
 struct TextFilter {
     IMGUI_API TextFilter(const char *default_filter = "");
-    IMGUI_API bool Draw(const char *label = "###Filter", float width = 0.0f);// Helper calling InputText+Build
-    IMGUI_API bool PassFilter(const char *text, const char *text_end = NULL) const;
-    IMGUI_API void Build();
-    void Clear() {
+    IMGUI_API bool draw(const char *label = "###Filter", float width = 0.0f);// Helper calling InputText+Build
+    IMGUI_API bool pass_filter(const char *text, const char *text_end = NULL) const;
+    IMGUI_API void build();
+    void clear() {
         InputBuf[0] = 0;
-        Build();
+        build();
     }
-    bool IsActive() const { return !Filters.empty(); }
-    ImGuiID GetHash() const;
+    bool is_active() const { return !Filters.empty(); }
+    ImGuiID get_hash() const;
 
     // [Internal]
     struct TextRange {

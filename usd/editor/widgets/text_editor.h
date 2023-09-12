@@ -11,5 +11,5 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void DrawTextEditor(SdfLayerRefPtr layer);
+void draw_text_editor(SdfLayerRefPtr layer);
 }// namespace vox

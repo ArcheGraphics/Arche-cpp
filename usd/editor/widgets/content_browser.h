@@ -10,5 +10,5 @@ namespace vox {
 class Editor;
 
 /// ContentBrowser draws the stages and layers
-void DrawContentBrowser(Editor &editor);
+void draw_content_browser(Editor &editor);
 }// namespace vox

@@ -22,7 +22,7 @@
 #include <pxr/usd/usd/tokens.h>
 #include <pxr/usd/usd/typed.h>
 #include <pxr/base/plug/registry.h>
-
+#include <imgui_stdlib.h>
 #include "commands/commands.h"
 #include "composition_editor.h"
 #include "file_browser.h"
@@ -34,7 +34,7 @@
 #include "sdf_layer_editor.h"
 #include "sdf_prim_editor.h"
 #include "sdf_attribute_editor.h"
-#include "editor/shortcuts.h"
+#include "commands/shortcuts.h"
 #include "table_layouts.h"
 #include "variant_editor.h"
 #include "vt_dictionary_editor.h"
@@ -50,7 +50,7 @@ namespace vox {
 // TODO: when a schema has no attribute, the ok button should be disabled
 //       and the name should be empty instead of the widget disappearing
 
-std::vector<std::string> GetPrimSpecPropertyNames(TfToken primTypeName, SdfSpecType filter) {
+std::vector<std::string> get_prim_spec_property_names(TfToken primTypeName, SdfSpecType filter) {
     std::vector<std::string> filteredPropNames;
     if (auto *primDefinition = UsdSchemaRegistry::GetInstance().FindConcretePrimDefinition(primTypeName)) {
         for (const auto &propName : primDefinition->GetPropertyNames()) {
@@ -63,15 +63,15 @@ std::vector<std::string> GetPrimSpecPropertyNames(TfToken primTypeName, SdfSpecT
 }
 
 struct CreateAttributeDialog : public ModalDialog {
-    CreateAttributeDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _schemaTypeNames(GetAllSpecTypeNames()) {
+    CreateAttributeDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _schemaTypeNames(get_all_spec_type_names()) {
         // https://openusd.org/release/api/class_usd_prim_definition.html
         selectedSchemaTypeName = std::find(_schemaTypeNames.begin(), _schemaTypeNames.end(), _sdfPrim->GetTypeName().GetString());
-        FillAttributeNames();
-        UpdateWithNewPrimDefinition();
+        fill_attribute_names();
+        update_with_new_prim_definition();
     };
     ~CreateAttributeDialog() override {}
 
-    void UpdateWithNewPrimDefinition() {
+    void update_with_new_prim_definition() {
         if (selectedSchemaTypeName != _schemaTypeNames.end() && _selectedAttributeName != _allAttrNames.end()) {
             if (auto *primDefinition =
                     UsdSchemaRegistry::GetInstance().FindConcretePrimDefinition(TfToken(*selectedSchemaTypeName))) {
@@ -85,16 +85,16 @@ struct CreateAttributeDialog : public ModalDialog {
         }
     }
 
-    void FillAttributeNames() {
+    void fill_attribute_names() {
         if (selectedSchemaTypeName != _schemaTypeNames.end()) {
-            _allAttrNames = GetPrimSpecPropertyNames(TfToken(*selectedSchemaTypeName), SdfSpecTypeAttribute);
+            _allAttrNames = get_prim_spec_property_names(TfToken(*selectedSchemaTypeName), SdfSpecTypeAttribute);
             _selectedAttributeName = _allAttrNames.begin();
         } else {
             _attributeName = "";
         }
     }
 
-    void Draw() override {
+    void draw() override {
         // Schema
         ImGui::Checkbox("Find attribute in schema", &_useSchema);
         ImGui::BeginDisabled(!_useSchema);
@@ -103,8 +103,8 @@ struct CreateAttributeDialog : public ModalDialog {
             for (size_t i = 0; i < _schemaTypeNames.size(); i++) {
                 if (_schemaTypeNames[i] != "" && ImGui::Selectable(_schemaTypeNames[i].c_str(), false)) {
                     selectedSchemaTypeName = _schemaTypeNames.begin() + i;
-                    FillAttributeNames();
-                    UpdateWithNewPrimDefinition();
+                    fill_attribute_names();
+                    update_with_new_prim_definition();
                 }
             }
             ImGui::EndCombo();
@@ -118,7 +118,7 @@ struct CreateAttributeDialog : public ModalDialog {
                 for (size_t i = 0; i < _allAttrNames.size(); i++) {
                     if (ImGui::Selectable(_allAttrNames[i].c_str(), false)) {
                         _selectedAttributeName = _allAttrNames.begin() + i;
-                        UpdateWithNewPrimDefinition();
+                        update_with_new_prim_definition();
                     }
                 }
                 ImGui::EndCombo();
@@ -126,9 +126,9 @@ struct CreateAttributeDialog : public ModalDialog {
         }
         ImGui::BeginDisabled(_useSchema);
         if (ImGui::BeginCombo("Type", _typeName.GetAsToken().GetString().c_str())) {
-            for (int i = 0; i < GetAllValueTypeNames().size(); i++) {
-                if (ImGui::Selectable(GetAllValueTypeNames()[i].GetAsToken().GetString().c_str(), false)) {
-                    _typeName = GetAllValueTypeNames()[i];
+            for (int i = 0; i < get_all_value_type_names().size(); i++) {
+                if (ImGui::Selectable(get_all_value_type_names()[i].GetAsToken().GetString().c_str(), false)) {
+                    _typeName = get_all_value_type_names()[i];
                 }
             }
             ImGui::EndCombo();
@@ -141,14 +141,14 @@ struct CreateAttributeDialog : public ModalDialog {
 
         ImGui::Checkbox("Custom attribute", &_custom);
         ImGui::Checkbox("Create default value", &_createDefault);
-        DrawOkCancelModal(
+        draw_ok_cancel_modal(
             [&]() {
-                ExecuteAfterDraw<PrimCreateAttribute>(_sdfPrim, _attributeName, _typeName, _variability, _custom, _createDefault);
+                execute_after_draw<PrimCreateAttribute>(_sdfPrim, _attributeName, _typeName, _variability, _custom, _createDefault);
             },
             bool(_attributeName == ""));
     }
 
-    const char *DialogId() const override { return "Create attribute"; }
+    const char *dialog_id() const override { return "Create attribute"; }
 
     const SdfPrimSpecHandle &_sdfPrim;
     std::string _attributeName;
@@ -165,23 +165,23 @@ struct CreateAttributeDialog : public ModalDialog {
 };
 
 struct CreateRelationDialog : public ModalDialog {
-    CreateRelationDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _allSchemaNames(GetAllSpecTypeNames()) {
+    CreateRelationDialog(const SdfPrimSpecHandle &sdfPrim) : _sdfPrim(sdfPrim), _allSchemaNames(get_all_spec_type_names()) {
         _selectedSchemaName = std::find(_allSchemaNames.begin(), _allSchemaNames.end(), _sdfPrim->GetTypeName().GetString());
-        FillRelationshipNames();
-        UpdateWithNewPrimDefinition();
+        fill_relationship_names();
+        update_with_new_prim_definition();
     };
     ~CreateRelationDialog() override {}
 
-    void FillRelationshipNames() {
+    void fill_relationship_names() {
         if (_selectedSchemaName != _allSchemaNames.end()) {
-            _allRelationshipNames = GetPrimSpecPropertyNames(TfToken(*_selectedSchemaName), SdfSpecTypeRelationship);
+            _allRelationshipNames = get_prim_spec_property_names(TfToken(*_selectedSchemaName), SdfSpecTypeRelationship);
             _selectedRelationshipName = _allRelationshipNames.begin();
         } else {
             _relationName = "";
         }
     }
 
-    void UpdateWithNewPrimDefinition() {
+    void update_with_new_prim_definition() {
         if (_selectedSchemaName != _allSchemaNames.end() && _selectedRelationshipName != _allRelationshipNames.end()) {
             if (auto *primDefinition =
                     UsdSchemaRegistry::GetInstance().FindConcretePrimDefinition(TfToken(*_selectedSchemaName))) {
@@ -194,7 +194,7 @@ struct CreateRelationDialog : public ModalDialog {
         }
     }
 
-    void Draw() override {
+    void draw() override {
         ImGui::Checkbox("Find relation in schema", &_useSchema);
         ImGui::BeginDisabled(!_useSchema);
         const char *schemaStr = _selectedSchemaName == _allSchemaNames.end() ? "" : _selectedSchemaName->c_str();
@@ -202,8 +202,8 @@ struct CreateRelationDialog : public ModalDialog {
             for (size_t i = 0; i < _allSchemaNames.size(); i++) {
                 if (_allSchemaNames[i] != "" && ImGui::Selectable(_allSchemaNames[i].c_str(), false)) {
                     _selectedSchemaName = _allSchemaNames.begin() + i;
-                    FillRelationshipNames();
-                    UpdateWithNewPrimDefinition();
+                    fill_relationship_names();
+                    update_with_new_prim_definition();
                 }
             }
             ImGui::EndCombo();
@@ -217,7 +217,7 @@ struct CreateRelationDialog : public ModalDialog {
                 for (size_t i = 0; i < _allRelationshipNames.size(); i++) {
                     if (ImGui::Selectable(_allRelationshipNames[i].c_str(), false)) {
                         _selectedRelationshipName = _allRelationshipNames.begin() + i;
-                        UpdateWithNewPrimDefinition();
+                        update_with_new_prim_definition();
                     }
                 }
                 ImGui::EndCombo();
@@ -239,13 +239,13 @@ struct CreateRelationDialog : public ModalDialog {
         }
         ImGui::EndDisabled();
         ImGui::Checkbox("Custom relationship", &_custom);
-        DrawOkCancelModal(
+        draw_ok_cancel_modal(
             [=]() {
-                ExecuteAfterDraw<PrimCreateRelationship>(_sdfPrim, _relationName, _variability, _custom, _operation, _targetPath);
+                execute_after_draw<PrimCreateRelationship>(_sdfPrim, _relationName, _variability, _custom, _operation, _targetPath);
             },
             _relationName == "");
     }
-    const char *DialogId() const override { return "Create relationship"; }
+    const char *dialog_id() const override { return "Create relationship"; }
 
     const SdfPrimSpecHandle &_sdfPrim;
     std::string _relationName;
@@ -265,9 +265,9 @@ struct CreateVariantModalDialog : public ModalDialog {
     CreateVariantModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
     ~CreateVariantModalDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         if (!_primSpec) {
-            CloseModal();
+            close_modal();
             return;
         }
         bool isVariant = _primSpec->GetPath().IsPrimVariantSelectionPath();
@@ -294,15 +294,16 @@ struct CreateVariantModalDialog : public ModalDialog {
                     }
                 }
             };
-            ExecuteAfterDraw<UsdFunctionCall>(_primSpec->GetLayer(), func);
+            execute_after_draw<UsdFunctionCall>(_primSpec->GetLayer(), func);
         }
         ImGui::SameLine();
         if (ImGui::Button("Close")) {
-            CloseModal();
+            close_modal();
         }
     }
 
-    const char *DialogId() const override { return "Add variant"; }
+    const char *dialog_id() const override { return "Add variant"; }
+
     SdfPrimSpecHandle _primSpec;
     std::string _variantSet;
     std::string _variant;
@@ -311,11 +312,10 @@ struct CreateVariantModalDialog : public ModalDialog {
 
 /// Very basic ui to create a connection
 struct CreateSdfAttributeConnectionDialog : public ModalDialog {
-
     CreateSdfAttributeConnectionDialog(SdfAttributeSpecHandle attribute) : _attribute(attribute){};
     ~CreateSdfAttributeConnectionDialog() override {}
 
-    void Draw() override {
+    void draw() override {
         if (!_attribute)
             return;
         ImGui::Text("Create connection for %s", _attribute->GetPath().GetString().c_str());
@@ -328,18 +328,17 @@ struct CreateSdfAttributeConnectionDialog : public ModalDialog {
             ImGui::EndCombo();
         }
         ImGui::InputText("Path", &_connectionEndPoint);
-        DrawOkCancelModal(
-            [&]() { ExecuteAfterDraw<PrimCreateAttributeConnection>(_attribute, _operation, _connectionEndPoint); });
+        draw_ok_cancel_modal(
+            [&]() { execute_after_draw<PrimCreateAttributeConnection>(_attribute, _operation, _connectionEndPoint); });
     }
-    const char *DialogId() const override { return "Attribute connection"; }
+    const char *dialog_id() const override { return "Attribute connection"; }
 
     SdfAttributeSpecHandle _attribute;
     std::string _connectionEndPoint;
     SdfListOpType _operation = SdfListOpTypeExplicit;
 };
 
-void DrawPrimSpecifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags) {
-
+void draw_prim_specifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags) {
     const SdfSpecifier current = primSpec->GetSpecifier();
     SdfSpecifier selected = current;
     const std::string specifierName = TfEnum::GetDisplayName(current);
@@ -355,59 +354,59 @@ void DrawPrimSpecifier(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboF
         }
 
         if (selected != current) {
-            ExecuteAfterDraw(&SdfPrimSpec::SetSpecifier, primSpec, selected);
+            execute_after_draw(&SdfPrimSpec::SetSpecifier, primSpec, selected);
         }
 
         ImGui::EndCombo();
     }
 }
 
-void DrawPrimInstanceable(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_instanceable(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec)
         return;
     bool isInstanceable = primSpec->GetInstanceable();
     if (ImGui::Checkbox("Instanceable", &isInstanceable)) {
-        ExecuteAfterDraw(&SdfPrimSpec::SetInstanceable, primSpec, isInstanceable);
+        execute_after_draw(&SdfPrimSpec::SetInstanceable, primSpec, isInstanceable);
     }
 }
 
-void DrawPrimHidden(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_hidden(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec)
         return;
     bool isHidden = primSpec->GetHidden();
     if (ImGui::Checkbox("Hidden", &isHidden)) {
-        ExecuteAfterDraw(&SdfPrimSpec::SetHidden, primSpec, isHidden);
+        execute_after_draw(&SdfPrimSpec::SetHidden, primSpec, isHidden);
     }
 }
 
-void DrawPrimActive(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_active(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec)
         return;
     bool isActive = primSpec->GetActive();
     if (ImGui::Checkbox("Active", &isActive)) {
         // TODO: use CTRL click to clear the checkbox
-        ExecuteAfterDraw(&SdfPrimSpec::SetActive, primSpec, isActive);
+        execute_after_draw(&SdfPrimSpec::SetActive, primSpec, isActive);
     }
 }
 
-void DrawPrimName(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_name(const SdfPrimSpecHandle &primSpec) {
     auto nameBuffer = primSpec->GetName();
     ImGui::InputText("Prim Name", &nameBuffer);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         auto primName = std::string(const_cast<char *>(nameBuffer.data()));
         if (primSpec->CanSetName(primName, nullptr)) {
-            ExecuteAfterDraw(&SdfPrimSpec::SetName, primSpec, primName, true);
+            execute_after_draw(&SdfPrimSpec::SetName, primSpec, primName, true);
         }
     }
 }
 
-void DrawPrimKind(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_kind(const SdfPrimSpecHandle &primSpec) {
     auto primKind = primSpec->GetKind();
     if (ImGui::BeginCombo("Kind", primKind.GetString().c_str())) {
         for (auto kind : KindRegistry::GetAllKinds()) {
             bool isSelected = primKind == kind;
             if (ImGui::Selectable(kind.GetString().c_str(), isSelected)) {
-                ExecuteAfterDraw(&SdfPrimSpec::SetKind, primSpec, kind);
+                execute_after_draw(&SdfPrimSpec::SetKind, primSpec, kind);
             }
         }
         ImGui::EndCombo();
@@ -416,29 +415,29 @@ void DrawPrimKind(const SdfPrimSpecHandle &primSpec) {
 
 /// Convert prim class tokens to and from char *
 /// The chars are stored in DrawPrimType
-static inline const char *ClassCharFromToken(const TfToken &classToken) {
+static inline const char *class_char_from_token(const TfToken &classToken) {
     return classToken == SdfTokens->AnyTypeToken ? "" : classToken.GetString().c_str();
 }
 
-static inline TfToken ClassTokenFromChar(const char *classChar) {
+static inline TfToken class_token_from_char(const char *classChar) {
     return strcmp(classChar, "") == 0 ? SdfTokens->AnyTypeToken : TfToken(classChar);
 }
 
 /// Draw a prim type name combo
-void DrawPrimType(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags) {
-    const char *currentItem = ClassCharFromToken(primSpec->GetTypeName());
-    const auto &allSpecTypes = GetAllSpecTypeNames();
+void draw_prim_type(const SdfPrimSpecHandle &primSpec, ImGuiComboFlags comboFlags) {
+    const char *currentItem = class_char_from_token(primSpec->GetTypeName());
+    const auto &allSpecTypes = get_all_spec_type_names();
     static int selected = 0;
 
     if (combo_with_filter("Prim Type", currentItem, allSpecTypes, &selected, comboFlags)) {
         const auto newSelection = allSpecTypes[selected].c_str();
-        if (primSpec->GetTypeName() != ClassTokenFromChar(newSelection)) {
-            ExecuteAfterDraw(&SdfPrimSpec::SetTypeName, primSpec, ClassTokenFromChar(newSelection));
+        if (primSpec->GetTypeName() != class_token_from_char(newSelection)) {
+            execute_after_draw(&SdfPrimSpec::SetTypeName, primSpec, class_token_from_char(newSelection));
         }
     }
 }
 template<typename T>
-static inline void DrawArrayEditorButton(T attribute) {
+static inline void draw_array_editor_button(T attribute) {
     if ((*attribute)->GetDefaultValue().IsArrayValued()) {
         if (ImGui::Button(ICON_FA_LIST)) {
             ExecuteAfterDraw<EditorSelectAttributePath>((*attribute)->GetPath());
@@ -447,34 +446,18 @@ static inline void DrawArrayEditorButton(T attribute) {
     }
 }
 
-inline SdfPathEditorProxy GetPathEditorProxy(SdfSpecHandle spec, TfToken field) {
-#ifdef WIN32
-    // Unfortunately on windows the SdfGetPathEditorProxy is not exposed
-    // So the following code is a workaround
-    // Only two calls for the moment, with the arguments:
-    //attribute, SdfFieldKeys->ConnectionPaths
-    //relation, SdfFieldKeys->TargetPaths
-    if (spec->GetSpecType() == SdfSpecTypeAttribute && field == SdfFieldKeys->ConnectionPaths) {
-        SdfAttributeSpecHandle attr = spec->GetLayer()->GetAttributeAtPath(spec->GetPath());
-        return attr->GetConnectionPathList();
-    } else if (spec->GetSpecType() == SdfSpecTypeRelationship && field == SdfFieldKeys->TargetPaths) {
-        SdfRelationshipSpecHandle rel = spec->GetLayer()->GetRelationshipAtPath(spec->GetPath());
-        return rel->GetTargetPathList();
-    }
-    return {};// Shouldn't happen, if it does, add the case above
-#else
+inline SdfPathEditorProxy get_path_editor_proxy(SdfSpecHandle spec, TfToken field) {
     return SdfGetPathEditorProxy(spec, field);
-#endif
 }
 
 // This editor is specialized for list editor of tokens in the metadata.
 // TODO: The code is really similar to DrawSdfPathListOneLinerEditor and ideally they should be unified.
-static void DrawTfTokenListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
+static void draw_tf_token_list_one_liner_editor(SdfSpecHandle spec, TfToken field) {
     SdfTokenListOp proxy = spec->GetInfo(field).Get<SdfTokenListOp>();
-    SdfListOpType currentList = GetEditListChoice(proxy);
+    SdfListOpType currentList = get_edit_list_choice(proxy);
 
     // Edit list chooser
-    DrawEditListSmallButtonSelector(currentList, proxy);
+    draw_edit_list_small_button_selector(currentList, proxy);
 
     ImGui::SameLine();
     thread_local std::string itemsString;// avoid reallocating for every element at every frame
@@ -499,17 +482,17 @@ static void DrawTfTokenListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
                 spec->SetInfo(field, VtValue(listOp));
             }
         };
-        ExecuteAfterDraw<UsdFunctionCall>(spec->GetLayer(), updateList);
+        execute_after_draw<UsdFunctionCall>(spec->GetLayer(), updateList);
     }
 }
 
 // This function is specialized for editing list of paths in a line editor
-static void DrawSdfPathListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
-    SdfPathEditorProxy proxy = GetPathEditorProxy(spec, field);
-    SdfListOpType currentList = GetEditListChoice(proxy);
+static void draw_sdf_path_list_one_liner_editor(SdfSpecHandle spec, TfToken field) {
+    SdfPathEditorProxy proxy = get_path_editor_proxy(spec, field);
+    SdfListOpType currentList = get_edit_list_choice(proxy);
 
     // Edit listop chooser
-    DrawEditListSmallButtonSelector(currentList, proxy);
+    draw_edit_list_small_button_selector(currentList, proxy);
 
     ImGui::SameLine();
     thread_local std::string itemsString;// avoid reallocating
@@ -525,7 +508,7 @@ static void DrawSdfPathListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
         // TODO: should the following code go in a command ??
         std::function<void()> updateList = [=]() {
             if (spec) {
-                auto editorProxy = GetPathEditorProxy(spec, field);
+                auto editorProxy = get_path_editor_proxy(spec, field);
                 auto editList = get_sdf_list_op_items(editorProxy, currentList);
                 editList.clear();
                 for (const auto &path : newList) {
@@ -533,20 +516,20 @@ static void DrawSdfPathListOneLinerEditor(SdfSpecHandle spec, TfToken field) {
                 }
             }
         };
-        ExecuteAfterDraw<UsdFunctionCall>(spec->GetLayer(), updateList);
+        execute_after_draw<UsdFunctionCall>(spec->GetLayer(), updateList);
     }
 }
 
-static void DrawAttributeRowPopupMenu(const SdfAttributeSpecHandle &attribute) {
+static void draw_attribute_row_popup_menu(const SdfAttributeSpecHandle &attribute) {
     if (ImGui::MenuItem(ICON_FA_TRASH " Remove attribute")) {
         SdfPrimSpecHandle primSpec = attribute->GetLayer()->GetPrimAtPath(attribute->GetOwner()->GetPath());
-        ExecuteAfterDraw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(attribute->GetPath()));
+        execute_after_draw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(attribute->GetPath()));
     }
     if (!attribute->HasConnectionPaths() && ImGui::MenuItem(ICON_FA_LINK " Create connection")) {
-        DrawModalDialog<CreateSdfAttributeConnectionDialog>(attribute);
+        draw_modal_dialog<CreateSdfAttributeConnectionDialog>(attribute);
     }
     if (attribute->HasConnectionPaths() && ImGui::MenuItem(ICON_FA_LINK " Clear connection paths")) {
-        ExecuteAfterDraw(&SdfAttributeSpec::ClearConnectionPaths, attribute);
+        execute_after_draw(&SdfAttributeSpec::ClearConnectionPaths, attribute);
     }
 
     // Only if there are no default
@@ -557,20 +540,20 @@ static void DrawAttributeRowPopupMenu(const SdfAttributeSpecHandle &attribute) {
                 attribute->SetDefaultValue(defaultValue);
             }
         };
-        ExecuteAfterDraw<UsdFunctionCall>(attribute->GetLayer(), createDefaultValue);
+        execute_after_draw<UsdFunctionCall>(attribute->GetLayer(), createDefaultValue);
     }
     if (attribute->HasDefaultValue() && ImGui::MenuItem(ICON_FA_TRASH " Clear default value")) {
-        ExecuteAfterDraw(&SdfAttributeSpec::ClearDefaultValue, attribute);
+        execute_after_draw(&SdfAttributeSpec::ClearDefaultValue, attribute);
     }
 
     if (ImGui::MenuItem(ICON_FA_KEY " Add key value")) {
-        DrawTimeSampleCreationDialog(attribute->GetLayer(), attribute->GetPath());
+        draw_time_sample_creation_dialog(attribute->GetLayer(), attribute->GetPath());
     }
 
     // TODO: delete keys if it has keys
 
     if (ImGui::MenuItem(ICON_FA_COPY " Copy property")) {
-        ExecuteAfterDraw<PropertyCopy>(static_cast<SdfPropertySpecHandle>(attribute));
+        execute_after_draw<PropertyCopy>(static_cast<SdfPropertySpecHandle>(attribute));
     }
 
     if (ImGui::MenuItem(ICON_FA_COPY " Copy property name")) {
@@ -587,8 +570,8 @@ struct AttributeRow {};
 // ICON_FA_EDIT could be great for edit target
 // ICON_FA_DRAW_POLYGON great for meshes
 template<>
-inline ScopedStyleColor GetRowStyle<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute,
-                                                  const Selection &selection, const int &showWhat) {
+inline ScopedStyleColor get_row_style<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute,
+                                                    const Selection &selection, const int &showWhat) {
     const bool selected = selection.is_selected(attribute);
     ImVec4 colorSelected = selected ? ImVec4(ColorAttributeSelectedBg) : ImVec4(0.75, 0.60, 0.33, 0.2);
     return ScopedStyleColor(ImGuiCol_HeaderHovered, selected ? colorSelected : ImVec4(ColorTransparent), ImGuiCol_HeaderActive,
@@ -598,19 +581,19 @@ inline ScopedStyleColor GetRowStyle<AttributeRow>(const int rowId, const SdfAttr
 }
 
 template<>
-inline void DrawFirstColumn<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
-                                          const int &showWhat) {
+inline void draw_first_column<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
+                                            const int &showWhat) {
     ImGui::PushID(rowId);
     if (ImGui::Button(ICON_FA_TRASH)) {
         SdfPrimSpecHandle primSpec = attribute->GetLayer()->GetPrimAtPath(attribute->GetOwner()->GetPath());
-        ExecuteAfterDraw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(attribute->GetPath()));
+        execute_after_draw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(attribute->GetPath()));
     }
     ImGui::PopID();
 };
 
 template<>
-inline void DrawSecondColumn<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
-                                           const int &showWhat) {
+inline void draw_second_column<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
+                                             const int &showWhat) {
     // Still not sure we want to show the type at all or in the same column as the name
     ImGui::PushStyleColor(ImGuiCol_Text, attribute->HasDefaultValue() ? ImVec4(ColorAttributeAuthored) : ImVec4(ColorAttributeUnauthored));
     ImGui::Text(ICON_FA_FLASK);
@@ -628,20 +611,20 @@ inline void DrawSecondColumn<AttributeRow>(const int rowId, const SdfAttributeSp
     const std::string attributeText(attribute->GetName() + " (" + attribute->GetTypeName().GetAsToken().GetString() + ")");
     ImGui::Text("%s", attributeText.c_str());
     if (ImGui::BeginPopupContextItem(attributeText.c_str())) {
-        DrawAttributeRowPopupMenu(attribute);
+        draw_attribute_row_popup_menu(attribute);
         ImGui::EndPopup();
     }
 };
 
 template<>
-inline void DrawThirdColumn<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
-                                          const int &showWhat) {
+inline void draw_third_column<AttributeRow>(const int rowId, const SdfAttributeSpecHandle &attribute, const Selection &selection,
+                                            const int &showWhat) {
     // Check what to show, this could be stored in a variable ... check imgui
     // For the mini buttons: ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
     ImGui::PushID(rowId);
     bool selected = selection.is_selected(attribute);
     if (ImGui::Selectable("##select", selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-        ExecuteAfterDraw<EditorSelectAttributePath>(attribute->GetPath());
+        execute_after_draw<EditorSelectAttributePath>(attribute->GetPath());
     }
     ImGui::SameLine();
     if (attribute->HasDefaultValue()) {
@@ -649,19 +632,19 @@ inline void DrawThirdColumn<AttributeRow>(const int rowId, const SdfAttributeSpe
         ImGui::PushItemWidth(-FLT_MIN);
         VtValue modified = DrawVtValue("##Default", attribute->GetDefaultValue());
         if (modified != VtValue()) {
-            ExecuteAfterDraw(&SdfPropertySpec::SetDefaultValue, attribute, modified);
+            execute_after_draw(&SdfPropertySpec::SetDefaultValue, attribute, modified);
         }
     }
 
     if (attribute->HasConnectionPaths()) {
         ScopedStyleColor connectionColor(ImGuiCol_Text, ImVec4(ColorAttributeConnection));
         SdfConnectionsProxy connections = attribute->GetConnectionPathList();
-        DrawSdfPathListOneLinerEditor(attribute, SdfFieldKeys->ConnectionPaths);
+        draw_sdf_path_list_one_liner_editor(attribute, SdfFieldKeys->ConnectionPaths);
     }
     ImGui::PopID();
 };
 
-void DrawPrimSpecAttributes(const SdfPrimSpecHandle &primSpec, const Selection &selection) {
+void draw_prim_spec_attributes(const SdfPrimSpecHandle &primSpec, const Selection &selection) {
     if (!primSpec)
         return;
 
@@ -670,15 +653,15 @@ void DrawPrimSpecAttributes(const SdfPrimSpecHandle &primSpec, const Selection &
         return;
     if (ImGui::CollapsingHeader("Attributes", ImGuiTreeNodeFlags_DefaultOpen)) {
         int rowId = 0;
-        if (BeginThreeColumnsTable("##DrawPrimSpecAttributes")) {
-            SetupThreeColumnsTable(false, "", "Attribute", "");
+        if (begin_three_columns_table("##DrawPrimSpecAttributes")) {
+            setup_three_columns_table(false, "", "Attribute", "");
             ImGui::PushID(primSpec->GetPath().GetHash());
             // the third column allows to show different attribute properties:
             // Default value, keyed values or connections (and summary ??)
             // int showWhat = DrawValueColumnSelector();
             int showWhat = 0;
             for (const SdfAttributeSpecHandle &attribute : attributes) {
-                DrawThreeColumnsRow<AttributeRow>(rowId++, attribute, selection, showWhat);
+                draw_three_columns_row<AttributeRow>(rowId++, attribute, selection, showWhat);
             }
             ImGui::PopID();
             ImGui::EndTable();
@@ -688,22 +671,22 @@ void DrawPrimSpecAttributes(const SdfPrimSpecHandle &primSpec, const Selection &
 
 struct RelationRow {};
 template<>
-inline void DrawFirstColumn<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
-                                         const SdfRelationshipSpecHandle &relation) {
+inline void draw_first_column<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
+                                           const SdfRelationshipSpecHandle &relation) {
     if (ImGui::Button(ICON_FA_TRASH)) {
-        ExecuteAfterDraw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(relation->GetPath()));
+        execute_after_draw(&SdfPrimSpec::RemoveProperty, primSpec, primSpec->GetPropertyAtPath(relation->GetPath()));
     }
 };
 template<>
-inline void DrawSecondColumn<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
-                                          const SdfRelationshipSpecHandle &relation) {
+inline void draw_second_column<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
+                                            const SdfRelationshipSpecHandle &relation) {
     ImGui::Text("%s", relation->GetName().c_str());
 };
 template<>
-inline void DrawThirdColumn<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
-                                         const SdfRelationshipSpecHandle &relation) {
+inline void draw_third_column<RelationRow>(const int rowId, const SdfPrimSpecHandle &primSpec,
+                                           const SdfRelationshipSpecHandle &relation) {
     ImGui::PushItemWidth(-FLT_MIN);
-    DrawSdfPathListOneLinerEditor(relation, SdfFieldKeys->TargetPaths);
+    draw_sdf_path_list_one_liner_editor(relation, SdfFieldKeys->TargetPaths);
 };
 
 void DrawPrimSpecRelations(const SdfPrimSpecHandle &primSpec) {
@@ -714,12 +697,12 @@ void DrawPrimSpecRelations(const SdfPrimSpecHandle &primSpec) {
         return;
     if (ImGui::CollapsingHeader("Relations", ImGuiTreeNodeFlags_DefaultOpen)) {
         int rowId = 0;
-        if (BeginThreeColumnsTable("##DrawPrimSpecRelations")) {
-            SetupThreeColumnsTable(false, "", "Relations", "");
+        if (begin_three_columns_table("##DrawPrimSpecRelations")) {
+            setup_three_columns_table(false, "", "Relations", "");
             auto relations = primSpec->GetRelationships();
             for (const SdfRelationshipSpecHandle &relation : relations) {
                 ImGui::PushID(relation->GetPath().GetHash());
-                DrawThreeColumnsRow<RelationRow>(rowId++, primSpec, relation);
+                draw_three_columns_row<RelationRow>(rowId++, primSpec, relation);
                 ImGui::PopID();
             }
             ImGui::EndTable();
@@ -729,75 +712,75 @@ void DrawPrimSpecRelations(const SdfPrimSpecHandle &primSpec) {
 
 struct ApiSchemaRow {};
 template<>
-inline bool HasEdits<ApiSchemaRow>(const SdfPrimSpecHandle &prim) { return prim->HasInfo(UsdTokens->apiSchemas); }
+inline bool has_edits<ApiSchemaRow>(const SdfPrimSpecHandle &prim) { return prim->HasInfo(UsdTokens->apiSchemas); }
 template<>
-inline void DrawFirstColumn<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
+inline void draw_first_column<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
     ImGui::PushID(rowId);
     if (ImGui::Button(ICON_FA_TRASH)) {
-        ExecuteAfterDraw(&SdfPrimSpec::ClearInfo, primSpec, UsdTokens->apiSchemas);
+        execute_after_draw(&SdfPrimSpec::ClearInfo, primSpec, UsdTokens->apiSchemas);
     }
     ImGui::PopID();
 };
 template<>
-inline void DrawSecondColumn<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
+inline void draw_second_column<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
     ImGui::Text("API Schemas");
 };
 template<>
-inline void DrawThirdColumn<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
+inline void draw_third_column<ApiSchemaRow>(const int rowId, const SdfPrimSpecHandle &primSpec) {
     ImGui::PushItemWidth(-FLT_MIN);
-    DrawTfTokenListOneLinerEditor(primSpec, UsdTokens->apiSchemas);
+    draw_tf_token_list_one_liner_editor(primSpec, UsdTokens->apiSchemas);
 };
 
-#define GENERATE_FIELD(ClassName_, FieldName_, DrawFunction_)                                     \
-    struct ClassName_ {                                                                           \
-        static constexpr const char *fieldName = FieldName_;                                      \
-    };                                                                                            \
-    template<>                                                                                    \
-    inline void DrawThirdColumn<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) { \
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                                \
-        DrawFunction_(primSpec);                                                                  \
+#define GENERATE_FIELD(ClassName_, FieldName_, DrawFunction_)                                       \
+    struct ClassName_ {                                                                             \
+        static constexpr const char *fieldName = FieldName_;                                        \
+    };                                                                                              \
+    template<>                                                                                      \
+    inline void draw_third_column<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) { \
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                                  \
+        DrawFunction_(primSpec);                                                                    \
     }
 
-#define GENERATE_FIELD_WITH_BUTTON(ClassName_, Token_, FieldName_, DrawFunction_)                      \
-    GENERATE_FIELD(ClassName_, FieldName_, DrawFunction_);                                             \
-    template<>                                                                                         \
-    inline bool HasEdits<ClassName_>(const SdfPrimSpecHandle &prim) { return prim->HasField(Token_); } \
-    template<>                                                                                         \
-    inline void DrawFirstColumn<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) {      \
-        ImGui::PushID(rowId);                                                                          \
-        if (ImGui::Button(ICON_FA_TRASH) && HasEdits<ClassName_>(primSpec)) {                          \
-            ExecuteAfterDraw(&SdfPrimSpec::ClearField, primSpec, Token_);                              \
-        }                                                                                              \
-        ImGui::PopID();                                                                                \
+#define GENERATE_FIELD_WITH_BUTTON(ClassName_, Token_, FieldName_, DrawFunction_)                       \
+    GENERATE_FIELD(ClassName_, FieldName_, DrawFunction_);                                              \
+    template<>                                                                                          \
+    inline bool has_edits<ClassName_>(const SdfPrimSpecHandle &prim) { return prim->HasField(Token_); } \
+    template<>                                                                                          \
+    inline void draw_first_column<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) {     \
+        ImGui::PushID(rowId);                                                                           \
+        if (ImGui::Button(ICON_FA_TRASH) && HasEdits<ClassName_>(primSpec)) {                           \
+            ExecuteAfterDraw(&SdfPrimSpec::ClearField, primSpec, Token_);                               \
+        }                                                                                               \
+        ImGui::PopID();                                                                                 \
     }
 
-GENERATE_FIELD(Specifier, "Specifier", DrawPrimSpecifier);
-GENERATE_FIELD(PrimType, "Type", DrawPrimType);
-GENERATE_FIELD(PrimName, "Name", DrawPrimName);
-GENERATE_FIELD_WITH_BUTTON(PrimKind, SdfFieldKeys->Kind, "Kind", DrawPrimKind);
-GENERATE_FIELD_WITH_BUTTON(PrimActive, SdfFieldKeys->Active, "Active", DrawPrimActive);
-GENERATE_FIELD_WITH_BUTTON(PrimInstanceable, SdfFieldKeys->Instanceable, "Instanceable", DrawPrimInstanceable);
-GENERATE_FIELD_WITH_BUTTON(PrimHidden, SdfFieldKeys->Hidden, "Hidden", DrawPrimHidden);
+GENERATE_FIELD(Specifier, "Specifier", draw_prim_specifier);
+GENERATE_FIELD(PrimType, "Type", draw_prim_type);
+GENERATE_FIELD(PrimName, "Name", draw_prim_name);
+GENERATE_FIELD_WITH_BUTTON(PrimKind, SdfFieldKeys->Kind, "Kind", draw_prim_kind);
+GENERATE_FIELD_WITH_BUTTON(PrimActive, SdfFieldKeys->Active, "Active", draw_prim_active);
+GENERATE_FIELD_WITH_BUTTON(PrimInstanceable, SdfFieldKeys->Instanceable, "Instanceable", draw_prim_instanceable);
+GENERATE_FIELD_WITH_BUTTON(PrimHidden, SdfFieldKeys->Hidden, "Hidden", draw_prim_hidden);
 
-void DrawPrimSpecMetadata(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_spec_metadata(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec->GetPath().IsPrimVariantSelectionPath()) {
         if (ImGui::CollapsingHeader("Core Metadata", ImGuiTreeNodeFlags_DefaultOpen)) {
             int rowId = 0;
-            if (BeginThreeColumnsTable("##DrawPrimSpecMetadata")) {
-                SetupThreeColumnsTable(false, "", "Metadata", "Value");
+            if (begin_three_columns_table("##DrawPrimSpecMetadata")) {
+                setup_three_columns_table(false, "", "Metadata", "Value");
                 ImGui::PushID(primSpec->GetPath().GetHash());
-                DrawThreeColumnsRow<Specifier>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimType>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimName>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimKind>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimActive>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimInstanceable>(rowId++, primSpec);
-                DrawThreeColumnsRow<PrimHidden>(rowId++, primSpec);
-                DrawThreeColumnsRow<ApiSchemaRow>(rowId++, primSpec);
-                DrawThreeColumnsDictionaryEditor<SdfPrimSpec>(rowId, primSpec, SdfFieldKeys->CustomData);
-                DrawThreeColumnsDictionaryEditor<SdfPrimSpec>(rowId, primSpec, SdfFieldKeys->AssetInfo);
+                draw_three_columns_row<Specifier>(rowId++, primSpec);
+                draw_three_columns_row<PrimType>(rowId++, primSpec);
+                draw_three_columns_row<PrimName>(rowId++, primSpec);
+                draw_three_columns_row<PrimKind>(rowId++, primSpec);
+                draw_three_columns_row<PrimActive>(rowId++, primSpec);
+                draw_three_columns_row<PrimInstanceable>(rowId++, primSpec);
+                draw_three_columns_row<PrimHidden>(rowId++, primSpec);
+                draw_three_columns_row<ApiSchemaRow>(rowId++, primSpec);
+                draw_three_columns_dictionary_editor<SdfPrimSpec>(rowId, primSpec, SdfFieldKeys->CustomData);
+                draw_three_columns_dictionary_editor<SdfPrimSpec>(rowId, primSpec, SdfFieldKeys->AssetInfo);
                 ImGui::PopID();
-                EndThreeColumnsTable();
+                end_three_columns_table();
             }
             ImGui::Separator();
         }

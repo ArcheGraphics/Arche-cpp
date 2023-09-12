@@ -12,5 +12,5 @@
 #include "Selection.h"
 
 namespace vox {
-void DrawLayerPrimHierarchy(SdfLayerRefPtr layer, const Selection &selectedPrim);
+void draw_layer_prim_hierarchy(SdfLayerRefPtr layer, const Selection &selectedPrim);
 }// namespace vox

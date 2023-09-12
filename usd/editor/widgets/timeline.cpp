@@ -11,7 +11,7 @@
 
 namespace vox {
 // The easiest version of a timeline: a slider
-void DrawTimeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
+void draw_timeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
     const bool hasStage = stage;
     constexpr int widgetWidth = 80;
     int startTime = hasStage ? static_cast<int>(stage->GetStartTimeCode()) : 0;
@@ -22,7 +22,7 @@ void DrawTimeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
     ImGui::InputInt("##Start", &startTime, 0);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         if (hasStage && stage->GetStartTimeCode() != static_cast<double>(startTime)) {
-            ExecuteAfterDraw(&UsdStage::SetStartTimeCode, stage, static_cast<double>(startTime));
+            execute_after_draw(&UsdStage::SetStartTimeCode, stage, static_cast<double>(startTime));
         }
     }
 
@@ -41,7 +41,7 @@ void DrawTimeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
     ImGui::InputInt("##End", &endTime, 0);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         if (hasStage && stage->GetEndTimeCode() != static_cast<double>(endTime)) {
-            ExecuteAfterDraw(&UsdStage::SetEndTimeCode, stage, static_cast<double>(endTime));
+            execute_after_draw(&UsdStage::SetEndTimeCode, stage, static_cast<double>(endTime));
         }
     }
 
@@ -60,15 +60,15 @@ void DrawTimeline(UsdStageRefPtr stage, UsdTimeCode &currentTimeCode) {
     ImGui::SameLine();
     ImGui::PushItemWidth(widgetWidth);
     if (ImGui::Button("Play", ImVec2(widgetWidth, 0))) {
-        ExecuteAfterDraw<EditorStartPlayback>();
+        execute_after_draw<EditorStartPlayback>();
     }
 
     // Stop button
     ImGui::SameLine();
     ImGui::PushItemWidth(widgetWidth);
     if (ImGui::Button("Stop", ImVec2(widgetWidth, 0))) {
-        ExecuteAfterDraw<EditorStopPlayback>();
+        execute_after_draw<EditorStopPlayback>();
     }
 }
 
-}
+}// namespace vox

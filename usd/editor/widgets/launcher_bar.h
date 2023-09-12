@@ -14,6 +14,6 @@ class Editor;
 // renders or publishing files from a button.
 
 // It is an editor specific UI
-void DrawLauncherBar(Editor *editor);
+void draw_launcher_bar(Editor *editor);
 
 }// namespace vox

@@ -14,7 +14,7 @@ namespace vox {
 // Only configurable at compile time, so it should change in the future.
 template<typename... Args>
 inline bool key_pressed(ImGuiKey key, Args... others) {
-    return key_pressed(key) && KeyPressed(others...);
+    return key_pressed(key) && key_pressed(others...);
 }
 template<>
 inline bool key_pressed(ImGuiKey key) { return ImGui::IsKeyDown(key); }

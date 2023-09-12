@@ -80,7 +80,7 @@ struct TreeIndenter {
     explicit TreeIndenter(const PathT &path) {
         path.GetPrefixes(&prefixes);
         for (int i = 0; i < prefixes.size(); ++i) {
-            ImGui::TreePushOverrideID(ToImGuiID<seed>(GetHash(prefixes[i])));
+            ImGui::TreePushOverrideID(to_imgui_id<seed>(get_hash(prefixes[i])));
         }
     }
     ~TreeIndenter() {

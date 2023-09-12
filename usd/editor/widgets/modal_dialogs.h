@@ -24,7 +24,7 @@ void _push_modal_dialog(ModalDialog *);
 template<typename T, typename... ArgTypes>
 void draw_modal_dialog(ArgTypes &&...args) {
     modalOpenTriggered = true;
-    _PushModalDialog(new T(args...));
+    _push_modal_dialog(new T(args...));
 }
 
 /// Draw the current modal dialog if it has been triggered

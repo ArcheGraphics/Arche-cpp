@@ -12,20 +12,20 @@ namespace vox {
 TextFilter::TextFilter(const char *default_filter) {
     if (default_filter) {
         ImStrncpy(InputBuf, default_filter, IM_ARRAYSIZE(InputBuf));
-        Build();
+        build();
     } else {
         memset(InputBuf, 0, InputBufSize);
         CountGrep = 0;
     }
 }
 
-bool TextFilter::Draw(const char *label, float width) {
+bool TextFilter::draw(const char *label, float width) {
     if (width != 0.0f)
         ImGui::SetNextItemWidth(width);
     bool value_changed = ImGui::InputTextWithHint(label, "Search", InputBuf, IM_ARRAYSIZE(InputBuf));
     ImGui::SameLine();
     if (value_changed)
-        Build();
+        build();
     return value_changed;
 }
 
@@ -44,8 +44,7 @@ void TextFilter::TextRange::split(char separator, ImVector<TextRange> *out) cons
         out->push_back(TextRange(wb, we));
 }
 
-void TextFilter::Build() {
-
+void TextFilter::build() {
     PatternMatchFunc = ImStristr;
 
     Filters.resize(0);
@@ -66,11 +65,11 @@ void TextFilter::Build() {
     }
 }
 
-ImGuiID TextFilter ::GetHash() const {
+ImGuiID TextFilter ::get_hash() const {
     return ImHashData(static_cast<const void *>(InputBuf), InputBufSize, 2000);
 }
 
-bool TextFilter::PassFilter(const char *text, const char *text_end) const {
+bool TextFilter::pass_filter(const char *text, const char *text_end) const {
     if (Filters.empty())
         return true;
 

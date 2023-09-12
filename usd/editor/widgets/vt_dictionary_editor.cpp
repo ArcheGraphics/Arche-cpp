@@ -9,7 +9,7 @@
 #include "vt_value_editor.h"
 #include "base/constants.h"
 #include <string>
-
+#include <imgui_stdlib.h>
 #include <pxr/base/vt/dictionary.h>
 
 #include "base/imgui_helpers.h"
@@ -18,7 +18,7 @@
 #include "vt_value_editor.h"
 
 namespace vox {
-static VtValue DrawEditableKeyName(const std::string &keyNameSrc, const std::string &typeName, int depth, bool &unfolded) {
+static VtValue draw_editable_key_name(const std::string &keyNameSrc, const std::string &typeName, int depth, bool &unfolded) {
     constexpr float indentSize = 10;// TODO move in Constants ??
     VtValue returnValue;
     ImGui::PushID(keyNameSrc.c_str());
@@ -63,7 +63,7 @@ static VtValue DrawEditableKeyName(const std::string &keyNameSrc, const std::str
     return returnValue;
 }
 
-static void CreateNewEntry(VtDictionary &dict) {
+static void create_new_entry(VtDictionary &dict) {
     int postfix = 1;
     VtDictionary::iterator found;
     std::string keyName;
@@ -76,10 +76,10 @@ static void CreateNewEntry(VtDictionary &dict) {
 }
 
 template<>
-inline bool HasEdits<VtDictionary>(const VtValue &dict) { return dict != VtValue(); }
+inline bool has_edits<VtDictionary>(const VtValue &dict) { return dict != VtValue(); }
 
 // TODO : show the types like "token" instead of TfToken
-VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName, int &rowId, int depth) {
+VtValue draw_dictionary_rows(const VtValue &dictValue, const std::string &dictName, int &rowId, int depth) {
 
     const VtDictionary &dictSource = dictValue.IsHolding<VtDictionary>() ? dictValue.Get<VtDictionary>() : VtDictionary();
 
@@ -89,7 +89,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
     std::string modifiedDictName;
     bool clearItem = false;
 
-    ScopedStyleColor style = GetRowStyle<VtDictionary>(0, dictValue);
+    ScopedStyleColor style = get_row_style<VtDictionary>(0, dictValue);
 
     ImGui::TableNextRow(ImGuiTableRowFlags_None, TableRowDefaultHeight);
     ImGui::TableSetColumnIndex(0);
@@ -100,7 +100,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
         if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
             if (ImGui::MenuItem(ICON_FA_PLUS " Add entry")) {
                 modifiedDict.reset(new VtDictionary(dictSource));
-                CreateNewEntry(*modifiedDict);
+                create_new_entry(*modifiedDict);
             }
             if (ImGui::MenuItem(ICON_FA_TRASH " Clear")) {
                 clearItem = true;
@@ -111,7 +111,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
 
     ImGui::TableSetColumnIndex(1);
     bool unfolded = false;
-    VtValue editedDictName = DrawEditableKeyName(dictName, "dict", depth, unfolded);
+    VtValue editedDictName = draw_editable_key_name(dictName, "dict", depth, unfolded);
     if (editedDictName != VtValue()) {
         modifiedDictName = editedDictName.Get<std::string>();
     }
@@ -120,7 +120,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
             // Is it a dictionary ?
             // TODO test with list/vect of vtvalue or dict
             if (item.second.IsHolding<VtDictionary>()) {
-                VtValue dictResult = DrawDictionaryRows(item.second, item.first, rowId, depth + 1);
+                VtValue dictResult = draw_dictionary_rows(item.second, item.first, rowId, depth + 1);
                 if (dictResult.IsHolding<VtDictionary>()) {
                     modifiedDict.reset(new VtDictionary(dictSource));
                     (*modifiedDict)[item.first] = dictResult.Get<VtDictionary>();
@@ -149,10 +149,10 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
                                 modifiedDict.reset(new VtDictionary(dictSource));
                                 (*modifiedDict)[item.first] = VtDictionary();
                             }
-                            for (int i = 0; i < GetAllValueTypeNames().size(); i++) {
-                                if (ImGui::Selectable(GetAllValueTypeNames()[i].GetAsToken().GetString().c_str(), false)) {
+                            for (int i = 0; i < get_all_value_type_names().size(); i++) {
+                                if (ImGui::Selectable(get_all_value_type_names()[i].GetAsToken().GetString().c_str(), false)) {
                                     modifiedDict.reset(new VtDictionary(dictSource));
-                                    (*modifiedDict)[item.first] = GetAllValueTypeNames()[i].GetDefaultValue();
+                                    (*modifiedDict)[item.first] = get_all_value_type_names()[i].GetDefaultValue();
                                 }
                             }
                             ImGui::EndMenu();
@@ -168,7 +168,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
 
                 ImGui::TableSetColumnIndex(1);
                 bool valueUnfolded = false;
-                VtValue editedKeyName = DrawEditableKeyName(item.first, item.second.GetTypeName(), depth + 1, valueUnfolded);
+                VtValue editedKeyName = draw_editable_key_name(item.first, item.second.GetTypeName(), depth + 1, valueUnfolded);
                 if (editedKeyName != VtValue()) {
                     modifiedDict.reset(new VtDictionary(dictSource));
                     modifiedDict->insert({editedKeyName.Get<std::string>(), item.second});
@@ -177,7 +177,7 @@ VtValue DrawDictionaryRows(const VtValue &dictValue, const std::string &dictName
 
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushItemWidth(-FLT_MIN);
-                VtValue result = DrawVtValue(item.first, item.second);
+                VtValue result = draw_vt_value(item.first, item.second);
                 if (result != VtValue()) {
                     modifiedDict.reset(new VtDictionary(dictSource));
                     (*modifiedDict)[item.first] = result;

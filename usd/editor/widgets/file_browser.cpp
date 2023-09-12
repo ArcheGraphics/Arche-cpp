@@ -13,7 +13,7 @@
 #include <functional>
 #include <ctime>
 #include <chrono>
-
+#include <imgui_stdlib.h>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -40,10 +40,10 @@ static std::string lineEditBuffer;
 static fs::path displayedDirectory = fs::current_path();
 };// namespace
 
-void SetValidExtensions(const std::vector<std::string> &extensions) { validExts = extensions; }
+void set_valid_extensions(const std::vector<std::string> &extensions) { validExts = extensions; }
 
 // Using a timer to avoid querying the filesytem at every frame
-static void EverySecond(const std::function<void()> &deferedFunction) {
+static void every_second(const std::function<void()> &deferedFunction) {
     static auto last = clk::steady_clock::now();
     auto now = clk::steady_clock::now();
     if ((now - last).count() > 1e9) {
@@ -52,7 +52,7 @@ static void EverySecond(const std::function<void()> &deferedFunction) {
     }
 }
 
-inline void ConvertToDirectory(const fs::path &path, std::string &directory) {
+inline void convert_to_directory(const fs::path &path, std::string &directory) {
     if (!path.empty() && path == path.root_name()) {// this is a drive
         auto path_ = path / path.root_directory();
         directory = path_.string();
@@ -64,14 +64,9 @@ inline void ConvertToDirectory(const fs::path &path, std::string &directory) {
 
 constexpr char preferred_separator_char_windows = '\\';
 constexpr char preferred_separator_char_unix = '/';
-
-#ifdef GHC_OS_WINDOWS
-static constexpr char preferred_separator_char = preferred_separator_char_windows;
-#else
 static constexpr char preferred_separator_char = preferred_separator_char_unix;
-#endif
 
-static bool DrawNavigationBar(fs::path &displayedDirectory) {
+static bool draw_navigation_bar(fs::path &displayedDirectory) {
     // Split the path navigator ??
     std::string lineEditBuffer;
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent));
@@ -119,7 +114,7 @@ static bool DrawNavigationBar(fs::path &displayedDirectory) {
     return false;
 }
 
-inline static bool DrawRefreshButton() {
+inline static bool draw_refresh_button() {
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent));
     if (ImGui::Button(ICON_FA_SYNC_ALT)) {
         return true;
@@ -127,14 +122,14 @@ inline static bool DrawRefreshButton() {
     return false;
 }
 
-static inline bool FileNameStartsWithDot(const fs::path &path) {
+static inline bool file_name_starts_with_dot(const fs::path &path) {
     const std::string &filename = path.filename().string();
     return filename.size() > 0 && filename[0] == '.';
 }
 
-static bool ShouldBeDisplayed(const fs::directory_entry &p) {
+static bool should_be_displayed(const fs::directory_entry &p) {
     const auto &filename = p.path().filename();
-    const auto startsWithDot = FileNameStartsWithDot(p.path());
+    const auto startsWithDot = file_name_starts_with_dot(p.path());
     bool endsWithValidExt = true;
     if (!validExts.empty()) {
         endsWithValidExt = false;
@@ -152,7 +147,7 @@ static bool ShouldBeDisplayed(const fs::directory_entry &p) {
 }
 
 // Compare function for sorting directories before files
-static bool compareDirectoryThenFile(const fs::directory_entry &a, const fs::directory_entry &b) {
+static bool compare_directory_then_file(const fs::directory_entry &a, const fs::directory_entry &b) {
     if (fs::is_directory(a) == fs::is_directory(b)) {
         return a < b;
     } else {
@@ -160,7 +155,7 @@ static bool compareDirectoryThenFile(const fs::directory_entry &a, const fs::dir
     }
 }
 
-static void DrawFileSize(uintmax_t fileSize) {
+static void draw_file_size(uintmax_t fileSize) {
     static const char *format[6] = {"%juB", "%juK", "%juM", "%juG", "%juT", "%juP"};
     constexpr int nbFormat = sizeof(format) / sizeof(const char *);
     int i = 0;
@@ -171,8 +166,7 @@ static void DrawFileSize(uintmax_t fileSize) {
     ImGui::Text(format[i], fileSize);
 }
 
-void DrawFileBrowser(int gutterSize) {
-
+void draw_file_browser(int gutterSize) {
     static fs::path displayedFileName;
     static std::vector<fs::directory_entry> directoryContent;
     static fs::path directoryContentPath;
@@ -210,11 +204,11 @@ void DrawFileBrowser(int gutterSize) {
     auto UpdateDirectoryContent = [&]() {
         directoryContent.clear();
         for (auto &item : fs::directory_iterator(displayedDirectory, fs::directory_options::skip_permission_denied)) {
-            if (ShouldBeDisplayed(item)) {
+            if (should_be_displayed(item)) {
                 directoryContent.push_back(item);
             };
         }
-        std::sort(directoryContent.begin(), directoryContent.end(), compareDirectoryThenFile);
+        std::sort(directoryContent.begin(), directoryContent.end(), compare_directory_then_file);
         mustUpdateDirectoryContent = false;
         directoryContentPath = displayedDirectory;
     };
@@ -232,11 +226,11 @@ void DrawFileBrowser(int gutterSize) {
     }
 
     // We scan the line buffer edit every second, no need to do it at every frame
-    EverySecond(ParseLineBufferEdit);
+    every_second(ParseLineBufferEdit);
     mustUpdateDirectoryContent |= directoryContentPath != displayedDirectory;
-    mustUpdateDirectoryContent |= DrawRefreshButton();
+    mustUpdateDirectoryContent |= draw_refresh_button();
     ImGui::SameLine();
-    mustUpdateDirectoryContent |= DrawNavigationBar(displayedDirectory);
+    mustUpdateDirectoryContent |= draw_navigation_bar(displayedDirectory);
 
     if (mustUpdateDirectoryContent) {
         UpdateDirectoryContent();
@@ -296,7 +290,7 @@ void DrawFileBrowser(int gutterSize) {
                     ImGui::Text("Error reading file");
                 }
                 ImGui::TableSetColumnIndex(3);
-                DrawFileSize(dirEntry.file_size());
+                draw_file_size(dirEntry.file_size());
             }
             ImGui::PopID();// direntries
             ImGui::EndTable();
@@ -308,13 +302,13 @@ void DrawFileBrowser(int gutterSize) {
     ImGui::InputText("File name", &lineEditBuffer);
 }
 
-bool FilePathExists() { return fileExists; }
+bool file_path_exists() { return fileExists; }
 
-std::string GetFileBrowserFilePath() { return filePath; }
+std::string get_file_browser_file_path() { return filePath; }
 
-std::string GetFileBrowserDirectory() { return displayedDirectory.string(); }
+std::string get_file_browser_directory() { return displayedDirectory.string(); }
 
-std::string GetFileBrowserFilePathRelativeTo(const std::string &root, bool unixify) {
+std::string get_file_browser_file_path_relative_to(const std::string &root, bool unixify) {
     fs::path rootPath(root);
     const fs::path originalPath(filePath);
     if (rootPath.is_absolute() && originalPath.is_absolute()) {
@@ -330,7 +324,7 @@ std::string GetFileBrowserFilePathRelativeTo(const std::string &root, bool unixi
     return filePath;
 }
 
-void EnsureFileBrowserDefaultExtension(const std::string &ext) {
+void ensure_file_browser_default_extension(const std::string &ext) {
     fs::path path(filePath);
     if (!path.empty() && !path.has_extension()) {
         path.replace_extension(ext);
@@ -339,7 +333,7 @@ void EnsureFileBrowserDefaultExtension(const std::string &ext) {
     }
 }
 
-void EnsureFileBrowserExtension(const std::string &ext) {
+void ensure_file_browser_extension(const std::string &ext) {
     fs::path path(filePath);
     if (!path.empty()) {
         path.replace_extension(ext);
@@ -348,18 +342,18 @@ void EnsureFileBrowserExtension(const std::string &ext) {
     }
 }
 
-void ResetFileBrowserFilePath() {
+void reset_file_browser_file_path() {
     filePath = "";
     lineEditBuffer = "";
 }
 
-void SetFileBrowserDirectory(const std::string &directory) {
+void set_file_browser_directory(const std::string &directory) {
     if (fs::exists(directory) && fs::is_directory(directory)) {
         displayedDirectory = directory;
     }
 }
 
-void SetFileBrowserFilePath(const std::string &path) {
+void set_file_browser_file_path(const std::string &path) {
     lineEditBuffer = path;
 }
 

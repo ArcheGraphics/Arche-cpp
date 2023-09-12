@@ -4,7 +4,7 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "Debug.h"
+#include "debug.h"
 
 #include <iostream>
 #include <array>
@@ -13,7 +13,7 @@
 #include <imgui_internal.h>
 
 namespace vox {
-void DrawDebugInfo() {
+void draw_debug_info() {
     ImGuiIO &io = ImGui::GetIO();
     ImGui::Text("Keys pressed:");
     for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++)

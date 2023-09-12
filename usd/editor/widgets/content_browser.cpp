@@ -17,6 +17,7 @@
 #include "modal_dialogs.h"
 #include "file_browser.h"
 #include "base/constants.h"
+#include "editor.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -55,31 +56,30 @@ struct hash<ContentBrowserOptions> {
 
 namespace vox {
 struct SessionLoadModalDialog : public ModalDialog {
-
     SessionLoadModalDialog(const UsdStageRefPtr &stage) : _stage(stage){};
     ~SessionLoadModalDialog() override {}
 
-    void Draw() override {
-        DrawFileBrowser();
-        auto filePath = GetFileBrowserFilePath();
+    void draw() override {
+        draw_file_browser();
+        auto filePath = get_file_browser_file_path();
         ImGui::Text("%s", filePath.c_str());
-        DrawOkCancelModal([&]() {// On Ok ->
+        draw_ok_cancel_modal([&]() {// On Ok ->
             if (!filePath.empty()) {
                 SdfLayerRefPtr sessionLayer = _stage->GetSessionLayer();
                 std::function<void()> importSession = [=]() {
                     sessionLayer->Import(filePath);
                 };
-                ExecuteAfterDraw<UsdFunctionCall>(sessionLayer, importSession);
+                execute_after_draw<UsdFunctionCall>(sessionLayer, importSession);
             }
         });
     }
 
-    const char *DialogId() const override { return "Load session"; }
+    const char *dialog_id() const override { return "Load session"; }
 
     UsdStageRefPtr _stage;
 };
 
-void DrawLayerTooltip(SdfLayerHandle layer) {
+void draw_layer_tooltip(SdfLayerHandle layer) {
     ImGui::SetTooltip("%s\n%s", layer->GetRealPath().c_str(), layer->GetIdentifier().c_str());
     auto assetInfo = layer->GetAssetInfo();
     if (!assetInfo.IsEmpty()) {
@@ -94,7 +94,7 @@ void DrawLayerTooltip(SdfLayerHandle layer) {
     }
 }
 
-static bool PassOptionsFilter(SdfLayerHandle layer, const ContentBrowserOptions &options, bool isStage) {
+static bool pass_options_filter(SdfLayerHandle layer, const ContentBrowserOptions &options, bool isStage) {
     if (!options._filterAnonymous) {
         if (layer->IsAnonymous())
             return false;
@@ -120,7 +120,7 @@ static bool PassOptionsFilter(SdfLayerHandle layer, const ContentBrowserOptions 
     return true;
 }
 
-static const std::string &LayerNameFromOptions(const SdfLayerHandle &layer, const ContentBrowserOptions &options) {
+static const std::string &layer_name_from_options(const SdfLayerHandle &layer, const ContentBrowserOptions &options) {
     // GetDisplayName proved to be really slow when the number of layers is high.
     // We maintain a map to store the displayName and avoid allocating and releasing memory
     static std::unordered_map<void const *, std::string> displayNames;
@@ -138,24 +138,24 @@ static const std::string &LayerNameFromOptions(const SdfLayerHandle &layer, cons
     return layer->GetIdentifier();
 }
 
-static inline void DrawSaveButton(SdfLayerHandle layer) {
+static inline void draw_save_button(SdfLayerHandle layer) {
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
                            layer->IsAnonymous() ? ImVec4(ColorTransparent) : (layer->IsDirty() ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(ColorTransparent)));
     if (ImGui::Button(ICON_FA_SAVE "###Save")) {
-        ExecuteAfterDraw(&SdfLayer::Save, layer, true);
+        execute_after_draw(&SdfLayer::Save, layer, true);
     }
 }
 
-static inline void DrawSelectStageButton(SdfLayerHandle layer, bool isStage, SdfLayerHandle *selectedStage) {
+static inline void draw_select_stage_button(SdfLayerHandle layer, bool isStage, SdfLayerHandle *selectedStage) {
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent), ImGuiCol_Text,
                            isStage ? ((selectedStage && *selectedStage == layer) ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0)) : ImVec4(ColorTransparent));
     if (ImGui::Button(ICON_FA_DESKTOP "###Stage")) {
-        ExecuteAfterDraw<EditorSetCurrentStage>(layer);
+        execute_after_draw<EditorSetCurrentStage>(layer);
     }
 }
 
-static inline void DrawLayerDescriptionRow(SdfLayerHandle layer, bool isStage, const std::string &layerName,
-                                           SdfLayerHandle *selectedLayer, SdfLayerHandle *selectedStage) {
+static inline void draw_layer_description_row(SdfLayerHandle layer, bool isStage, const std::string &layerName,
+                                              SdfLayerHandle *selectedLayer, SdfLayerHandle *selectedStage) {
     ScopedStyleColor style(ImGuiCol_Text, isStage ? (selectedStage && *selectedStage == layer ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(1.0, 1.0, 1.0, 1.0)) : ImVec4(0.6, 0.6, 0.6, 1.0));
     bool selected = selectedLayer && *selectedLayer == layer;
     if (ImGui::Selectable(layerName.c_str(), selected)) {
@@ -165,14 +165,14 @@ static inline void DrawLayerDescriptionRow(SdfLayerHandle layer, bool isStage, c
     }
     if (ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
         if (!isStage) {
-            ExecuteAfterDraw<EditorOpenStage>(layer->GetRealPath());
+            execute_after_draw<EditorOpenStage>(layer->GetRealPath());
         } else {
-            ExecuteAfterDraw<EditorSetCurrentStage>(layer);
+            execute_after_draw<EditorSetCurrentStage>(layer);
         }
     }
 }
 
-inline size_t ComputeLayerSetHash(SdfLayerHandleSet &layerSet) {
+inline size_t compute_layer_set_hash(SdfLayerHandleSet &layerSet) {
     size_t seed = 0;
     for (auto it = layerSet.begin(); it != layerSet.end(); ++it) {
         seed ^= hash_value(*it) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -180,8 +180,8 @@ inline size_t ComputeLayerSetHash(SdfLayerHandleSet &layerSet) {
     return seed;
 }
 
-void DrawLayerSet(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerHandle *selectedLayer, SdfLayerHandle *selectedStage,
-                  const ContentBrowserOptions &options, const ImVec2 &listSize = ImVec2(0, -10)) {
+void draw_layer_set(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerHandle *selectedLayer, SdfLayerHandle *selectedStage,
+                    const ContentBrowserOptions &options, const ImVec2 &listSize = ImVec2(0, -10)) {
 
     static std::vector<SdfLayerHandle> sortedLayerList;
     static std::vector<SdfLayerHandle>::iterator endOfPartition = sortedLayerList.end();
@@ -189,27 +189,27 @@ void DrawLayerSet(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerHan
     static TextFilter filter;
     static size_t pastTextFilterHash;
     static size_t pastOptionFilterHash;
-    filter.Draw();
+    filter.draw();
 
     ImGui::PushItemWidth(-1);
     if (ImGui::BeginListBox("##DrawLayerSet", listSize)) {
         // Filter and sort the layer set. This is done only when the layer set or the filter have changed, otherwise it can be
         // really costly to do it at every frame, mainly because of the string creation and deletion.
         // We check if anything has changed using a hash which should be relatively quick to compute.
-        size_t currentLayerSetHash = ComputeLayerSetHash(layerSet);
-        size_t currentTextFilterHash = filter.GetHash();
+        size_t currentLayerSetHash = compute_layer_set_hash(layerSet);
+        size_t currentTextFilterHash = filter.get_hash();
         size_t currentOptionFilterHash = std::hash<ContentBrowserOptions>()(options);
         if (currentLayerSetHash != pastLayerSetHash || currentTextFilterHash != pastTextFilterHash ||
             currentOptionFilterHash != pastOptionFilterHash) {
             sortedLayerList.assign(layerSet.begin(), layerSet.end());
             endOfPartition = partition(sortedLayerList.begin(), sortedLayerList.end(), [&](const auto &layer) {
                 const bool isStage = cache.FindOneMatching(layer);
-                return filter.PassFilter(LayerNameFromOptions(layer, options).c_str()) &&
-                       PassOptionsFilter(layer, options, isStage);
+                return filter.pass_filter(layer_name_from_options(layer, options).c_str()) &&
+                       pass_options_filter(layer, options, isStage);
             });
 
             std::sort(sortedLayerList.begin(), endOfPartition, [&](const auto &t1, const auto &t2) {
-                return LayerNameFromOptions(t1, options) < LayerNameFromOptions(t2, options);
+                return layer_name_from_options(t1, options) < layer_name_from_options(t2, options);
             });
             pastLayerSetHash = currentLayerSetHash;
             pastTextFilterHash = currentTextFilterHash;
@@ -223,40 +223,40 @@ void DrawLayerSet(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerHan
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 const auto &layer = sortedLayerList[row];
-                const std::string &layerName = LayerNameFromOptions(layer, options);
+                const std::string &layerName = layer_name_from_options(layer, options);
                 const UsdStageRefPtr isStage = cache.FindOneMatching(layer);
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, ImGui::GetStyle().ItemSpacing.y));
                 ImGui::PushID(layer->GetUniqueIdentifier());
-                DrawSelectStageButton(layer, isStage, selectedStage);
+                draw_select_stage_button(layer, isStage, selectedStage);
                 ImGui::SameLine();
-                DrawSaveButton(layer);
+                draw_save_button(layer);
                 ImGui::PopStyleVar();
                 ImGui::SameLine();
-                DrawLayerDescriptionRow(layer, isStage, layerName, selectedLayer, selectedStage);
+                draw_layer_description_row(layer, isStage, layerName, selectedLayer, selectedStage);
 
                 if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 2) {
-                    DrawLayerTooltip(layer);
+                    draw_layer_tooltip(layer);
                 }
                 if (ImGui::BeginPopupContextItem()) {
                     if (isStage) {
                         if (ImGui::MenuItem("Edit session layer")) {
-                            ExecuteAfterDraw<EditorSetCurrentLayer>(isStage->GetSessionLayer());
+                            execute_after_draw<EditorSetCurrentLayer>(isStage->GetSessionLayer());
                         }
                         if (ImGui::MenuItem("Load session layer")) {
-                            DrawModalDialog<SessionLoadModalDialog>(isStage);
+                            draw_modal_dialog<SessionLoadModalDialog>(isStage);
                         }
                         if (ImGui::MenuItem("Save session layer as")) {
-                            ExecuteAfterDraw<EditorSaveLayerAs>(isStage->GetSessionLayer());
+                            execute_after_draw<EditorSaveLayerAs>(isStage->GetSessionLayer());
                         }
                     }
 
                     if (ImGui::MenuItem("Edit layer")) {
-                        ExecuteAfterDraw<EditorSetCurrentLayer>(layer);
+                        execute_after_draw<EditorSetCurrentLayer>(layer);
                     }
 
                     // TODO: split stage and layer ??
                     // Stage could be flatten and exported - or zipped
-                    DrawLayerActionPopupMenu(layer, isStage);
+                    draw_layer_action_popup_menu(layer, isStage);
 
                     ImGui::EndPopup();
                 }
@@ -305,12 +305,12 @@ void DrawContentBrowser(Editor &editor) {
     static ContentBrowserOptions options;
     DrawContentBrowserMenuBar(options);
     // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
-    SdfLayerHandle selectedLayer(editor.GetCurrentLayer());
-    SdfLayerHandle selectedStage(editor.GetCurrentStage() ? editor.GetCurrentStage()->GetRootLayer() : SdfLayerHandle());
+    SdfLayerHandle selectedLayer(editor.get_current_layer());
+    SdfLayerHandle selectedStage(editor.get_current_stage() ? editor.get_current_stage()->GetRootLayer() : SdfLayerHandle());
     auto layers = SdfLayer::GetLoadedLayers();
-    DrawLayerSet(editor.GetStageCache(), layers, &selectedLayer, &selectedStage, options);
-    if (selectedLayer != editor.GetCurrentLayer()) {
-        ExecuteAfterDraw<EditorSetSelection>(selectedLayer, SdfPath::AbsoluteRootPath());
+    draw_layer_set(editor.get_stage_cache(), layers, &selectedLayer, &selectedStage, options);
+    if (selectedLayer != editor.get_current_layer()) {
+        execute_after_draw<EditorSetSelection>(selectedLayer, SdfPath::AbsoluteRootPath());
     }
 }
 

@@ -21,31 +21,31 @@
 
 namespace vox {
 #define StageOutlinerSeed 2342934
-#define IdOf ToImGuiID<StageOutlinerSeed, size_t>
+#define IdOf to_imgui_id<StageOutlinerSeed, size_t>
 
 class StageOutlinerDisplayOptions {
 public:
-    StageOutlinerDisplayOptions() { ComputePrimFlagsPredicate(); }
+    StageOutlinerDisplayOptions() { compute_prim_flags_predicate(); }
 
-    Usd_PrimFlagsPredicate GetPrimFlagsPredicate() const { return _displayPredicate; }
+    Usd_PrimFlagsPredicate get_prim_flags_predicate() const { return _displayPredicate; }
 
-    void ToggleShowPrototypes() { _showPrototypes = !_showPrototypes; }
+    void toggle_show_prototypes() { _showPrototypes = !_showPrototypes; }
 
-    void ToggleShowInactive() {
+    void toggle_show_inactive() {
         _showInactive = !_showInactive;
-        ComputePrimFlagsPredicate();
+        compute_prim_flags_predicate();
     }
-    void ToggleShowAbstract() {
+    void toggle_show_abstract() {
         _showAbstract = !_showAbstract;
-        ComputePrimFlagsPredicate();
+        compute_prim_flags_predicate();
     }
-    void ToggleShowUnloaded() {
+    void toggle_show_unloaded() {
         _showUnloaded = !_showUnloaded;
-        ComputePrimFlagsPredicate();
+        compute_prim_flags_predicate();
     }
-    void ToggleShowUndefined() {
+    void toggle_show_undefined() {
         _showUndefined = !_showUndefined;
-        ComputePrimFlagsPredicate();
+        compute_prim_flags_predicate();
     }
 
     bool GetShowPrototypes() const { return _showPrototypes; }
@@ -57,7 +57,7 @@ public:
 private:
     // Default is:
     // UsdPrimIsActive && UsdPrimIsDefined && UsdPrimIsLoaded && !UsdPrimIsAbstract
-    void ComputePrimFlagsPredicate() {
+    void compute_prim_flags_predicate() {
         Usd_PrimFlagsConjunction flags;
         if (!_showInactive) {
             flags = flags && UsdPrimIsActive;
@@ -82,7 +82,7 @@ private:
     bool _showPrototypes = true;
 };
 
-static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
+static void explore_layer_tree(SdfLayerTreeHandle tree, PcpNodeRef node) {
     if (!tree)
         return;
     auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -92,31 +92,31 @@ static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
         format += " ";
         format += obj->GetPath().GetString();
         if (ImGui::MenuItem(format.c_str())) {
-            ExecuteAfterDraw<EditorSetSelection>(tree->GetLayer(), obj->GetPath());
+            execute_after_draw<EditorSetSelection>(tree->GetLayer(), obj->GetPath());
         }
     }
     for (auto subTree : tree->GetChildTrees()) {
-        ExploreLayerTree(subTree, node);
+        explore_layer_tree(subTree, node);
     }
 }
 
-static void ExploreComposition(PcpNodeRef root) {
+static void explore_composition(PcpNodeRef root) {
     auto tree = root.GetLayerStack()->GetLayerTree();
-    ExploreLayerTree(tree, root);
-    TF_FOR_ALL(childNode, root.GetChildrenRange()) { ExploreComposition(*childNode); }
+    explore_layer_tree(tree, root);
+    TF_FOR_ALL(childNode, root.GetChildrenRange()) { explore_composition(*childNode); }
 }
 
 static void DrawUsdPrimEditMenuItems(const UsdPrim &prim) {
     if (ImGui::MenuItem("Toggle active")) {
         const bool active = !prim.IsActive();
-        ExecuteAfterDraw(&UsdPrim::SetActive, prim, active);
+        execute_after_draw(&UsdPrim::SetActive, prim, active);
     }
     // TODO: Load and Unload are not in the undo redo :( ... make a command for them
     if (prim.HasAuthoredPayloads() && prim.IsLoaded() && ImGui::MenuItem("Unload")) {
-        ExecuteAfterDraw(&UsdPrim::Unload, prim);
+        execute_after_draw(&UsdPrim::Unload, prim);
     }
     if (prim.HasAuthoredPayloads() && !prim.IsLoaded() && ImGui::MenuItem("Load")) {
-        ExecuteAfterDraw(&UsdPrim::Load, prim, UsdLoadWithDescendants);
+        execute_after_draw(&UsdPrim::Load, prim, UsdLoadWithDescendants);
     }
     if (ImGui::MenuItem("Copy prim path")) {
         ImGui::SetClipboardText(prim.GetPath().GetString().c_str());
@@ -125,13 +125,13 @@ static void DrawUsdPrimEditMenuItems(const UsdPrim &prim) {
         auto pcpIndex = prim.ComputeExpandedPrimIndex();
         if (pcpIndex.IsValid()) {
             auto rootNode = pcpIndex.GetRootNode();
-            ExploreComposition(rootNode);
+            explore_composition(rootNode);
         }
         ImGui::EndMenu();
     }
 }
 
-static ImVec4 GetPrimColor(const UsdPrim &prim) {
+static ImVec4 get_prim_color(const UsdPrim &prim) {
     if (!prim.IsActive() || !prim.IsLoaded()) {
         return ImVec4(ColorPrimInactive);
     }
@@ -152,7 +152,7 @@ static ImVec4 GetPrimColor(const UsdPrim &prim) {
     return ImVec4(ColorPrimDefault);
 }
 
-static inline const char *GetVisibilityIcon(const TfToken &visibility) {
+static inline const char *get_visibility_icon(const TfToken &visibility) {
     if (visibility == UsdGeomTokens->inherited) {
         return ICON_FA_HAND_POINT_UP;
     } else if (visibility == UsdGeomTokens->invisible) {
@@ -163,7 +163,7 @@ static inline const char *GetVisibilityIcon(const TfToken &visibility) {
     return ICON_FA_EYE;
 }
 
-static void DrawVisibilityButton(const UsdPrim &prim) {
+static void draw_visibility_button(const UsdPrim &prim) {
     // TODO: this should work with animation
     UsdGeomImageable imageable(prim);
     if (imageable) {
@@ -173,7 +173,7 @@ static void DrawVisibilityButton(const UsdPrim &prim) {
         VtValue visibleValue;
         attr.Get(&visibleValue);
         TfToken visibilityToken = visibleValue.Get<TfToken>();
-        const char *visibilityIcon = GetVisibilityIcon(visibilityToken);
+        const char *visibilityIcon = get_visibility_icon(visibilityToken);
         {
             ScopedStyleColor buttonColor(
                 ImGuiCol_Text, attr.HasAuthoredValue() ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(ColorPrimInactive));
@@ -183,14 +183,14 @@ static void DrawVisibilityButton(const UsdPrim &prim) {
                 ScopedStyleColor menuTextColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
                 if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
                     if (attr.HasAuthoredValue() && ImGui::MenuItem("clear visibiliy")) {
-                        ExecuteAfterDraw(&UsdPrim::RemoveProperty, prim, attr.GetName());
+                        execute_after_draw(&UsdPrim::RemoveProperty, prim, attr.GetName());
                     }
                     VtValue allowedTokens;
                     attr.GetMetadata(TfToken("allowedTokens"), &allowedTokens);
                     if (allowedTokens.IsHolding<VtArray<TfToken>>()) {
                         for (const auto &token : allowedTokens.Get<VtArray<TfToken>>()) {
                             if (ImGui::MenuItem(token.GetText())) {
-                                ExecuteAfterDraw<AttributeSet>(attr, VtValue(token), UsdTimeCode::Default());
+                                execute_after_draw<AttributeSet>(attr, VtValue(token), UsdTimeCode::Default());
                             }
                         }
                     }
@@ -221,7 +221,7 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
         ImGuiTreeNodeFlags_AllowItemOverlap;// for testing worse case scenario add | ImGuiTreeNodeFlags_DefaultOpen;
 
     // Another way ???
-    const auto &children = prim.GetFilteredChildren(displayOptions.GetPrimFlagsPredicate());
+    const auto &children = prim.GetFilteredChildren(displayOptions.get_prim_flags_predicate());
     if (children.empty()) {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
@@ -233,7 +233,7 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
     {
         {
             TreeIndenter<StageOutlinerSeed, SdfPath> indenter(prim.GetPath());
-            ScopedStyleColor primColor(ImGuiCol_Text, GetPrimColor(prim), ImGuiCol_HeaderHovered, 0, ImGuiCol_HeaderActive, 0);
+            ScopedStyleColor primColor(ImGuiCol_Text, get_prim_color(prim), ImGuiCol_HeaderHovered, 0, ImGuiCol_HeaderActive, 0);
             const ImGuiID pathHash = IdOf(get_hash(prim.GetPath()));
 
             unfolded = ImGui::TreeNodeBehavior(pathHash, flags, prim.GetName().GetText());
@@ -248,7 +248,7 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
                         selectedPaths.add_selected(prim.GetStage(), prim.GetPath());
                     }
                 } else {
-                    ExecuteAfterDraw<EditorSetSelection>(prim.GetStage(), prim.GetPath());
+                    execute_after_draw<EditorSetSelection>(prim.GetStage(), prim.GetPath());
                 }
             }
             {
@@ -261,7 +261,7 @@ static void DrawPrimTreeRow(const UsdPrim &prim, Selection &selectedPaths, Stage
         }
         // Visibility
         ImGui::TableSetColumnIndex(1);
-        DrawVisibilityButton(prim);
+        draw_visibility_button(prim);
 
         // Type
         ImGui::TableSetColumnIndex(2);
@@ -285,7 +285,7 @@ static void DrawStageTreeRow(const UsdStageRefPtr &stage, Selection &selectedPat
     if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_MouseButtonLeft)) {
         const UsdPrim &selected =
             selectedPaths.is_selection_empty(stage) ? stage->GetPseudoRoot() : stage->GetPrimAtPath(selectedPaths.get_anchor_prim_path(stage));
-        DrawUsdPrimEditTarget(selected);
+        draw_usd_prim_edit_target(selected);
         ImGui::EndPopup();
     }
     ImGui::SameLine();
@@ -348,12 +348,12 @@ static void TraverseOpenedPaths(UsdStageRefPtr stage, std::vector<SdfPath> &path
 
     if (rootPathIsOpen) {
         // Stage
-        auto range = UsdPrimRange::Stage(stage, displayOptions.GetPrimFlagsPredicate());
+        auto range = UsdPrimRange::Stage(stage, displayOptions.get_prim_flags_predicate());
         TraverseRange(range, paths);
         // Prototypes
         if (displayOptions.GetShowPrototypes()) {
             for (const auto &proto : stage->GetPrototypes()) {
-                auto range = UsdPrimRange(proto, displayOptions.GetPrimFlagsPredicate());
+                auto range = UsdPrimRange(proto, displayOptions.get_prim_flags_predicate());
                 TraverseRange(range, paths);
             }
         }
@@ -380,19 +380,19 @@ void DrawStageOutlinerMenuBar(StageOutlinerDisplayOptions &displayOptions) {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Show")) {
             if (ImGui::MenuItem("Inactive", nullptr, displayOptions.GetShowInactive())) {
-                displayOptions.ToggleShowInactive();
+                displayOptions.toggle_show_inactive();
             }
             if (ImGui::MenuItem("Undefined", nullptr, displayOptions.GetShowUndefined())) {
-                displayOptions.ToggleShowUndefined();
+                displayOptions.toggle_show_undefined();
             }
             if (ImGui::MenuItem("Unloaded", nullptr, displayOptions.GetShowUnloaded())) {
-                displayOptions.ToggleShowUnloaded();
+                displayOptions.toggle_show_unloaded();
             }
             if (ImGui::MenuItem("Abstract", nullptr, displayOptions.GetShowAbstract())) {
-                displayOptions.ToggleShowAbstract();
+                displayOptions.toggle_show_abstract();
             }
             if (ImGui::MenuItem("Prototypes", nullptr, displayOptions.GetShowPrototypes())) {
-                displayOptions.ToggleShowPrototypes();
+                displayOptions.toggle_show_prototypes();
             }
             ImGui::EndMenu();
         }
@@ -468,7 +468,7 @@ void DrawStageOutliner(UsdStageRefPtr stage, Selection &selectedPaths) {
     ImGui::Checkbox("use regex", &useRegex);
     ImGui::SameLine();
     if (ImGui::Button("Select next") || enterPressed) {
-        ExecuteAfterDraw<EditorFindPrim>(std::string(patternBuffer), useRegex);
+        execute_after_draw<EditorFindPrim>(std::string(patternBuffer), useRegex);
     }
 }
 

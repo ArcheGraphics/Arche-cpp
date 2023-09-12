@@ -11,5 +11,5 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void DrawPrimVariants(const SdfPrimSpecHandle &primSpec);
+void draw_prim_variants(const SdfPrimSpecHandle &primSpec);
 }// namespace vox

@@ -11,12 +11,12 @@
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace vox {
-void DrawAttributeValueAtTime(UsdAttribute &attribute, UsdTimeCode currentTime = UsdTimeCode::Default());
-void DrawUsdPrimProperties(UsdPrim &obj, UsdTimeCode currentTime = UsdTimeCode::Default());
+void draw_attribute_value_at_time(UsdAttribute &attribute, UsdTimeCode currentTime = UsdTimeCode::Default());
+void draw_usd_prim_properties(UsdPrim &obj, UsdTimeCode currentTime = UsdTimeCode::Default());
 
 /// Should go in TransformEditor.h
-bool DrawXformsCommon(UsdPrim &prim, UsdTimeCode currentTime = UsdTimeCode::Default());
+bool draw_xforms_common(UsdPrim &prim, UsdTimeCode currentTime = UsdTimeCode::Default());
 
 /// Should go in a UsdPrimEditors file instead
-void DrawUsdPrimEditTarget(const UsdPrim &prim);
+void draw_usd_prim_edit_target(const UsdPrim &prim);
 }// namespace vox
