@@ -6,6 +6,7 @@
 #include "FontAwesomeFree5.h"
 #include "IBMPlexMonoFree.h"
 #include "IBMPlexSansMediumFree.h"
+#include "IconsFontAwesome5.h"
 
 #define GUI_CONFIG_FILE "usdtweak_gui.ini"
 
@@ -62,7 +63,7 @@ static void UsdTweakDataWriteAll(ImGuiContext *ctx, ImGuiSettingsHandler *iniHan
 
 bool ResourcesLoader::_resourcesLoaded = false;
 
-EditorSettings ResourcesLoader::_editorSettings = EditorSettings();
+//EditorSettings ResourcesLoader::_editorSettings = EditorSettings();
 
 EditorSettings &ResourcesLoader::GetEditorSettings() { return _editorSettings; }
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "base/constants.h"
+
 namespace vox {
 //
 // Provide a standard and consistent layout for tables with button+field+value, and I don't have to write and fix the same code multiple time in the source

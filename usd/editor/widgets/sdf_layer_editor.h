@@ -9,6 +9,8 @@
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 
+PXR_NAMESPACE_USING_DIRECTIVE
+
 namespace vox {
 //
 void draw_sdf_layer_identity(const SdfLayerRefPtr &layer, const SdfPath &);

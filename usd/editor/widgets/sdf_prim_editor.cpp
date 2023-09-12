@@ -22,6 +22,7 @@
 #include <pxr/usd/usd/tokens.h>
 #include <pxr/usd/usd/typed.h>
 #include <pxr/base/plug/registry.h>
+#include <imgui.h>
 #include <imgui_stdlib.h>
 #include "commands/commands.h"
 #include "composition_editor.h"
@@ -630,7 +631,7 @@ inline void draw_third_column<AttributeRow>(const int rowId, const SdfAttributeS
     if (attribute->HasDefaultValue()) {
         // Show Default value if any
         ImGui::PushItemWidth(-FLT_MIN);
-        VtValue modified = DrawVtValue("##Default", attribute->GetDefaultValue());
+        VtValue modified = draw_vt_value("##Default", attribute->GetDefaultValue());
         if (modified != VtValue()) {
             execute_after_draw(&SdfPropertySpec::SetDefaultValue, attribute, modified);
         }
@@ -689,7 +690,7 @@ inline void draw_third_column<RelationRow>(const int rowId, const SdfPrimSpecHan
     draw_sdf_path_list_one_liner_editor(relation, SdfFieldKeys->TargetPaths);
 };
 
-void DrawPrimSpecRelations(const SdfPrimSpecHandle &primSpec) {
+void draw_prim_spec_relations(const SdfPrimSpecHandle &primSpec) {
     if (!primSpec)
         return;
     const auto &relationships = primSpec->GetRelationships();
@@ -748,8 +749,8 @@ inline void draw_third_column<ApiSchemaRow>(const int rowId, const SdfPrimSpecHa
     template<>                                                                                          \
     inline void draw_first_column<ClassName_>(const int rowId, const SdfPrimSpecHandle &primSpec) {     \
         ImGui::PushID(rowId);                                                                           \
-        if (ImGui::Button(ICON_FA_TRASH) && HasEdits<ClassName_>(primSpec)) {                           \
-            ExecuteAfterDraw(&SdfPrimSpec::ClearField, primSpec, Token_);                               \
+        if (ImGui::Button(ICON_FA_TRASH) && has_edits<ClassName_>(primSpec)) {                           \
+            execute_after_draw(&SdfPrimSpec::ClearField, primSpec, Token_);                               \
         }                                                                                               \
         ImGui::PopID();                                                                                 \
     }
@@ -790,19 +791,19 @@ void draw_prim_spec_metadata(const SdfPrimSpecHandle &primSpec) {
 void DrawPrimCreateCompositionMenu(const SdfPrimSpecHandle &primSpec) {
     if (primSpec) {
         if (ImGui::MenuItem("Reference")) {
-            DrawPrimCreateReference(primSpec);
+            draw_prim_create_reference(primSpec);
         }
         if (ImGui::MenuItem("Payload")) {
-            DrawPrimCreatePayload(primSpec);
+            draw_prim_create_payload(primSpec);
         }
         if (ImGui::MenuItem("Inherit")) {
-            DrawPrimCreateInherit(primSpec);
+            draw_prim_create_inherit(primSpec);
         }
         if (ImGui::MenuItem("Specialize")) {
-            DrawPrimCreateSpecialize(primSpec);
+            draw_prim_create_specialize(primSpec);
         }
         if (ImGui::MenuItem("Variant")) {
-            DrawModalDialog<CreateVariantModalDialog>(primSpec);
+            draw_modal_dialog<CreateVariantModalDialog>(primSpec);
         }
     }
 }
@@ -810,16 +811,15 @@ void DrawPrimCreateCompositionMenu(const SdfPrimSpecHandle &primSpec) {
 void DrawPrimCreatePropertyMenu(const SdfPrimSpecHandle &primSpec) {
     if (primSpec) {
         if (ImGui::MenuItem("Attribute")) {
-            DrawModalDialog<CreateAttributeDialog>(primSpec);
+            draw_modal_dialog<CreateAttributeDialog>(primSpec);
         }
         if (ImGui::MenuItem("Relation")) {
-            DrawModalDialog<CreateRelationDialog>(primSpec);
+            draw_modal_dialog<CreateRelationDialog>(primSpec);
         }
     }
 }
 
-void DrawSdfPrimEditorMenuBar(const SdfPrimSpecHandle &primSpec) {
-
+void draw_sdf_prim_editor_menu_bar(const SdfPrimSpecHandle &primSpec) {
     bool enabled = primSpec;
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("New", enabled)) {
@@ -830,7 +830,7 @@ void DrawSdfPrimEditorMenuBar(const SdfPrimSpecHandle &primSpec) {
         }
         if (ImGui::BeginMenu("Edit", enabled)) {
             if (ImGui::MenuItem("Paste")) {
-                ExecuteAfterDraw<PropertyPaste>(primSpec);
+                execute_after_draw<PropertyPaste>(primSpec);
             }
             ImGui::EndMenu();
         }
@@ -838,22 +838,22 @@ void DrawSdfPrimEditorMenuBar(const SdfPrimSpecHandle &primSpec) {
     }
 }
 
-void DrawSdfPrimEditor(const SdfPrimSpecHandle &primSpec, const Selection &selection) {
+void draw_sdf_prim_editor(const SdfPrimSpecHandle &primSpec, const Selection &selection) {
     if (!primSpec)
         return;
     auto headerSize = ImGui::GetWindowSize();
     headerSize.y = TableRowDefaultHeight * 3;// 3 fields in the header
     headerSize.x = -FLT_MIN;
     ImGui::BeginChild("##LayerHeader", headerSize);
-    DrawSdfLayerIdentity(primSpec->GetLayer(), primSpec->GetPath());// TODO rename to DrawUsdObjectInfo()
+    draw_sdf_layer_identity(primSpec->GetLayer(), primSpec->GetPath());// TODO rename to DrawUsdObjectInfo()
     ImGui::EndChild();
     ImGui::Separator();
     ImGui::BeginChild("##LayerBody");
-    DrawPrimSpecMetadata(primSpec);
-    DrawPrimCompositions(primSpec);
-    DrawPrimVariants(primSpec);
-    DrawPrimSpecAttributes(primSpec, selection);
-    DrawPrimSpecRelations(primSpec);
+    draw_prim_spec_metadata(primSpec);
+    draw_prim_compositions(primSpec);
+    draw_prim_variants(primSpec);
+    draw_prim_spec_attributes(primSpec, selection);
+    draw_prim_spec_relations(primSpec);
     ImGui::EndChild();
     if (ImGui::IsItemHovered()) {
         const SdfPath &selectedProperty = selection.get_anchor_property_path(primSpec->GetLayer());

@@ -268,7 +268,7 @@ void draw_layer_set(UsdStageCache &cache, SdfLayerHandleSet &layerSet, SdfLayerH
     ImGui::PopItemWidth();
 }
 
-void DrawContentBrowserMenuBar(ContentBrowserOptions &options) {
+void draw_content_browser_menu_bar(ContentBrowserOptions &options) {
     if (ImGui::BeginMenuBar()) {
         bool selected = true;
         if (ImGui::BeginMenu("Filter")) {
@@ -301,9 +301,9 @@ void DrawContentBrowserMenuBar(ContentBrowserOptions &options) {
     }
 }
 
-void DrawContentBrowser(Editor &editor) {
+void draw_content_browser(Editor &editor) {
     static ContentBrowserOptions options;
-    DrawContentBrowserMenuBar(options);
+    draw_content_browser_menu_bar(options);
     // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
     SdfLayerHandle selectedLayer(editor.get_current_layer());
     SdfLayerHandle selectedStage(editor.get_current_stage() ? editor.get_current_stage()->GetRootLayer() : SdfLayerHandle());

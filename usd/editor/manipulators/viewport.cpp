@@ -129,7 +129,8 @@ void draw_camera_editor(Viewport &viewport) {
 }
 
 Viewport::Viewport(UsdStageRefPtr stage, Selection &selection)
-    : _stage(stage), _cameraManipulator({InitialWindowWidth, InitialWindowHeight}),
+    : _stage(stage),
+      _cameraManipulator({500, 500}), // todo
       _currentEditingState(new MouseHoverManipulator()), _activeManipulator(&_positionManipulator), _selection(selection),
       _textureSize(1, 1), _selectedCameraPath(perspectiveCameraPath), _renderCamera(&_perspectiveCamera) {
 
@@ -244,7 +245,7 @@ void Viewport::draw_stage_selector(const ImVec2 widgetOrigin) {
         const UsdPrim &selected = get_selection().is_selection_empty(get_current_stage()) ?
                                       get_current_stage()->GetPseudoRoot() :
                                       get_current_stage()->GetPrimAtPath(get_selection().get_anchor_prim_path(get_current_stage()));
-        DrawUsdPrimEditTarget(selected);
+        draw_usd_prim_edit_target(selected);
         ImGui::EndPopup();
     }
     ImGui::SameLine();
@@ -527,7 +528,7 @@ void Viewport::set_camera_path(const SdfPath &cameraPath) {
 
 void Viewport::begin_hydra_ui(int width, int height) {
     // Create a ImGui windows to render the gizmos in
-    ImGui_ImplOpenGL3_NewFrame();
+//    ImGui_ImplOpenGL3_NewFrame();
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)width, (float)height);
     ImGui::NewFrame();
@@ -611,7 +612,7 @@ void Viewport::render() {
     }
 
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+//    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     _drawTarget->Unbind();
 }

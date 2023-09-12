@@ -13,9 +13,9 @@
 #include <functional>
 #include <ctime>
 #include <chrono>
+#include <imgui.h>
 #include <imgui_stdlib.h>
 #include <filesystem>
-namespace fs = std::filesystem;
 
 #include "file_browser.h"
 #include "base/imgui_helpers.h"
@@ -37,7 +37,7 @@ static std::string filePath;
 static bool fileExists = false;
 static std::vector<std::string> validExts;
 static std::string lineEditBuffer;
-static fs::path displayedDirectory = fs::current_path();
+static std::filesystem::path displayedDirectory = std::filesystem::current_path();
 };// namespace
 
 void set_valid_extensions(const std::vector<std::string> &extensions) { validExts = extensions; }
@@ -52,7 +52,7 @@ static void every_second(const std::function<void()> &deferedFunction) {
     }
 }
 
-inline void convert_to_directory(const fs::path &path, std::string &directory) {
+inline void convert_to_directory(const std::filesystem::path &path, std::string &directory) {
     if (!path.empty() && path == path.root_name()) {// this is a drive
         auto path_ = path / path.root_directory();
         directory = path_.string();
@@ -66,7 +66,7 @@ constexpr char preferred_separator_char_windows = '\\';
 constexpr char preferred_separator_char_unix = '/';
 static constexpr char preferred_separator_char = preferred_separator_char_unix;
 
-static bool draw_navigation_bar(fs::path &displayedDirectory) {
+static bool draw_navigation_bar(std::filesystem::path &displayedDirectory) {
     // Split the path navigator ??
     std::string lineEditBuffer;
     ScopedStyleColor style(ImGuiCol_Button, ImVec4(ColorTransparent));
@@ -87,7 +87,7 @@ static bool draw_navigation_bar(fs::path &displayedDirectory) {
                     const std::string driveText = driveVolumeName + " (" + driveLetter + ")";
                     if (ImGui::Selectable(driveText.c_str(), false)) {
                         lineEditBuffer = driveLetter + preferred_separator_char;
-                        displayedDirectory = fs::path(lineEditBuffer);
+                        displayedDirectory = std::filesystem::path(lineEditBuffer);
                         ImGui::EndPopup();
                         return true;
                     }
@@ -99,7 +99,7 @@ static bool draw_navigation_bar(fs::path &displayedDirectory) {
         const std::string dirLabel = directoryPath.substr(pos, len - pos);
         if (ImGui::Button(dirLabel.empty() ? "###emptydirlabel" : dirLabel.c_str())) {
             lineEditBuffer = directoryPath.substr(0, len) + preferred_separator_char;
-            displayedDirectory = fs::path(lineEditBuffer);
+            displayedDirectory = std::filesystem::path(lineEditBuffer);
             return true;
         }
         pos = len + 1;
@@ -122,12 +122,12 @@ inline static bool draw_refresh_button() {
     return false;
 }
 
-static inline bool file_name_starts_with_dot(const fs::path &path) {
+static inline bool file_name_starts_with_dot(const std::filesystem::path &path) {
     const std::string &filename = path.filename().string();
     return filename.size() > 0 && filename[0] == '.';
 }
 
-static bool should_be_displayed(const fs::directory_entry &p) {
+static bool should_be_displayed(const std::filesystem::directory_entry &p) {
     const auto &filename = p.path().filename();
     const auto startsWithDot = file_name_starts_with_dot(p.path());
     bool endsWithValidExt = true;
@@ -139,19 +139,19 @@ static bool should_be_displayed(const fs::directory_entry &p) {
     }
 
     try {
-        const bool isDirectory = fs::is_directory(p);
-        return !startsWithDot && (isDirectory || endsWithValidExt) && !fs::is_symlink(p);
-    } catch (fs::filesystem_error &) {
+        const bool isDirectory = std::filesystem::is_directory(p);
+        return !startsWithDot && (isDirectory || endsWithValidExt) && !std::filesystem::is_symlink(p);
+    } catch (std::filesystem::filesystem_error &) {
         return false;
     }
 }
 
 // Compare function for sorting directories before files
-static bool compare_directory_then_file(const fs::directory_entry &a, const fs::directory_entry &b) {
-    if (fs::is_directory(a) == fs::is_directory(b)) {
+static bool compare_directory_then_file(const std::filesystem::directory_entry &a, const std::filesystem::directory_entry &b) {
+    if (std::filesystem::is_directory(a) == std::filesystem::is_directory(b)) {
         return a < b;
     } else {
-        return fs::is_directory(a) > fs::is_directory(b);
+        return std::filesystem::is_directory(a) > std::filesystem::is_directory(b);
     }
 }
 
@@ -167,22 +167,22 @@ static void draw_file_size(uintmax_t fileSize) {
 }
 
 void draw_file_browser(int gutterSize) {
-    static fs::path displayedFileName;
-    static std::vector<fs::directory_entry> directoryContent;
-    static fs::path directoryContentPath;
+    static std::filesystem::path displayedFileName;
+    static std::vector<std::filesystem::directory_entry> directoryContent;
+    static std::filesystem::path directoryContentPath;
     static bool mustUpdateDirectoryContent = true;
     static bool mustUpdateChosenFileName = false;
 
     // Parse the line buffer containing the user input and try to make sense of it
     auto ParseLineBufferEdit = [&]() {
-        auto path = fs::path(lineEditBuffer);
-        if (path != path.root_name() && fs::is_directory(path)) {
+        auto path = std::filesystem::path(lineEditBuffer);
+        if (path != path.root_name() && std::filesystem::is_directory(path)) {
             displayedDirectory = path;
             mustUpdateDirectoryContent = true;
             lineEditBuffer = "";
             displayedFileName = "";
             mustUpdateChosenFileName = true;
-        } else if (path.parent_path() != path.root_name() && fs::is_directory(path.parent_path())) {
+        } else if (path.parent_path() != path.root_name() && std::filesystem::is_directory(path.parent_path())) {
             displayedDirectory = path.parent_path();
             mustUpdateDirectoryContent = true;
             lineEditBuffer = path.filename().string();
@@ -203,7 +203,7 @@ void draw_file_browser(int gutterSize) {
     // Update the list of entries for the chosen directory
     auto UpdateDirectoryContent = [&]() {
         directoryContent.clear();
-        for (auto &item : fs::directory_iterator(displayedDirectory, fs::directory_options::skip_permission_denied)) {
+        for (auto &item : std::filesystem::directory_iterator(displayedDirectory, std::filesystem::directory_options::skip_permission_denied)) {
             if (should_be_displayed(item)) {
                 directoryContent.push_back(item);
             };
@@ -214,14 +214,14 @@ void draw_file_browser(int gutterSize) {
     };
 
     if (mustUpdateChosenFileName) {
-        if (!displayedDirectory.empty() && !displayedFileName.empty() && fs::exists(displayedDirectory) &&
-            fs::is_directory(displayedDirectory)) {
+        if (!displayedDirectory.empty() && !displayedFileName.empty() && std::filesystem::exists(displayedDirectory) &&
+            std::filesystem::is_directory(displayedDirectory)) {
             const auto path_ = displayedDirectory / displayedFileName;
             filePath = path_.string();
         } else {
             filePath = "";
         }
-        fileExists = fs::exists(filePath);
+        fileExists = std::filesystem::exists(filePath);
         mustUpdateChosenFileName = false;
     }
 
@@ -280,15 +280,15 @@ void draw_file_browser(int gutterSize) {
                     ImGui::TextColored(ImVec4(0.5, 1.0, 0.5, 1.0), "%s", dirEntry.path().filename().string().c_str());
                 }
                 ImGui::TableSetColumnIndex(2);
-                try {
-                    const auto lastModified = last_write_time(dirEntry.path());
-                    const time_t cftime = decltype(lastModified)::clock::to_time_t(lastModified);
-                    struct tm lt;// Convert to local time
-                    localtime_(&lt, &cftime);
-                    ImGui::Text("%04d/%02d/%02d %02d:%02d", 1900 + lt.tm_year, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min);
-                } catch (const std::exception &) {
-                    ImGui::Text("Error reading file");
-                }
+//                try {
+//                    const auto lastModified = last_write_time(dirEntry.path());
+//                    const time_t cftime = decltype(lastModified)::clock::to_time_t(lastModified);
+//                    struct tm lt;// Convert to local time
+//                    localtime_(&lt, &cftime);
+//                    ImGui::Text("%04d/%02d/%02d %02d:%02d", 1900 + lt.tm_year, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min);
+//                } catch (const std::exception &) {
+//                    ImGui::Text("Error reading file");
+//                }
                 ImGui::TableSetColumnIndex(3);
                 draw_file_size(dirEntry.file_size());
             }
@@ -309,11 +309,11 @@ std::string get_file_browser_file_path() { return filePath; }
 std::string get_file_browser_directory() { return displayedDirectory.string(); }
 
 std::string get_file_browser_file_path_relative_to(const std::string &root, bool unixify) {
-    fs::path rootPath(root);
-    const fs::path originalPath(filePath);
+    std::filesystem::path rootPath(root);
+    const std::filesystem::path originalPath(filePath);
     if (rootPath.is_absolute() && originalPath.is_absolute()) {
         rootPath.remove_filename();
-        const fs::path relativePath = fs::relative(originalPath, rootPath);
+        const std::filesystem::path relativePath = std::filesystem::relative(originalPath, rootPath);
         auto relativePathStr = relativePath.string();
         if (unixify) {
             std::replace(relativePathStr.begin(), relativePathStr.end(), preferred_separator_char_windows,
@@ -325,20 +325,20 @@ std::string get_file_browser_file_path_relative_to(const std::string &root, bool
 }
 
 void ensure_file_browser_default_extension(const std::string &ext) {
-    fs::path path(filePath);
+    std::filesystem::path path(filePath);
     if (!path.empty() && !path.has_extension()) {
         path.replace_extension(ext);
         filePath = path.generic_string();
-        fileExists = fs::exists(filePath);
+        fileExists = std::filesystem::exists(filePath);
     }
 }
 
 void ensure_file_browser_extension(const std::string &ext) {
-    fs::path path(filePath);
+    std::filesystem::path path(filePath);
     if (!path.empty()) {
         path.replace_extension(ext);
         filePath = path.generic_string();
-        fileExists = fs::exists(filePath);
+        fileExists = std::filesystem::exists(filePath);
     }
 }
 
@@ -348,7 +348,7 @@ void reset_file_browser_file_path() {
 }
 
 void set_file_browser_directory(const std::string &directory) {
-    if (fs::exists(directory) && fs::is_directory(directory)) {
+    if (std::filesystem::exists(directory) && std::filesystem::is_directory(directory)) {
         displayedDirectory = directory;
     }
 }

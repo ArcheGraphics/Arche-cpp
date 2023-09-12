@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../editor/editor_settings.h"
+#include "entry/editor_settings.h"
 
 namespace vox {
 // Load fonts, ini settings, texture and initialise an imgui context.

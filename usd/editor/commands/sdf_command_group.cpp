@@ -39,8 +39,8 @@ template void SdfCommandGroup::store_instruction<UndoRedoPopChild<SdfPath>>(Undo
 // Call all the functions stored in _commands in reverse order
 void SdfCommandGroup::undo_it() {
     SdfChangeBlock block;
-    for (auto &_instruction : std::ranges::reverse_view(_instructions)) {
-        _instruction.undo_it();
+    for (auto cmd = _instructions.rbegin(); cmd != _instructions.rend(); ++cmd) {
+        cmd->undo_it();
     }
 }
 

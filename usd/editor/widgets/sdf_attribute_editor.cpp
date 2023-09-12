@@ -7,6 +7,7 @@
 #include "commands/commands.h"
 #include "vt_value_editor.h"
 #include <iostream>
+#include <imgui.h>
 #include <imgui_stdlib.h>
 #include <pxr/usd/sdf/attributeSpec.h>
 #include <pxr/usd/sdf/propertySpec.h>

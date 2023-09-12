@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <vector>
+#include <string>
 #include "fonts/IconsFontAwesome5.h"
 
 namespace vox {

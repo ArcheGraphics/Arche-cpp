@@ -9,7 +9,7 @@
 #include <pxr/usd/sdf/layer.h>
 #include <pxr/usd/sdf/primSpec.h>
 
-#include "Selection.h"
+#include "selection.h"
 
 namespace vox {
 void draw_layer_prim_hierarchy(SdfLayerRefPtr layer, const Selection &selectedPrim);

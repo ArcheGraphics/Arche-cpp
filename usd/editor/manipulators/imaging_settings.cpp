@@ -221,7 +221,7 @@ void draw_renderer_settings(UsdImagingGLEngine &renderer, ImagingSettings &rende
     // Renderer settings
     for (auto setting : renderer.GetRendererSettingsList()) {
         VtValue currentValue = renderer.GetRendererSetting(setting.key);
-        VtValue newValue = DrawVtValue(setting.name, currentValue);
+        VtValue newValue = draw_vt_value(setting.name, currentValue);
         if (newValue != VtValue()) {
             // TODO: that should be executed after drawing the UI
             // the following code should live in a command

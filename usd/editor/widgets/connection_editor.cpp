@@ -306,7 +306,7 @@ void build_node_graph(const UsdPrim &prim, ImVector<Node *> &nodes, ImVector<Nod
     }
 }
 
-static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
+static void show_example_app_custom_node_graph(const UsdPrim &prim) {
     ImGui::SetNextWindowSize(ImVec2(700, 600), ImGuiCond_FirstUseEver);
     if (!prim) return;
 
@@ -521,8 +521,8 @@ static void ShowExampleAppCustomNodeGraph(const UsdPrim &prim) {
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-void DrawConnectionEditor(const UsdPrim &prim) {
-    ShowExampleAppCustomNodeGraph(prim);
+void draw_connection_editor(const UsdPrim &prim) {
+    show_example_app_custom_node_graph(prim);
 }
 
 }// namespace vox

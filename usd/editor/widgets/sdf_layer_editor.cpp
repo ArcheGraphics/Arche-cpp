@@ -23,6 +23,7 @@
 #include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdRender/settings.h>
+#include <imgui.h>
 #include <imgui_stdlib.h>
 #include "editor.h"
 #include "commands/commands.h"
@@ -230,26 +231,26 @@ GENERATE_DRAW_FUNCTION(Documentation, TextMultiline, "##DrawLayerDocumentation")
 GENERATE_DRAW_FUNCTION(Comment, TextMultiline, "##DrawLayerComment");
 
 // To avoid repeating the same code, we let the preprocessor do the work
-#define GENERATE_METADATA_FIELD(ClassName_, Token_, DrawFun_, FieldName_)                        \
-    struct ClassName_ {                                                                          \
-        static constexpr const char *fieldName = FieldName_;                                     \
-    };                                                                                           \
-    template<>                                                                                   \
-    inline void DrawThirdColumn<ClassName_>(const int rowId, const SdfLayerRefPtr &owner) {      \
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                               \
-        DrawFun_(owner);                                                                         \
-    }                                                                                            \
-    template<>                                                                                   \
-    inline bool HasEdits<ClassName_>(const SdfLayerRefPtr &owner) {                              \
-        return !owner->GetField(SdfPath::AbsoluteRootPath(), Token_).IsEmpty();                  \
-    }                                                                                            \
-    template<>                                                                                   \
-    inline void DrawFirstColumn<ClassName_>(const int rowId, const SdfLayerRefPtr &owner) {      \
-        ImGui::PushID(rowId);                                                                    \
-        if (ImGui::Button(ICON_FA_TRASH) && HasEdits<ClassName_>(owner)) {                       \
-            ExecuteAfterDraw(&SdfLayer::EraseField, owner, SdfPath::AbsoluteRootPath(), Token_); \
-        }                                                                                        \
-        ImGui::PopID();                                                                          \
+#define GENERATE_METADATA_FIELD(ClassName_, Token_, DrawFun_, FieldName_)                          \
+    struct ClassName_ {                                                                            \
+        static constexpr const char *fieldName = FieldName_;                                       \
+    };                                                                                             \
+    template<>                                                                                     \
+    inline void draw_third_column<ClassName_>(const int rowId, const SdfLayerRefPtr &owner) {      \
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);                                 \
+        DrawFun_(owner);                                                                           \
+    }                                                                                              \
+    template<>                                                                                     \
+    inline bool has_edits<ClassName_>(const SdfLayerRefPtr &owner) {                               \
+        return !owner->GetField(SdfPath::AbsoluteRootPath(), Token_).IsEmpty();                    \
+    }                                                                                              \
+    template<>                                                                                     \
+    inline void draw_first_column<ClassName_>(const int rowId, const SdfLayerRefPtr &owner) {      \
+        ImGui::PushID(rowId);                                                                      \
+        if (ImGui::Button(ICON_FA_TRASH) && has_edits<ClassName_>(owner)) {                        \
+            execute_after_draw(&SdfLayer::EraseField, owner, SdfPath::AbsoluteRootPath(), Token_); \
+        }                                                                                          \
+        ImGui::PopID();                                                                            \
     }
 
 // Draw the layer path

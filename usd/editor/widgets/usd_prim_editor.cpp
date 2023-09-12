@@ -13,6 +13,7 @@
 #include <pxr/usd/pcp/node.h>
 #include <pxr/usd/pcp/layerStack.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <imgui.h>
 #include <imgui_stdlib.h>
 #include "usd_prim_editor.h"
 #include "vt_value_editor.h"
