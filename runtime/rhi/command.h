@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <array>
 #include <variant>
+#include <span>
 
 #include "common/macro.h"
 #include "common/basic_types.h"
@@ -26,16 +27,16 @@ struct IndirectDispatchArg {
     uint32_t max_dispatch_size;
 };
 
-#define LUISA_COMPUTE_RUNTIME_COMMANDS   \
-    BufferUploadCommand,                 \
-        BufferDownloadCommand,           \
-        BufferCopyCommand,               \
-        BufferToTextureCopyCommand,      \
-        ShaderDispatchCommand,           \
-        TextureUploadCommand,            \
-        TextureDownloadCommand,          \
-        TextureCopyCommand,              \
-        TextureToBufferCopyCommand,      \
+#define LUISA_COMPUTE_RUNTIME_COMMANDS \
+    BufferUploadCommand,               \
+        BufferDownloadCommand,         \
+        BufferCopyCommand,             \
+        BufferToTextureCopyCommand,    \
+        ShaderDispatchCommand,         \
+        TextureUploadCommand,          \
+        TextureDownloadCommand,        \
+        TextureCopyCommand,            \
+        TextureToBufferCopyCommand,    \
         CustomCommand
 
 #define LUISA_MAKE_COMMAND_FWD_DECL(CMD) class CMD;

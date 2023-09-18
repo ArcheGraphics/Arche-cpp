@@ -21,6 +21,7 @@ set(COMMON_FILES
         filesystem.cpp
         utils.cpp
         basic_types.cpp
+        magic_enum.h
 )
 
 set(GUI_FILES
@@ -63,6 +64,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         glfw
         imgui
         half
+        magic_enum
 )
 
 if (${NEED_LINK_ATOMIC})

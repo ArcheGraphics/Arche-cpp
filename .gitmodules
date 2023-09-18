@@ -25,3 +25,6 @@
 [submodule "third_party/MikkTSpace"]
 	path = third_party/MikkTSpace
 	url = https://github.com/mmikk/MikkTSpace
+[submodule "third_party/magic_enum"]
+	path = third_party/magic_enum
+	url = https://github.com/Neargye/magic_enum.git

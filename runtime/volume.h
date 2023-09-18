@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "common/mathematics.h"
 #include "runtime/rhi/pixel.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/mipmap.h"
@@ -102,7 +103,7 @@ public:
         if (level >= _mip_levels) [[unlikely]] {
             detail::error_volume_invalid_mip_levels(level, _mip_levels);
         }
-        auto mip_size = std::max(_size >> level, 1u);
+        auto mip_size = vox::max(_size >> level, 1u);
         return VolumeView<T>{handle(), _storage, level, mip_size};
     }
     [[nodiscard]] auto view() const noexcept { return view(0u); }

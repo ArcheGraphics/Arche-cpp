@@ -13,7 +13,6 @@
 namespace vox::compute {
 
 class ShaderDispatchCmdEncoder {
-
 public:
     using Argument = ShaderDispatchCommandBase::Argument;
 
@@ -33,7 +32,6 @@ protected:
 };
 
 class ComputeDispatchCmdEncoder final : public ShaderDispatchCmdEncoder {
-
 private:
     std::variant<uint3, IndirectDispatchArg> _dispatch_size;
 

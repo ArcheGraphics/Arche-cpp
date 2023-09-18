@@ -14,13 +14,7 @@
 #include "runtime/rhi/command.h"
 #include "runtime/command_list.h"
 
-namespace vox {
-class BinaryIO;
-}// namespace vox
-
 namespace vox::compute {
-class Type;
-
 class DeviceConfigExt {
 public:
     virtual ~DeviceConfigExt() noexcept = default;
@@ -28,7 +22,6 @@ public:
 
 struct DeviceConfig {
     mutable std::unique_ptr<DeviceConfigExt> extension;
-    const BinaryIO *binary_io{nullptr};
     size_t device_index{std::numeric_limits<size_t>::max()};
     bool inqueue_buffer_limit{true};
     bool headless{false};
@@ -40,7 +33,6 @@ protected:
 };
 
 class DeviceInterface : public std::enable_shared_from_this<DeviceInterface> {
-
 protected:
     friend class Context;
     std::string _backend_name;
@@ -58,7 +50,7 @@ public:
     [[nodiscard]] virtual uint compute_warp_size() const noexcept = 0;
 
 public:
-    [[nodiscard]] virtual BufferCreationInfo create_buffer(const Type *element, size_t elem_count) noexcept = 0;
+    [[nodiscard]] virtual BufferCreationInfo create_buffer(size_t elem_count) noexcept = 0;
     virtual void destroy_buffer(uint64_t handle) noexcept = 0;
 
     // texture
@@ -83,7 +75,7 @@ public:
     virtual void present_display_in_stream(uint64_t stream_handle, uint64_t swapchain_handle, uint64_t image_handle) noexcept = 0;
 
     // kernel
-    [[nodiscard]] virtual ShaderCreationInfo load_shader(std::string_view name, std::span<const Type *const> arg_types) noexcept = 0;
+    [[nodiscard]] virtual ShaderCreationInfo load_shader(std::string_view name) noexcept = 0;
     virtual void destroy_shader(uint64_t handle) noexcept = 0;
 
     // event

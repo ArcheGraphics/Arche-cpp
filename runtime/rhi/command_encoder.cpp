@@ -24,7 +24,7 @@ ShaderDispatchCmdEncoder::ShaderDispatchCmdEncoder(
     : _handle{handle}, _argument_count{arg_count} {
     if (auto arg_size_bytes = arg_count * sizeof(Argument)) {
         _argument_buffer.reserve(arg_size_bytes + uniform_size);
-        _argument_buffer.resize_uninitialized(arg_size_bytes);
+        _argument_buffer.resize(arg_size_bytes);
     }
 }
 
@@ -48,7 +48,9 @@ void ShaderDispatchCmdEncoder::_encode_texture(uint64_t handle, uint32_t level) 
 
 void ShaderDispatchCmdEncoder::_encode_uniform(const void *data, size_t size) noexcept {
     auto offset = _argument_buffer.size();
-    _argument_buffer.push_back_uninitialized(size);
+    for (int i = 0; i < size; ++i) {
+        _argument_buffer.push_back(std::byte());
+    }
     std::memcpy(_argument_buffer.data() + offset, data, size);
     auto &&arg = _create_argument();
     arg.tag = Argument::Tag::UNIFORM;

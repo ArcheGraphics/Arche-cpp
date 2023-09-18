@@ -102,6 +102,7 @@ public:
     enum struct Tag : uint32_t {
         BUFFER,
         TEXTURE,
+        STREAM,
         EVENT,
         SHADER,
         SWAP_CHAIN,

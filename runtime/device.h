@@ -142,7 +142,6 @@ public:
     [[nodiscard]] ByteBuffer create_byte_buffer(size_t byte_size) noexcept;
 
     template<typename T>
-        requires(!is_custom_struct_v<T>)//backend-specific type not allowed
     [[nodiscard]] auto create_buffer(size_t size) noexcept {
         return _create<Buffer<T>>(size);
     }
@@ -160,7 +159,7 @@ public:
 
     template<typename Kernel>
     void compile_to(Kernel &&kernel,
-                    vox::string_view name,
+                    std::string_view name,
                     bool enable_fast_math = true,
                     bool enable_debug_info = false) noexcept {
         ShaderOption option{
@@ -168,7 +167,7 @@ public:
             .enable_fast_math = enable_fast_math,
             .enable_debug_info = enable_debug_info,
             .compile_only = true,
-            .name = vox::string{name}};
+            .name = std::string{name}};
         static_cast<void>(this->compile(std::forward<Kernel>(kernel), option));
     }
 
@@ -186,7 +185,7 @@ public:
 
     template<size_t N, typename Kernel>
     void compile_to(Kernel &&kernel,
-                    vox::string_view name,
+                    std::string_view name,
                     bool enable_fast_math = true,
                     bool enable_debug_info = false) noexcept {
         ShaderOption option{
@@ -194,7 +193,7 @@ public:
             .enable_fast_math = enable_fast_math,
             .enable_debug_info = enable_debug_info,
             .compile_only = true,
-            .name = vox::string{name}};
+            .name = std::string{name}};
         static_cast<void>(this->compile<N>(std::forward<Kernel>(kernel), option));
     }
 

@@ -19,6 +19,7 @@ set(COMMON_FILES
         mipmap.cpp
         stream.cpp
         volume.cpp
+        swapchain.cpp
         rhi/command_encoder.cpp
         rhi/device_interface.cpp
         rhi/pixel.cpp
@@ -56,6 +57,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         half
+        magic_enum
 )
 
 if (${NEED_LINK_ATOMIC})

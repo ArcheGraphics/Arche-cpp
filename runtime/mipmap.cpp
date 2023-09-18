@@ -5,6 +5,7 @@
 //  property of any third parties.
 
 #include "common/logging.h"
+#include "common/magic_enum.h"
 #include "runtime/mipmap.h"
 
 namespace vox::compute::detail {
@@ -22,7 +23,7 @@ MipmapView::MipmapView(uint64_t handle, uint3 size, uint32_t level, PixelStorage
       _storage{storage} {
     VERBOSE_WITH_LOCATION(
         "Mipmap: size = [{}, {}, {}], storage = {}, level = {}.",
-        size.x, size.y, size.z, std::to_string(storage), level);
+        size.x, size.y, size.z, vox::to_string(storage), level);
 }
 
 [[nodiscard]] std::unique_ptr<TextureCopyCommand> MipmapView::copy_from(MipmapView src) const noexcept {

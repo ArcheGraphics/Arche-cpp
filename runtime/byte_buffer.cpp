@@ -31,7 +31,6 @@ ByteBuffer::ByteBuffer(DeviceInterface *device, size_t size_bytes) noexcept
                   detail::error_buffer_size_not_aligned(4);
               }
               return device->create_buffer(
-                  Type::of<uint>(),
                   (size_bytes + sizeof(uint) - 1u) / sizeof(uint));
           }()} {}
 

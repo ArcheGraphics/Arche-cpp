@@ -97,7 +97,7 @@ private:
                      if (size == 0) [[unlikely]] {
                          detail::error_buffer_size_is_zero();
                      }
-                     return device->create_buffer(Type::of<T>(), size);
+                     return device->create_buffer(size);
                  }()} {}
 
 public:
@@ -215,7 +215,6 @@ public:
     }
     // reinterpret cast buffer to another type U
     template<typename U>
-        requires(!is_custom_struct_v<U>)
     [[nodiscard]] auto as() const noexcept {
         if (this->size_bytes() < sizeof(U)) [[unlikely]] {
             detail::error_buffer_reinterpret_size_too_small(sizeof(U), this->size_bytes());
@@ -227,18 +226,18 @@ public:
     // commands
     // copy buffer's data to pointer
     [[nodiscard]] auto copy_to(void *data) const noexcept {
-        return vox::make_unique<BufferDownloadCommand>(_handle, offset_bytes(), size_bytes(), data);
+        return std::make_unique<BufferDownloadCommand>(_handle, offset_bytes(), size_bytes(), data);
     }
     // copy pointer's data to buffer
     [[nodiscard]] auto copy_from(const void *data) noexcept {
-        return vox::make_unique<BufferUploadCommand>(this->handle(), this->offset_bytes(), this->size_bytes(), data);
+        return std::make_unique<BufferUploadCommand>(this->handle(), this->offset_bytes(), this->size_bytes(), data);
     }
     // copy source buffer's data to buffer
     [[nodiscard]] auto copy_from(BufferView<T> source) noexcept {
         if (source.size() != this->size()) [[unlikely]] {
             detail::error_buffer_copy_sizes_mismatch(source.size(), this->size());
         }
-        return vox::make_unique<BufferCopyCommand>(
+        return std::make_unique<BufferCopyCommand>(
             source.handle(), this->handle(),
             source.offset_bytes(), this->offset_bytes(),
             this->size_bytes());

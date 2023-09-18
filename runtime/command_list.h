@@ -9,6 +9,7 @@
 #include <memory>
 #include <span>
 #include "runtime/rhi/command.h"
+#include "common/concepts.h"
 
 #ifdef LUISA_ENABLE_API
 #include "api/common.h>

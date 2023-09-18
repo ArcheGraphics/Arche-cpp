@@ -17,7 +17,6 @@ namespace vox::compute {
 class Device;
 
 class Event final : public Resource {
-
 public:
     struct Signal {
         uint64_t handle;

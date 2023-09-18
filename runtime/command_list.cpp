@@ -27,7 +27,7 @@ void CommandList::clear() noexcept {
     _committed = false;
 }
 
-CommandList &CommandList::append(vox::unique_ptr<Command> &&cmd) noexcept {
+CommandList &CommandList::append(std::unique_ptr<Command> &&cmd) noexcept {
     if (cmd) { _commands.emplace_back(std::move(cmd)); }
     return *this;
 }

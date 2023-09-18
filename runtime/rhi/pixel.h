@@ -17,7 +17,6 @@ void error_pixel_invalid_format(const char *name) noexcept;
 }// namespace detail
 
 enum struct PixelStorage : uint32_t {
-
     BYTE1,
     BYTE2,
     BYTE4,
