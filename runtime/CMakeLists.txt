@@ -9,7 +9,6 @@ cmake_minimum_required(VERSION 3.16)
 project(runtime LANGUAGES C CXX)
 
 set(COMMON_FILES
-        bindless_array.cpp
         buffer.cpp
         byte_buffer.cpp
         command_list.cpp

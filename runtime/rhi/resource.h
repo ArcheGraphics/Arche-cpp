@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include <string>
@@ -55,18 +61,6 @@ struct ShaderCreationInfo : public ResourceCreationInfo {
     }
 };
 
-struct AccelOption {
-
-    enum struct UsageHint : uint32_t {
-        FAST_TRACE,// build with best quality
-        FAST_BUILD // optimize for frequent rebuild
-    };
-
-    UsageHint hint{UsageHint::FAST_TRACE};
-    bool allow_compaction{true};
-    bool allow_update{false};
-};
-
 /// \brief Options for shader creation.
 struct ShaderOption {
     /// \brief Whether to enable shader cache.
@@ -108,11 +102,6 @@ public:
     enum struct Tag : uint32_t {
         BUFFER,
         TEXTURE,
-        BINDLESS_ARRAY,
-        MESH,
-        PROCEDURAL_PRIMITIVE,
-        ACCEL,
-        STREAM,
         EVENT,
         SHADER,
         SWAP_CHAIN,
@@ -177,37 +166,3 @@ public:
 };
 
 }// namespace vox::compute
-
-namespace std {
-
-template<>
-struct hash<vox::compute::ShaderOption> {
-    using is_avalanching = void;
-    [[nodiscard]] auto operator()(const vox::compute::ShaderOption &option) const noexcept {
-        constexpr auto enable_cache_shift = 0u;
-        constexpr auto enable_fast_math_shift = 1u;
-        constexpr auto enable_debug_info_shift = 2u;
-        constexpr auto compile_only_shift = 3u;
-        auto opt_hash = hash_value((static_cast<uint>(option.enable_cache) << enable_cache_shift) |
-                                   (static_cast<uint>(option.enable_fast_math) << enable_fast_math_shift) |
-                                   (static_cast<uint>(option.enable_debug_info) << enable_debug_info_shift) |
-                                   (static_cast<uint>(option.compile_only) << compile_only_shift));
-        auto name_hash = hash_value(option.name);
-        return hash_combine({opt_hash, name_hash});
-    }
-};
-
-template<>
-struct hash<vox::compute::AccelOption> {
-    using is_avalanching = void;
-    [[nodiscard]] auto operator()(const vox::compute::AccelOption &option) const noexcept {
-        constexpr auto hint_shift = 0u;
-        constexpr auto allow_compaction_shift = 8u;
-        constexpr auto allow_update_shift = 9u;
-        return hash_value((static_cast<uint>(option.hint) << hint_shift) |
-                          (static_cast<uint>(option.allow_compaction) << allow_compaction_shift) |
-                          (static_cast<uint>(option.allow_update) << allow_update_shift));
-    }
-};
-
-}// namespace std

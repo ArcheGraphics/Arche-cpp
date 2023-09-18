@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #include "common/logging.h"
 #include "runtime/mipmap.h"
 
@@ -14,7 +20,7 @@ MipmapView::MipmapView(uint64_t handle, uint3 size, uint32_t level, PixelStorage
       _size{size},
       _level{level},
       _storage{storage} {
-    LUISA_VERBOSE_WITH_LOCATION(
+    VERBOSE_WITH_LOCATION(
         "Mipmap: size = [{}, {}, {}], storage = {}, level = {}.",
         size.x, size.y, size.z, std::to_string(storage), level);
 }

@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include <span>
@@ -22,8 +28,6 @@ protected:
     void _encode_buffer(uint64_t handle, size_t offset, size_t size) noexcept;
     void _encode_texture(uint64_t handle, uint32_t level) noexcept;
     void _encode_uniform(const void *data, size_t size) noexcept;
-    void _encode_bindless_array(uint64_t handle) noexcept;
-    void _encode_accel(uint64_t handle) noexcept;
     [[nodiscard]] std::byte *_make_space(size_t size) noexcept;
     [[nodiscard]] Argument &_create_argument() noexcept;
 };
@@ -44,8 +48,6 @@ public:
     void encode_buffer(uint64_t handle, size_t offset, size_t size) noexcept;
     void encode_texture(uint64_t handle, uint32_t level) noexcept;
     void encode_uniform(const void *data, size_t size) noexcept;
-    void encode_bindless_array(uint64_t handle) noexcept;
-    void encode_accel(uint64_t handle) noexcept;
     std::unique_ptr<ShaderDispatchCommand> build() && noexcept;
 };
 

@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #include "common/logging.h"
 #include "runtime/rhi/command.h"
 #include "runtime/rhi/command_encoder.h"
@@ -58,18 +64,6 @@ void ComputeDispatchCmdEncoder::set_dispatch_size(IndirectDispatchArg indirect_a
     _dispatch_size = indirect_arg;
 }
 
-void ShaderDispatchCmdEncoder::_encode_bindless_array(uint64_t handle) noexcept {
-    auto &&arg = _create_argument();
-    arg.tag = Argument::Tag::BINDLESS_ARRAY;
-    arg.bindless_array = Argument::BindlessArray{handle};
-}
-
-void ShaderDispatchCmdEncoder::_encode_accel(uint64_t handle) noexcept {
-    auto &&arg = _create_argument();
-    arg.tag = Argument::Tag::ACCEL;
-    arg.accel = Argument::Accel{handle};
-}
-
 ComputeDispatchCmdEncoder::ComputeDispatchCmdEncoder(uint64_t handle, size_t arg_count, size_t uniform_size) noexcept
     : ShaderDispatchCmdEncoder{handle, arg_count, uniform_size} {}
 
@@ -83,14 +77,6 @@ void ComputeDispatchCmdEncoder::encode_texture(uint64_t handle, uint32_t level) 
 
 void ComputeDispatchCmdEncoder::encode_uniform(const void *data, size_t size) noexcept {
     _encode_uniform(data, size);
-}
-
-void ComputeDispatchCmdEncoder::encode_bindless_array(uint64_t handle) noexcept {
-    _encode_bindless_array(handle);
-}
-
-void ComputeDispatchCmdEncoder::encode_accel(uint64_t handle) noexcept {
-    _encode_accel(handle);
 }
 
 std::unique_ptr<ShaderDispatchCommand> ComputeDispatchCmdEncoder::build() && noexcept {

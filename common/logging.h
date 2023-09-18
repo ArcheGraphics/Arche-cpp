@@ -80,13 +80,13 @@ Logger &Logger::operator<<(const T &content) {
 #define NOT_IMPLEMENTED() \
     ERROR_WITH_LOCATION("Not implemented.")
 
-#define ASSERT(x, fmt, ...)                      \
-    do {                                         \
-        if (!(x)) [[unlikely]] {                 \
-            auto msg = fmt::format(              \
-                fmt __VA_OPT__(, ) __VA_ARGS__); \
-            ERROR_WITH_LOCATION(                 \
-                "Assertion '{}' failed: {}",     \
-                #x, msg);                        \
-        }                                        \
+#define ASSERT(x, fmtValue, ...)                      \
+    do {                                              \
+        if (!(x)) [[unlikely]] {                      \
+            auto msg = fmt::format(                   \
+                fmtValue __VA_OPT__(, ) __VA_ARGS__); \
+            ERROR_WITH_LOCATION(                      \
+                "Assertion '{}' failed: {}",          \
+                #x, msg);                             \
+        }                                             \
     } while (false);

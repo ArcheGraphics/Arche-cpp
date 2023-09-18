@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include <memory>
@@ -14,7 +20,6 @@ class BinaryIO;
 
 namespace vox::compute {
 class Type;
-struct AccelOption;
 
 class DeviceConfigExt {
 public:
@@ -63,10 +68,6 @@ public:
         uint mipmap_levels, bool simultaneous_access) noexcept = 0;
     virtual void destroy_texture(uint64_t handle) noexcept = 0;
 
-    // bindless array
-    [[nodiscard]] virtual ResourceCreationInfo create_bindless_array(size_t size) noexcept = 0;
-    virtual void destroy_bindless_array(uint64_t handle) noexcept = 0;
-
     // stream
     [[nodiscard]] virtual ResourceCreationInfo create_stream(StreamTag stream_tag) noexcept = 0;
     virtual void destroy_stream(uint64_t handle) noexcept = 0;
@@ -92,18 +93,6 @@ public:
     virtual void wait_event(uint64_t handle, uint64_t stream_handle, uint64_t fence_value) noexcept = 0;
     virtual bool is_event_completed(uint64_t handle, uint64_t fence_value) const noexcept = 0;
     virtual void synchronize_event(uint64_t handle, uint64_t fence_value) noexcept = 0;
-
-    // accel
-    [[nodiscard]] virtual ResourceCreationInfo create_mesh(
-        const AccelOption &option) noexcept = 0;
-    virtual void destroy_mesh(uint64_t handle) noexcept = 0;
-
-    [[nodiscard]] virtual ResourceCreationInfo create_procedural_primitive(
-        const AccelOption &option) noexcept = 0;
-    virtual void destroy_procedural_primitive(uint64_t handle) noexcept = 0;
-
-    [[nodiscard]] virtual ResourceCreationInfo create_accel(const AccelOption &option) noexcept = 0;
-    virtual void destroy_accel(uint64_t handle) noexcept = 0;
 
     // query
     [[nodiscard]] virtual std::string query(std::string_view property) noexcept { return {}; }

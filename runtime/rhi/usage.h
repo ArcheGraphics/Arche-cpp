@@ -4,11 +4,19 @@
 //  personal capacity and am not conveying any rights to any intellectual
 //  property of any third parties.
 
-#include "common/logging.h"
-#include "runtime/device.h"
+#pragma once
+
+#include <cstdint>
 
 namespace vox::compute {
 
-}
+/** @file */
+/// Flags of usage
+enum struct Usage : uint32_t {
+    NONE = 0u,
+    READ = 0x01u,
+    WRITE = 0x02u,
+    READ_WRITE = READ | WRITE
+};
 
 }// namespace vox::compute

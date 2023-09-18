@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include "runtime/rhi/device_interface.h"
@@ -12,12 +18,7 @@ class Context;
 class Event;
 class TimelineEvent;
 class Stream;
-class Mesh;
-class MeshFormat;
-class ProceduralPrimitive;
-class Accel;
 class Swapchain;
-class BindlessArray;
 class IndirectDispatchBuffer;
 class ByteBuffer;
 
@@ -117,25 +118,6 @@ public:
         bool allow_hdr = true, bool vsync = true, uint back_buffer_count = 1) noexcept;
     // see definition in runtime/dispatch_buffer.cpp
     [[nodiscard]] IndirectDispatchBuffer create_indirect_dispatch_buffer(size_t capacity) noexcept;
-    // see definition in rtx/mesh.h
-    template<typename VBuffer, typename TBuffer>
-    [[nodiscard]] Mesh create_mesh(VBuffer &&vertices,
-                                   TBuffer &&triangles,
-                                   const AccelOption &option = {}) noexcept;
-
-    template<typename VBuffer, typename TBuffer>
-    [[nodiscard]] Mesh create_mesh(VBuffer &&vertices,
-                                   size_t vertex_stride,
-                                   TBuffer &&triangles,
-                                   const AccelOption &option = {}) noexcept;
-    // see definition in rtx/procedural_primitive.h
-    template<typename AABBBuffer>
-    [[nodiscard]] ProceduralPrimitive create_procedural_primitive(AABBBuffer &&aabb_buffer,
-                                                                  const AccelOption &option = {}) noexcept;
-    // see definition in rtx/accel.cpp
-    [[nodiscard]] Accel create_accel(const AccelOption &option = {}) noexcept;
-    // see definition in runtime/bindless_array.cpp
-    [[nodiscard]] BindlessArray create_bindless_array(size_t slots = 65536u) noexcept;
 
     template<typename T>
     [[nodiscard]] auto create_image(PixelStorage pixel, uint width, uint height, uint mip_levels = 1u, bool simultaneous_access = false) noexcept {

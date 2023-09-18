@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include "runtime/rhi/resource.h"
@@ -22,8 +28,6 @@ class ImageView;
 
 template<typename T>
 class BufferView;
-
-class BindlessArray;
 
 // Images are textures without sampling, i.e., surfaces.
 template<typename T>

@@ -1,3 +1,9 @@
+//  Copyright (c) 2023 Feng Yang
+//
+//  I am making my contributions/submissions to this project solely in my
+//  personal capacity and am not conveying any rights to any intellectual
+//  property of any third parties.
+
 #pragma once
 
 #include <cstdlib>
@@ -10,6 +16,7 @@
 #include "runtime/rhi/stream_tag.h"
 #include "runtime/rhi/sampler.h"
 #include "runtime/rhi/argument.h"
+#include "usage.h"
 
 namespace vox::compute {
 
@@ -29,10 +36,6 @@ struct IndirectDispatchArg {
         TextureDownloadCommand,          \
         TextureCopyCommand,              \
         TextureToBufferCopyCommand,      \
-        AccelBuildCommand,               \
-        MeshBuildCommand,                \
-        ProceduralPrimitiveBuildCommand, \
-        BindlessArrayUpdateCommand,      \
         CustomCommand
 
 #define LUISA_MAKE_COMMAND_FWD_DECL(CMD) class CMD;
@@ -384,227 +387,6 @@ public:
     LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
-enum struct AccelBuildRequest : uint32_t {
-    PREFER_UPDATE,
-    FORCE_BUILD,
-};
-
-class MeshBuildCommand final : public Command {
-
-private:
-    uint64_t _handle{};
-    AccelBuildRequest _request{};
-    uint64_t _vertex_buffer{};
-    size_t _vertex_buffer_offset{};
-    size_t _vertex_buffer_size{};
-    size_t _vertex_stride{};
-    uint64_t _triangle_buffer{};
-    size_t _triangle_buffer_offset{};
-    size_t _triangle_buffer_size{};
-
-private:
-    MeshBuildCommand() noexcept
-        : Command{Command::Tag::EMeshBuildCommand} {}
-
-public:
-    MeshBuildCommand(uint64_t handle, AccelBuildRequest request, uint64_t vertex_buffer,
-                     size_t vertex_buffer_offset, size_t vertex_buffer_size, size_t vertex_stride,
-                     uint64_t triangle_buffer, size_t triangle_buffer_offset, size_t triangle_buffer_size) noexcept
-        : Command{Command::Tag::EMeshBuildCommand}, _handle{handle}, _request{request},
-          _vertex_buffer{vertex_buffer}, _vertex_buffer_offset{vertex_buffer_offset},
-          _vertex_buffer_size{vertex_buffer_size}, _vertex_stride{vertex_stride},
-          _triangle_buffer{triangle_buffer}, _triangle_buffer_offset{triangle_buffer_offset},
-          _triangle_buffer_size{triangle_buffer_size} {
-    }
-    [[nodiscard]] auto handle() const noexcept { return _handle; }
-    [[nodiscard]] auto request() const noexcept { return _request; }
-    [[nodiscard]] auto vertex_buffer() const noexcept { return _vertex_buffer; }
-    [[nodiscard]] auto vertex_stride() const noexcept { return _vertex_stride; }
-    [[nodiscard]] auto vertex_buffer_offset() const noexcept { return _vertex_buffer_offset; }
-    [[nodiscard]] auto vertex_buffer_size() const noexcept { return _vertex_buffer_size; }
-    [[nodiscard]] auto triangle_buffer() const noexcept { return _triangle_buffer; }
-    [[nodiscard]] auto triangle_buffer_offset() const noexcept { return _triangle_buffer_offset; }
-    [[nodiscard]] auto triangle_buffer_size() const noexcept { return _triangle_buffer_size; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
-};
-
-class ProceduralPrimitiveBuildCommand final : public Command {
-
-private:
-    uint64_t _handle{};
-    AccelBuildRequest _request{};
-    uint64_t _aabb_buffer{};
-    size_t _aabb_buffer_offset{};
-    size_t _aabb_buffer_size{};
-
-public:
-    ProceduralPrimitiveBuildCommand(uint64_t handle, AccelBuildRequest request, uint64_t aabb_buffer,
-                                    size_t aabb_buffer_offset, size_t aabb_buffer_size)
-        : Command{Command::Tag::EProceduralPrimitiveBuildCommand},
-          _handle{handle}, _request{request}, _aabb_buffer{aabb_buffer},
-          _aabb_buffer_offset{aabb_buffer_offset}, _aabb_buffer_size{aabb_buffer_size} {}
-    [[nodiscard]] auto handle() const noexcept { return _handle; }
-    [[nodiscard]] auto request() const noexcept { return _request; }
-    [[nodiscard]] auto aabb_buffer() const noexcept { return _aabb_buffer; }
-    [[nodiscard]] auto aabb_buffer_offset() const noexcept { return _aabb_buffer_offset; }
-    [[nodiscard]] auto aabb_buffer_size() const noexcept { return _aabb_buffer_size; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
-};
-
-class AccelBuildCommand final : public Command {
-
-public:
-    struct alignas(16) Modification {
-
-        // flags
-        static constexpr auto flag_primitive = 1u << 0u;
-        static constexpr auto flag_transform = 1u << 1u;
-        static constexpr auto flag_opaque_on = 1u << 2u;
-        static constexpr auto flag_opaque_off = 1u << 3u;
-        static constexpr auto flag_visibility = 1u << 4u;
-        static constexpr auto flag_opaque = flag_opaque_on | flag_opaque_off;
-        static constexpr auto flag_vis_mask_offset = 24u;
-
-        // members
-        uint index{};
-        uint flags{};
-        uint64_t primitive{};
-        float affine[12]{};
-
-        // ctor
-        Modification() noexcept = default;
-        explicit Modification(uint index) noexcept : index{index} {}
-
-        // encode interfaces
-        void set_transform(float4x4 m) noexcept {
-            affine[0] = m[0][0];
-            affine[1] = m[1][0];
-            affine[2] = m[2][0];
-            affine[3] = m[3][0];
-            affine[4] = m[0][1];
-            affine[5] = m[1][1];
-            affine[6] = m[2][1];
-            affine[7] = m[3][1];
-            affine[8] = m[0][2];
-            affine[9] = m[1][2];
-            affine[10] = m[2][2];
-            affine[11] = m[3][2];
-            flags |= flag_transform;
-        }
-        void set_transform_data(const float affine_data[12]) noexcept {
-            for (auto i = 0u; i < 12u; i++) { affine[i] = affine_data[i]; }
-            flags |= flag_transform;
-        }
-        void set_visibility(uint8_t mask) noexcept {
-            flags &= (1u << flag_vis_mask_offset) - 1u;
-            flags |= (mask << flag_vis_mask_offset) | flag_visibility;
-        }
-        void set_opaque(bool opaque) noexcept {
-            flags &= ~flag_opaque;// clear old visibility flags
-            flags |= opaque ? flag_opaque_on : flag_opaque_off;
-        }
-        void set_primitive(uint64_t handle) noexcept {
-            primitive = handle;
-            flags |= flag_primitive;
-        }
-    };
-
-private:
-    uint64_t _handle;
-    uint32_t _instance_count;
-    AccelBuildRequest _request;
-    bool _update_instance_buffer_only;
-    std::vector<Modification> _modifications;
-
-public:
-    AccelBuildCommand(uint64_t handle, uint32_t instance_count,
-                      AccelBuildRequest request,
-                      std::vector<Modification> modifications,
-                      bool update_instance_buffer_only) noexcept
-        : Command{Command::Tag::EAccelBuildCommand},
-          _handle{handle}, _instance_count{instance_count},
-          _request{request}, _update_instance_buffer_only{update_instance_buffer_only},
-          _modifications{std::move(modifications)} {}
-    [[nodiscard]] auto handle() const noexcept { return _handle; }
-    [[nodiscard]] auto request() const noexcept { return _request; }
-    [[nodiscard]] auto instance_count() const noexcept { return _instance_count; }
-    [[nodiscard]] auto modifications() const noexcept { return std::span{_modifications}; }
-    [[nodiscard]] auto update_instance_buffer_only() const noexcept { return _update_instance_buffer_only; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
-};
-
-class BindlessArrayUpdateCommand final : public Command {
-
-public:
-    struct Modification {
-
-        enum struct Operation : uint {
-            NONE,
-            EMPLACE,
-            REMOVE,
-        };
-
-        struct Buffer {
-            uint64_t handle;
-            size_t offset_bytes;
-            Operation op;
-            Buffer() noexcept
-                : handle{0}, offset_bytes{0u}, op{Operation::NONE} {}
-            Buffer(uint64_t handle, size_t offset_bytes, Operation op) noexcept
-                : handle{handle}, offset_bytes{offset_bytes}, op{op} {}
-            [[nodiscard]] static auto emplace(uint64_t handle, size_t offset_bytes) noexcept {
-                return Buffer{handle, offset_bytes, Operation::EMPLACE};
-            }
-            [[nodiscard]] static auto remove() noexcept {
-                return Buffer{0u, 0u, Operation::REMOVE};
-            }
-        };
-
-        struct Texture {
-            uint64_t handle;
-            Sampler sampler;
-            Operation op;
-            Texture() noexcept
-                : handle{0u}, sampler{}, op{Operation::NONE} {}
-            Texture(uint64_t handle, Sampler sampler, Operation op) noexcept
-                : handle{handle}, sampler{sampler}, op{op} {}
-            [[nodiscard]] static auto emplace(uint64_t handle, Sampler sampler) noexcept {
-                return Texture{handle, sampler, Operation::EMPLACE};
-            }
-            [[nodiscard]] static auto remove() noexcept {
-                return Texture{0u, Sampler{}, Operation::REMOVE};
-            }
-        };
-
-        size_t slot;
-        Buffer buffer;
-        Texture tex2d;
-        Texture tex3d;
-
-        explicit Modification(size_t slot) noexcept
-            : slot{slot}, buffer{}, tex2d{}, tex3d{} {}
-
-        explicit Modification(size_t slot, Buffer buffer, Texture tex2d, Texture tex3d) noexcept
-            : slot{slot}, buffer{buffer}, tex2d{tex2d}, tex3d{tex3d} {}
-    };
-
-    static_assert(sizeof(Modification) == 64u);
-
-private:
-    uint64_t _handle;
-    std::vector<Modification> _modifications;
-
-public:
-    BindlessArrayUpdateCommand(uint64_t handle,
-                               std::vector<Modification> mods) noexcept
-        : Command{Command::Tag::EBindlessArrayUpdateCommand},
-          _handle{handle}, _modifications{std::move(mods)} {}
-    [[nodiscard]] auto handle() const noexcept { return _handle; }
-    [[nodiscard]] auto steal_modifications() noexcept { return std::move(_modifications); }
-    [[nodiscard]] std::span<const Modification> modifications() const noexcept { return _modifications; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
-};
-
 class CustomCommand : public Command {
 
 public:
@@ -621,9 +403,7 @@ class CustomDispatchCommand : public CustomCommand {
 public:
     using ResourceHandle = std::variant<
         Argument::Buffer,
-        Argument::Texture,
-        Argument::BindlessArray,
-        Argument::Accel>;
+        Argument::Texture>;
 
     class ArgumentVisitor {
     public:
