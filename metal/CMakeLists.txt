@@ -17,7 +17,6 @@ set(COMMON_FILES
         metal_debug_capture.cpp
         metal_device.cpp
         metal_event.cpp
-        metal_stage_buffer_pool.cpp
         metal_stream.cpp
         metal_stream.mm
         metal_texture.cpp
