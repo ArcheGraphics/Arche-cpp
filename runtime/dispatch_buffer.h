@@ -2,17 +2,11 @@
 
 #include "runtime/rhi/resource.h"
 #include "runtime/rhi/device_interface.h"
-#include "ast/type_registry.h"
 
 namespace vox::compute {
 struct IndirectKernelDispatch {};
 class IndirectDispatchBuffer;
 }// namespace vox::compute
-
-LUISA_CUSTOM_STRUCT_REFLECT(vox::compute::IndirectKernelDispatch,
-                            "LC_IndirectKernelDispatch")
-LUISA_CUSTOM_STRUCT_REFLECT(vox::compute::IndirectDispatchBuffer,
-                            "LC_IndirectDispatchBuffer")
 
 namespace vox::compute {
 

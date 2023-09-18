@@ -1,16 +1,13 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include "runtime/rhi/pixel.h"
 
 namespace vox::compute {
 
 class DeviceInterface;
 class Device;
-
-namespace detail {
-class ShaderInvokeBase;
-}// namespace detail
 
 constexpr auto invalid_resource_handle = ~0ull;
 
@@ -105,9 +102,7 @@ struct ShaderOption {
 };
 
 class Resource {
-
     friend class Device;
-    friend class detail::ShaderInvokeBase;
 
 public:
     enum struct Tag : uint32_t {
@@ -131,7 +126,7 @@ private:
     Tag _tag{};
 
 private:
-    [[noreturn]] static void _error_invalid() noexcept;
+    static void _error_invalid() noexcept;
 
 protected:
     static void _check_same_derived_types(const Resource &lhs,

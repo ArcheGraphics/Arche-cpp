@@ -1,8 +1,7 @@
 #pragma once
 
-#include "core/concepts.h"
-#include "core/stl/optional.h"
-#include "core/stl/functional.h"
+#include <memory>
+#include <span>
 #include "runtime/rhi/command.h"
 
 #ifdef LUISA_ENABLE_API
@@ -18,8 +17,8 @@ class CommandList : concepts::Noncopyable {
 
 public:
     class Commit;
-    using CommandContainer = vox::vector<vox::unique_ptr<Command>>;
-    using CallbackContainer = vox::vector<vox::move_only_function<void()>>;
+    using CommandContainer = std::vector<std::unique_ptr<Command>>;
+    using CallbackContainer = std::vector<std::function<void()>>;
 
 private:
     CommandContainer _commands;
@@ -35,12 +34,12 @@ public:
                                             size_t reserved_callback_size = 0u) noexcept;
 
     void reserve(size_t command_size, size_t callback_size) noexcept;
-    CommandList &operator<<(vox::unique_ptr<Command> &&cmd) noexcept;
-    CommandList &append(vox::unique_ptr<Command> &&cmd) noexcept;
-    CommandList &add_callback(vox::move_only_function<void()> &&callback) noexcept;
+    CommandList &operator<<(std::unique_ptr<Command> &&cmd) noexcept;
+    CommandList &append(std::unique_ptr<Command> &&cmd) noexcept;
+    CommandList &add_callback(std::function<void()> &&callback) noexcept;
     void clear() noexcept;
-    [[nodiscard]] auto commands() const noexcept { return vox::span{_commands}; }
-    [[nodiscard]] auto callbacks() const noexcept { return vox::span{_callbacks}; }
+    [[nodiscard]] auto commands() const noexcept { return std::span{_commands}; }
+    [[nodiscard]] auto callbacks() const noexcept { return std::span{_callbacks}; }
     [[nodiscard]] CommandContainer steal_commands() noexcept;
     [[nodiscard]] CallbackContainer steal_callbacks() noexcept;
     [[nodiscard]] auto empty() const noexcept { return _commands.empty() && _callbacks.empty(); }

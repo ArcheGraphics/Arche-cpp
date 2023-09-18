@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "runtime/rhi/command.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/rhi/stream_tag.h"

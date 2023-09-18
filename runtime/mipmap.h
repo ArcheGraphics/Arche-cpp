@@ -33,7 +33,7 @@ private:
     PixelStorage _storage;
 
 private:
-    [[noreturn]] static void _error_mipmap_copy_buffer_size_mismatch(size_t mip_size, size_t buffer_size) noexcept;
+    static void _error_mipmap_copy_buffer_size_mismatch(size_t mip_size, size_t buffer_size) noexcept;
 
 public:
     MipmapView(uint64_t handle, uint3 size, uint32_t level, PixelStorage storage) noexcept;

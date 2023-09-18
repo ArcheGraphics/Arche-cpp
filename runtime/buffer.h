@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/concepts.h"
-#include "core/mathematics.h"
 #include "runtime/rhi/command.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/rhi/device_interface.h"

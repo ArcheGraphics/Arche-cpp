@@ -7,7 +7,7 @@
 namespace vox::compute {
 
 namespace detail {
-[[noreturn]] void error_pixel_invalid_format(const char *name) noexcept;
+void error_pixel_invalid_format(const char *name) noexcept;
 }// namespace detail
 
 enum struct PixelStorage : uint32_t {
@@ -228,6 +228,7 @@ constexpr auto pixel_format_count = to_underlying(PixelFormat::BC7UNorm) + 1u;
         default: break;
     }
     detail::error_pixel_invalid_format("unknown");
+    return 0u;
 }
 
 [[nodiscard]] constexpr auto pixel_storage_channel_count(PixelStorage storage) noexcept {

@@ -2,24 +2,14 @@
 
 #include <cstdlib>
 #include <array>
+#include <variant>
 
-#include "core/macro.h"
+#include "common/macro.h"
 #include "common/basic_types.h"
-#include "core/stl/vector.h"
-#include "core/stl/memory.h"
-#include "core/stl/variant.h"
-#include "core/stl/string.h"
-#include "core/stl/functional.h"
-#include "ast/usage.h"
 #include "runtime/rhi/pixel.h"
 #include "runtime/rhi/stream_tag.h"
 #include "runtime/rhi/sampler.h"
 #include "runtime/rhi/argument.h"
-
-// for validation
-namespace lc::validation {
-class Stream;
-}// namespace lc::validation
 
 namespace vox::compute {
 
@@ -104,12 +94,12 @@ public:
 
 private:
     uint64_t _handle;
-    vox::vector<std::byte> _argument_buffer;
+    std::vector<std::byte> _argument_buffer;
     size_t _argument_count;
 
 protected:
     ShaderDispatchCommandBase(uint64_t shader_handle,
-                              vox::vector<std::byte> &&argument_buffer,
+                              std::vector<std::byte> &&argument_buffer,
                               size_t argument_count) noexcept
         : _handle{shader_handle},
           _argument_buffer{std::move(argument_buffer)},
@@ -119,24 +109,24 @@ protected:
 public:
     [[nodiscard]] auto handle() const noexcept { return _handle; }
     [[nodiscard]] auto arguments() const noexcept {
-        return vox::span{reinterpret_cast<const Argument *>(_argument_buffer.data()), _argument_count};
+        return std::span{reinterpret_cast<const Argument *>(_argument_buffer.data()), _argument_count};
     }
     [[nodiscard]] auto uniform(const Argument::Uniform &u) const noexcept {
-        return vox::span{_argument_buffer}.subspan(u.offset, u.size);
+        return std::span{_argument_buffer}.subspan(u.offset, u.size);
     }
 };
 
 class ShaderDispatchCommand final : public Command, public ShaderDispatchCommandBase {
 
 public:
-    using DispatchSize = vox::variant<uint3, IndirectDispatchArg>;
+    using DispatchSize = std::variant<uint3, IndirectDispatchArg>;
 
 private:
     DispatchSize _dispatch_size;
 
 public:
     ShaderDispatchCommand(uint64_t shader_handle,
-                          vox::vector<std::byte> &&argument_buffer,
+                          std::vector<std::byte> &&argument_buffer,
                           size_t argument_count,
                           DispatchSize dispatch_size) noexcept
         : Command{Tag::EShaderDispatchCommand},
@@ -146,9 +136,9 @@ public:
           _dispatch_size{dispatch_size} {}
     ShaderDispatchCommand(ShaderDispatchCommand const &) = delete;
     ShaderDispatchCommand(ShaderDispatchCommand &&) = default;
-    [[nodiscard]] auto is_indirect() const noexcept { return vox::holds_alternative<IndirectDispatchArg>(_dispatch_size); }
-    [[nodiscard]] auto dispatch_size() const noexcept { return vox::get<uint3>(_dispatch_size); }
-    [[nodiscard]] auto indirect_dispatch() const noexcept { return vox::get<IndirectDispatchArg>(_dispatch_size); }
+    [[nodiscard]] auto is_indirect() const noexcept { return std::holds_alternative<IndirectDispatchArg>(_dispatch_size); }
+    [[nodiscard]] auto dispatch_size() const noexcept { return std::get<uint3>(_dispatch_size); }
+    [[nodiscard]] auto indirect_dispatch() const noexcept { return std::get<IndirectDispatchArg>(_dispatch_size); }
     LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
 };
 
@@ -524,12 +514,12 @@ private:
     uint32_t _instance_count;
     AccelBuildRequest _request;
     bool _update_instance_buffer_only;
-    vox::vector<Modification> _modifications;
+    std::vector<Modification> _modifications;
 
 public:
     AccelBuildCommand(uint64_t handle, uint32_t instance_count,
                       AccelBuildRequest request,
-                      vox::vector<Modification> modifications,
+                      std::vector<Modification> modifications,
                       bool update_instance_buffer_only) noexcept
         : Command{Command::Tag::EAccelBuildCommand},
           _handle{handle}, _instance_count{instance_count},
@@ -538,7 +528,7 @@ public:
     [[nodiscard]] auto handle() const noexcept { return _handle; }
     [[nodiscard]] auto request() const noexcept { return _request; }
     [[nodiscard]] auto instance_count() const noexcept { return _instance_count; }
-    [[nodiscard]] auto modifications() const noexcept { return vox::span{_modifications}; }
+    [[nodiscard]] auto modifications() const noexcept { return std::span{_modifications}; }
     [[nodiscard]] auto update_instance_buffer_only() const noexcept { return _update_instance_buffer_only; }
     LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
 };
@@ -602,16 +592,16 @@ public:
 
 private:
     uint64_t _handle;
-    vox::vector<Modification> _modifications;
+    std::vector<Modification> _modifications;
 
 public:
     BindlessArrayUpdateCommand(uint64_t handle,
-                               vox::vector<Modification> mods) noexcept
+                               std::vector<Modification> mods) noexcept
         : Command{Command::Tag::EBindlessArrayUpdateCommand},
           _handle{handle}, _modifications{std::move(mods)} {}
     [[nodiscard]] auto handle() const noexcept { return _handle; }
     [[nodiscard]] auto steal_modifications() noexcept { return std::move(_modifications); }
-    [[nodiscard]] vox::span<const Modification> modifications() const noexcept { return _modifications; }
+    [[nodiscard]] std::span<const Modification> modifications() const noexcept { return _modifications; }
     LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
@@ -629,7 +619,7 @@ public:
 class CustomDispatchCommand : public CustomCommand {
 
 public:
-    using ResourceHandle = vox::variant<
+    using ResourceHandle = std::variant<
         Argument::Buffer,
         Argument::Texture,
         Argument::BindlessArray,

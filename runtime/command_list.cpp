@@ -1,13 +1,13 @@
 #include "runtime/rhi/command.h"
 #include "runtime/command_list.h"
-#include "core/logging.h"
+#include "common/logging.h"
 
 namespace vox::compute {
 
 CommandList::~CommandList() noexcept {
-    LUISA_ASSERT(_committed || empty(),
-                 "Destructing non-empty command list. "
-                 "Did you forget to commit?");
+    ASSERT(_committed || empty(),
+           "Destructing non-empty command list. "
+           "Did you forget to commit?");
 }
 
 void CommandList::reserve(size_t command_size, size_t callback_size) noexcept {
@@ -26,7 +26,7 @@ CommandList &CommandList::append(vox::unique_ptr<Command> &&cmd) noexcept {
     return *this;
 }
 
-CommandList &CommandList::add_callback(vox::move_only_function<void()> &&callback) noexcept {
+CommandList &CommandList::add_callback(std::function<void()> &&callback) noexcept {
     if (callback) {
         if (_callbacks.empty()) [[likely]] { _callbacks.reserve(2); }
         _callbacks.emplace_back(std::move(callback));
@@ -34,7 +34,7 @@ CommandList &CommandList::add_callback(vox::move_only_function<void()> &&callbac
     return *this;
 }
 
-CommandList &CommandList::operator<<(vox::unique_ptr<Command> &&cmd) noexcept {
+CommandList &CommandList::operator<<(std::unique_ptr<Command> &&cmd) noexcept {
     return append(std::move(cmd));
 }
 

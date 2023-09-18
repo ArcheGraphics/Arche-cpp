@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ast/function.h"
+#include <span>
+#include <variant>
 #include "runtime/rhi/command.h"
 
 namespace vox::compute {
@@ -25,10 +26,6 @@ protected:
     void _encode_accel(uint64_t handle) noexcept;
     [[nodiscard]] std::byte *_make_space(size_t size) noexcept;
     [[nodiscard]] Argument &_create_argument() noexcept;
-
-public:
-    [[nodiscard]] static size_t compute_uniform_size(std::span<const Variable> arguments) noexcept;
-    [[nodiscard]] static size_t compute_uniform_size(std::span<const Type *const> arg_types) noexcept;
 };
 
 class ComputeDispatchCmdEncoder final : public ShaderDispatchCmdEncoder {

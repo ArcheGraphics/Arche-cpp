@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/mathematics.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/mipmap.h"
 #include "runtime/rhi/sampler.h"

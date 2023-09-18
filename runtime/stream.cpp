@@ -1,7 +1,6 @@
 #include <utility>
 
-#include "core/logging.h"
-#include "core/magic_enum.h"
+#include "common/logging.h"
 #include "runtime/device.h"
 #include "runtime/stream.h"
 
@@ -18,9 +17,9 @@ void Stream::_dispatch(CommandList &&list) noexcept {
         for (auto &&i : list.commands()) {
             auto cmd_tag = vox::to_underlying(i->stream_tag());
             auto s_tag = vox::to_underlying(_stream_tag);
-            LUISA_ASSERT(cmd_tag >= s_tag,
-                         "Command of type {} in stream of type {} not allowed!",
-                         to_string(i->stream_tag()), to_string(_stream_tag));
+            ASSERT(cmd_tag >= s_tag,
+                   "Command of type {} in stream of type {} not allowed!",
+                   to_string(i->stream_tag()), to_string(_stream_tag));
         }
 #endif
         device()->dispatch(handle(), std::move(list));

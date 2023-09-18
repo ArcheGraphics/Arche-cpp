@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ast/type_registry.h"
 #include "runtime/rhi/device_interface.h"
 
 namespace vox {
@@ -89,8 +88,6 @@ private:
     [[nodiscard]] auto _create(Args &&...args) noexcept {
         return T{this->_impl.get(), std::forward<Args>(args)...};
     }
-
-    static void _check_no_implicit_binding(Function func, std::string_view shader_path) noexcept;
 
 public:
     Device() noexcept = default;

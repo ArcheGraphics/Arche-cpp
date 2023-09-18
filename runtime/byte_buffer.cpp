@@ -1,13 +1,12 @@
 #include "runtime/byte_buffer.h"
 #include "runtime/device.h"
-#include "runtime/shader.h"
-#include "core/logging.h"
+#include "common/logging.h"
 
 namespace vox::compute {
 
 namespace detail {
 void error_buffer_size_not_aligned(size_t align) noexcept {
-    LUISA_ERROR_WITH_LOCATION("Buffer size must be aligned to {}.", align);
+    ERROR_WITH_LOCATION("Buffer size must be aligned to {}.", align);
 }
 }// namespace detail
 
@@ -37,13 +36,5 @@ ByteBuffer::~ByteBuffer() noexcept {
 ByteBuffer Device::create_byte_buffer(size_t byte_size) noexcept {
     return ByteBuffer{impl(), byte_size};
 }
-
-namespace detail {
-ShaderInvokeBase &ShaderInvokeBase::operator<<(const ByteBuffer &buffer) noexcept {
-    buffer._check_is_valid();
-    _encoder.encode_buffer(buffer.handle(), 0u, buffer.size_bytes());
-    return *this;
-}
-}// namespace detail
 
 }// namespace vox::compute

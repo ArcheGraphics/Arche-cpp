@@ -33,18 +33,18 @@ public:
     using Resource::operator bool;
     [[nodiscard]] auto copy_to(void *data) const noexcept {
         _check_is_valid();
-        return vox::make_unique<BufferDownloadCommand>(handle(), 0u, _size_bytes, data);
+        return std::make_unique<BufferDownloadCommand>(handle(), 0u, _size_bytes, data);
     }
     [[nodiscard]] auto copy_from(const void *data) noexcept {
         _check_is_valid();
-        return vox::make_unique<BufferUploadCommand>(handle(), 0u, _size_bytes, data);
+        return std::make_unique<BufferUploadCommand>(handle(), 0u, _size_bytes, data);
     }
     [[nodiscard]] auto copy_from(const void *data, size_t buffer_offset, size_t size_bytes) noexcept {
         _check_is_valid();
         if (size_bytes > _size_bytes) [[unlikely]] {
             detail::error_buffer_copy_sizes_mismatch(size_bytes, _size_bytes);
         }
-        return vox::make_unique<BufferUploadCommand>(handle(), buffer_offset, size_bytes, data);
+        return std::make_unique<BufferUploadCommand>(handle(), buffer_offset, size_bytes, data);
     }
     template<typename T>
     [[nodiscard]] auto copy_from(BufferView<T> source) noexcept {
@@ -52,7 +52,7 @@ public:
         if (source.size_bytes() != _size_bytes) [[unlikely]] {
             detail::error_buffer_copy_sizes_mismatch(source.size_bytes(), _size_bytes);
         }
-        return vox::make_unique<BufferCopyCommand>(
+        return std::make_unique<BufferCopyCommand>(
             source.handle(), this->handle(),
             source.offset_bytes(), 0u,
             this->size_bytes());
@@ -62,7 +62,7 @@ public:
         if (size_bytes > _size_bytes) [[unlikely]] {
             detail::error_buffer_copy_sizes_mismatch(size_bytes, _size_bytes);
         }
-        return vox::make_unique<BufferCopyCommand>(
+        return std::make_unique<BufferCopyCommand>(
             source.handle(), this->handle(),
             offset, 0u,
             size_bytes);

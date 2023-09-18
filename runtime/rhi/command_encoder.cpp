@@ -1,5 +1,4 @@
-#include "core/logging.h"
-#include "ast/function_builder.h"
+#include "common/logging.h"
 #include "runtime/rhi/command.h"
 #include "runtime/rhi/command_encoder.h"
 #include <numeric>
@@ -71,26 +70,6 @@ void ShaderDispatchCmdEncoder::_encode_accel(uint64_t handle) noexcept {
     arg.accel = Argument::Accel{handle};
 }
 
-size_t ShaderDispatchCmdEncoder::compute_uniform_size(std::span<const Variable> arguments) noexcept {
-    return std::accumulate(
-        arguments.cbegin(), arguments.cend(),
-        static_cast<size_t>(0u), [](auto size, auto arg) noexcept {
-            auto arg_type = arg.type();
-            // Do not allocate redundant uniform buffer
-            return size + (arg_type->is_resource() ? 0u : arg_type->size());
-        });
-}
-
-size_t ShaderDispatchCmdEncoder::compute_uniform_size(std::span<const Type *const> arg_types) noexcept {
-    return std::accumulate(
-        arg_types.cbegin(), arg_types.cend(),
-        static_cast<size_t>(0u), [](auto size, auto arg_type) noexcept {
-            LUISA_ASSERT(arg_type != nullptr, "Invalid argument type.");
-            // Do not allocate redundant uniform buffer
-            return size + (arg_type->is_resource() ? 0u : arg_type->size());
-        });
-}
-
 ComputeDispatchCmdEncoder::ComputeDispatchCmdEncoder(uint64_t handle, size_t arg_count, size_t uniform_size) noexcept
     : ShaderDispatchCmdEncoder{handle, arg_count, uniform_size} {}
 
@@ -112,6 +91,17 @@ void ComputeDispatchCmdEncoder::encode_bindless_array(uint64_t handle) noexcept 
 
 void ComputeDispatchCmdEncoder::encode_accel(uint64_t handle) noexcept {
     _encode_accel(handle);
+}
+
+std::unique_ptr<ShaderDispatchCommand> ComputeDispatchCmdEncoder::build() && noexcept {
+    if (_argument_idx != _argument_count) [[unlikely]] {
+        LOGE("Required argument count {}. "
+             "Actual argument count {}.",
+             _argument_count, _argument_idx);
+    }
+    return std::make_unique<ShaderDispatchCommand>(
+        _handle, std::move(_argument_buffer),
+        _argument_count, _dispatch_size);
 }
 
 }// namespace vox::compute

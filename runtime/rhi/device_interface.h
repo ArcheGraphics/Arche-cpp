@@ -1,7 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <span>
 #include "common/basic_types.h"
-#include "ast/function.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/rhi/stream_tag.h"
 #include "runtime/rhi/command.h"
@@ -12,20 +13,6 @@ class BinaryIO;
 }// namespace vox
 
 namespace vox::compute {
-
-class Context;
-
-namespace detail {
-class ContextImpl;
-}// namespace detail
-
-namespace ir {
-struct KernelModule;
-struct Type;
-template<class T>
-struct CArc;
-}// namespace ir
-
 class Type;
 struct AccelOption;
 
@@ -52,15 +39,13 @@ class DeviceInterface : public std::enable_shared_from_this<DeviceInterface> {
 protected:
     friend class Context;
     std::string _backend_name;
-    std::shared_ptr<detail::ContextImpl> _ctx_impl;
 
 public:
-    explicit DeviceInterface(Context &&ctx) noexcept;
+    explicit DeviceInterface() noexcept;
     virtual ~DeviceInterface() noexcept;
     DeviceInterface(DeviceInterface &&) = delete;
     DeviceInterface(DeviceInterface const &) = delete;
 
-    [[nodiscard]] Context context() const noexcept;
     [[nodiscard]] auto backend_name() const noexcept { return std::string_view{_backend_name}; }
 
     // native handle
@@ -69,7 +54,6 @@ public:
 
 public:
     [[nodiscard]] virtual BufferCreationInfo create_buffer(const Type *element, size_t elem_count) noexcept = 0;
-    [[nodiscard]] virtual BufferCreationInfo create_buffer(const ir::CArc<ir::Type> *element, size_t elem_count) noexcept = 0;
     virtual void destroy_buffer(uint64_t handle) noexcept = 0;
 
     // texture
@@ -98,10 +82,7 @@ public:
     virtual void present_display_in_stream(uint64_t stream_handle, uint64_t swapchain_handle, uint64_t image_handle) noexcept = 0;
 
     // kernel
-    [[nodiscard]] virtual ShaderCreationInfo create_shader(const ShaderOption &option, Function kernel) noexcept = 0;
-    [[nodiscard]] virtual ShaderCreationInfo create_shader(const ShaderOption &option, const ir::KernelModule *kernel) noexcept = 0;
     [[nodiscard]] virtual ShaderCreationInfo load_shader(std::string_view name, std::span<const Type *const> arg_types) noexcept = 0;
-    virtual Usage shader_argument_usage(uint64_t handle, size_t index) noexcept = 0;
     virtual void destroy_shader(uint64_t handle) noexcept = 0;
 
     // event

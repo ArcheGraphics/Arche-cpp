@@ -67,3 +67,26 @@ Logger &Logger::operator<<(const T &content) {
     }
     return *this;
 }
+
+#define VERBOSE_WITH_LOCATION(fmt, ...) \
+    LOGD(fmt " [{}:{}]" __VA_OPT__(, ) __VA_ARGS__, __FILE__, __LINE__)
+#define INFO_WITH_LOCATION(fmt, ...) \
+    LOGI(fmt " [{}:{}]" __VA_OPT__(, ) __VA_ARGS__, __FILE__, __LINE__)
+#define WARNING_WITH_LOCATION(fmt, ...) \
+    LOGW(fmt " [{}:{}]" __VA_OPT__(, ) __VA_ARGS__, __FILE__, __LINE__)
+#define ERROR_WITH_LOCATION(fmt, ...) \
+    LOGE(fmt " [{}:{}]" __VA_OPT__(, ) __VA_ARGS__, __FILE__, __LINE__)
+
+#define NOT_IMPLEMENTED() \
+    ERROR_WITH_LOCATION("Not implemented.")
+
+#define ASSERT(x, fmt, ...)                      \
+    do {                                         \
+        if (!(x)) [[unlikely]] {                 \
+            auto msg = fmt::format(              \
+                fmt __VA_OPT__(, ) __VA_ARGS__); \
+            ERROR_WITH_LOCATION(                 \
+                "Assertion '{}' failed: {}",     \
+                #x, msg);                        \
+        }                                        \
+    } while (false);

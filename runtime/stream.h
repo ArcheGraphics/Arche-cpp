@@ -2,7 +2,6 @@
 
 #include <utility>
 
-#include "core/spin_mutex.h"
 #include "runtime/rhi/resource.h"
 #include "runtime/rhi/stream_tag.h"
 #include "runtime/stream_event.h"
