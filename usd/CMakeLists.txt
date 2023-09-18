@@ -8,19 +8,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(usd-framework LANGUAGES C CXX)
 
-set(CONVERTER_FILES
-        converter/cgltf_util.cpp
-        converter/converter.cpp
-        converter/debug_codes.cpp
-        converter/file_format.cpp
-        converter/guc.cpp
-        converter/image.cpp
-        converter/materialx.cpp
-        converter/mesh.cpp
-        converter/naming.cpp
-        converter/usd_preview_surface.cpp
-)
-
 set(BASE_FILES
         editor/base/geometric_functions.h
         editor/base/usd_helpers.cpp
@@ -95,7 +82,6 @@ source_group("common\\" FILES ${COMMON_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
-        ${CONVERTER_FILES}
         # Editor
         editor/selection.cpp
         editor/blueprints.cpp
