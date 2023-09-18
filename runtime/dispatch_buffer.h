@@ -21,7 +21,6 @@ class IndirectDispatchBufferExprProxy;
 }// namespace detail
 
 class IndirectDispatchBuffer final : public Resource {
-
 private:
     size_t _capacity{};
     size_t _byte_size{};

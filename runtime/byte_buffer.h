@@ -15,7 +15,6 @@ class ByteBufferExprProxy;
 }// namespace detail
 
 class ByteBuffer final : public Resource {
-
 private:
     size_t _size_bytes{};
 

@@ -56,7 +56,6 @@ VOX_MARK_STREAM_EVENT_TYPE(Event::Signal)
 VOX_MARK_STREAM_EVENT_TYPE(Event::Wait)
 
 class TimelineEvent final : public Resource {
-
 public:
     using Signal = Event::Signal;
     using Wait = Event::Wait;

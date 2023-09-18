@@ -31,7 +31,6 @@ class BufferView;
 namespace detail {
 
 class MipmapView {
-
 private:
     uint64_t _handle;
     uint3 _size;

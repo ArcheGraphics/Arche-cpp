@@ -28,15 +28,15 @@ struct IndirectDispatchArg {
 };
 
 #define VOX_COMPUTE_RUNTIME_COMMANDS \
-    BufferUploadCommand,               \
-        BufferDownloadCommand,         \
-        BufferCopyCommand,             \
-        BufferToTextureCopyCommand,    \
-        ShaderDispatchCommand,         \
-        TextureUploadCommand,          \
-        TextureDownloadCommand,        \
-        TextureCopyCommand,            \
-        TextureToBufferCopyCommand,    \
+    BufferUploadCommand,             \
+        BufferDownloadCommand,       \
+        BufferCopyCommand,           \
+        BufferToTextureCopyCommand,  \
+        ShaderDispatchCommand,       \
+        TextureUploadCommand,        \
+        TextureDownloadCommand,      \
+        TextureCopyCommand,          \
+        TextureToBufferCopyCommand,  \
         CustomCommand
 
 #define VOX_MAKE_COMMAND_FWD_DECL(CMD) class CMD;
@@ -62,7 +62,7 @@ struct MutableCommandVisitor {
 class Command;
 class CommandList;
 
-#define VOX_MAKE_COMMAND_COMMON_ACCEPT()                                                \
+#define VOX_MAKE_COMMAND_COMMON_ACCEPT()                                                  \
     void accept(CommandVisitor &visitor) const noexcept override { visitor.visit(this); } \
     void accept(MutableCommandVisitor &visitor) noexcept override { visitor.visit(this); }
 
@@ -71,7 +71,6 @@ class CommandList;
     StreamTag stream_tag() const noexcept override { return Type; }
 
 class Command {
-
 public:
     enum struct Tag {
 #define VOX_MAKE_COMMAND_TAG(Cmd) E##Cmd,
@@ -92,7 +91,6 @@ public:
 };
 
 class ShaderDispatchCommandBase {
-
 public:
     using Argument = vox::compute::Argument;
 
@@ -121,7 +119,6 @@ public:
 };
 
 class ShaderDispatchCommand final : public Command, public ShaderDispatchCommandBase {
-
 public:
     using DispatchSize = std::variant<uint3, IndirectDispatchArg>;
 
@@ -147,7 +144,6 @@ public:
 };
 
 class BufferUploadCommand final : public Command {
-
 private:
     uint64_t _handle{};
     size_t _offset{};
@@ -173,7 +169,6 @@ public:
 };
 
 class BufferDownloadCommand final : public Command {
-
 private:
     uint64_t _handle{};
     size_t _offset{};
@@ -196,7 +191,6 @@ public:
 };
 
 class BufferCopyCommand final : public Command {
-
 private:
     uint64_t _src_handle{};
     uint64_t _dst_handle{};
@@ -222,7 +216,6 @@ public:
 };
 
 class BufferToTextureCopyCommand final : public Command {
-
 private:
     uint64_t _buffer_handle{};
     size_t _buffer_offset{};
@@ -256,7 +249,6 @@ public:
 };
 
 class TextureToBufferCopyCommand final : public Command {
-
 private:
     uint64_t _buffer_handle{};
     size_t _buffer_offset{};
@@ -290,7 +282,6 @@ public:
 };
 
 class TextureCopyCommand final : public Command {
-
 private:
     PixelStorage _storage{};
     uint64_t _src_handle{};
@@ -325,7 +316,6 @@ public:
 };
 
 class TextureUploadCommand final : public Command {
-
 private:
     uint64_t _handle{};
     PixelStorage _storage{};
@@ -357,7 +347,6 @@ public:
 };
 
 class TextureDownloadCommand final : public Command {
-
 private:
     uint64_t _handle{};
     PixelStorage _storage{};
@@ -389,7 +378,6 @@ public:
 };
 
 class CustomCommand : public Command {
-
 public:
     explicit CustomCommand() noexcept
         : Command{Command::Tag::ECustomCommand} {}
@@ -400,7 +388,6 @@ public:
 
 // For custom shader-dispatch or pass
 class CustomDispatchCommand : public CustomCommand {
-
 public:
     using ResourceHandle = std::variant<
         Argument::Buffer,

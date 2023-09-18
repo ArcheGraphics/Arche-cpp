@@ -11,17 +11,9 @@
 #include "runtime/rhi/command.h"
 #include "common/concepts.h"
 
-#ifdef VOX_ENABLE_API
-#include "api/common.h>
-#endif
-namespace lc::validation {
-class Device;
-}// namespace lc::validation
 namespace vox::compute {
 
 class CommandList : concepts::Noncopyable {
-    friend class lc::validation::Device;
-
 public:
     class Commit;
     using CommandContainer = std::vector<std::unique_ptr<Command>>;
@@ -54,7 +46,6 @@ public:
 };
 
 class CommandList::Commit {
-
 private:
     CommandList _list;
 

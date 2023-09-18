@@ -16,7 +16,6 @@
 namespace vox::compute {
 
 class Stream final : public Resource {
-
 public:
     struct Commit {};
     struct Synchronize {};

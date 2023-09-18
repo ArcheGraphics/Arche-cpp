@@ -8,12 +8,7 @@
 
 #include "runtime/rhi/device_interface.h"
 
-namespace vox {
-class BinaryIO;
-}// namespace vox
-
 namespace vox::compute {
-
 class Context;
 class Event;
 class TimelineEvent;
