@@ -100,7 +100,7 @@ template<typename Object>
         mtl_label->release();
     }
     desc->setCaptureObject(scope);
-    return std::new_with_allocator<MetalDebugCaptureScope>(desc, scope);
+    return new MetalDebugCaptureScope(desc, scope);
 }
 
 }// namespace detail
@@ -126,7 +126,7 @@ uint64_t MetalDebugCaptureExt::create_stream_capture_scope(uint64_t stream_handl
 void MetalDebugCaptureExt::destroy_capture_scope(uint64_t handle) const noexcept {
     with_autorelease_pool([&] {
         auto scope = reinterpret_cast<MetalDebugCaptureScope *>(handle);
-        std::delete_with_allocator(scope);
+        delete scope;
     });
 }
 

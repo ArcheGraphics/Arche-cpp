@@ -64,7 +64,6 @@ public:
 
 private:
     friend class Device;
-    friend class DStorageExt;
     StreamTag _stream_tag{};
 
 private:

@@ -105,9 +105,7 @@ public:
         STREAM,
         EVENT,
         SHADER,
-        SWAP_CHAIN,
-        DSTORAGE_FILE,
-        DSTORAGE_PINNED_MEMORY
+        SWAP_CHAIN
     };
 
 private:

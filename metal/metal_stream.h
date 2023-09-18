@@ -10,7 +10,7 @@
 #include "runtime/command_list.h"
 #include "metal_api.h"
 #include "metal_stage_buffer_pool.h"
-
+#include <shared_mutex>
 
 extern void luisa_compute_metal_stream_print_function_logs(MTL::LogContainer *logs);
 
@@ -24,10 +24,10 @@ class MetalCommandEncoder;
 class MetalStream {
 private:
     MTL::CommandQueue *_queue;
-    spin_mutex _upload_pool_creation_mutex;
-    spin_mutex _download_pool_creation_mutex;
-    spin_mutex _callback_mutex;
-    spin_mutex _dispatch_mutex;
+    std::shared_mutex _upload_pool_creation_mutex;
+    std::shared_mutex _download_pool_creation_mutex;
+    std::shared_mutex _callback_mutex;
+    std::shared_mutex _dispatch_mutex;
     std::unique_ptr<MetalStageBufferPool> _upload_pool;
     std::unique_ptr<MetalStageBufferPool> _download_pool;
 
@@ -52,4 +52,3 @@ public:
 };
 
 }// namespace vox::compute::metal
-

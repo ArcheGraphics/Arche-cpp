@@ -27,4 +27,3 @@ public:
 };
 
 }// namespace vox::compute::metal
-

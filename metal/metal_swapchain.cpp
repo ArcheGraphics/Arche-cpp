@@ -10,13 +10,14 @@
 #include "common/logging.h"
 #include "common/metal_helpers.h"
 #include "common/filesystem.h"
+#include "metal_device.h"
 
 namespace vox::compute::metal {
-MetalSwapchain::MetalSwapchain(MTL::Device &device, uint64_t window_handle,
+MetalSwapchain::MetalSwapchain(MetalDevice *device, uint64_t window_handle,
                                uint width, uint height, bool allow_hdr,
                                bool vsync, uint back_buffer_size) noexcept
     : _layer{metal_backend_create_layer(
-          &device, window_handle,
+          device->handle(), window_handle,
           width, height, allow_hdr,
           vsync, back_buffer_size)},
       _render_pass_desc{make_shared(MTL::RenderPassDescriptor::alloc()->init())} {
@@ -27,7 +28,7 @@ MetalSwapchain::MetalSwapchain(MTL::Device &device, uint64_t window_handle,
     attachment_desc->setClearColor(MTL::ClearColor(1.0, 1.0, 1.0, 1.0));
     _format = allow_hdr ? MTL::PixelFormatRGBA16Float : MTL::PixelFormatBGRA8Unorm;
 
-    create_pso(device);
+    create_pso(device->handle());
 }
 
 MetalSwapchain::~MetalSwapchain() noexcept {
@@ -37,12 +38,12 @@ MetalSwapchain::~MetalSwapchain() noexcept {
     _layer->release();
 }
 
-void MetalSwapchain::create_pso(MTL::Device &device) {
+void MetalSwapchain::create_pso(MTL::Device *device) {
     auto raw_source = fs::read_shader("usd_blit.metal");
     auto source = NS::String::string(raw_source.c_str(), NS::UTF8StringEncoding);
     NS::Error *error{nullptr};
     auto option = make_shared(MTL::CompileOptions::alloc()->init());
-    auto defaultLibrary = make_shared(device.newLibrary(source, option.get(), &error));
+    auto defaultLibrary = make_shared(device->newLibrary(source, option.get(), &error));
     if (error != nullptr) {
         LOGE("Error: could not load Metal shader library: {}",
              error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
@@ -72,10 +73,16 @@ void MetalSwapchain::create_pso(MTL::Device &device) {
     colorDescriptor->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
 
     error = nullptr;
-    _pipeline = make_shared(device.newRenderPipelineState(pipelineStateDescriptor.get(), &error));
+    _pipeline = make_shared(device->newRenderPipelineState(pipelineStateDescriptor.get(), &error));
     if (!_pipeline) {
         LOGE("Failed to created pipeline state, error {}", error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
     }
+}
+
+PixelStorage MetalSwapchain::pixel_storage() const noexcept {
+    return _layer->pixelFormat() == MTL::PixelFormatRGBA16Float ?
+               PixelStorage::HALF4 :
+               PixelStorage::BYTE4;
 }
 
 void MetalSwapchain::present(MTL::CommandBuffer *command_buffer, MTL::Texture *image) noexcept {

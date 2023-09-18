@@ -20,6 +20,8 @@ set(COMMON_FILES
         metal_stream.cpp
         metal_stream.mm
         metal_texture.cpp
+        metal_stage_buffer_pool.cpp
+        metal_callback_context.cpp
 )
 
 set(FG_FILES
@@ -82,6 +84,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         metal-cpp
+        half
+        magic_enum
 )
 
 if (${NEED_LINK_ATOMIC})

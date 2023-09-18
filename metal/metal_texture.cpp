@@ -17,9 +17,9 @@ MetalTexture::MetalTexture(MTL::Device *device, PixelFormat format, uint dimensi
     if (is_block_compressed(format)) {
         auto autorelease_pool = NS::AutoreleasePool::alloc()->init();
         ASSERT(device->supportsBCTextureCompression(),
-                     "Metal device '{}' does not support "
-                     "block-compressed texture compression.",
-                     device->name()->cString(NS::UTF8StringEncoding));
+               "Metal device '{}' does not support "
+               "block-compressed texture compression.",
+               device->name()->cString(NS::UTF8StringEncoding));
         autorelease_pool->release();
     }
 

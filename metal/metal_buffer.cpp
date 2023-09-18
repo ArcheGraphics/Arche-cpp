@@ -45,7 +45,7 @@ MetalIndirectDispatchBuffer::MetalIndirectDispatchBuffer(
                                          MTL::ResourceStorageModePrivate |
                                              MTL::ResourceHazardTrackingModeTracked);
     ASSERT(_dispatch_buffer != nullptr,
-                 "Failed to create indirect dispatch buffer.");
+           "Failed to create indirect dispatch buffer.");
 
     auto command_buffer_desc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
     command_buffer_desc->setCommandTypes(MTL::IndirectCommandTypeConcurrentDispatch);
@@ -59,7 +59,7 @@ MetalIndirectDispatchBuffer::MetalIndirectDispatchBuffer(
                                                        MTL::ResourceStorageModePrivate |
                                                            MTL::ResourceHazardTrackingModeTracked);
     ASSERT(_command_buffer != nullptr,
-                 "Failed to create indirect command buffer.");
+           "Failed to create indirect command buffer.");
     command_buffer_desc->release();
 }
 
@@ -94,4 +94,3 @@ void MetalIndirectDispatchBuffer::set_name(std::string_view name) noexcept {
 }
 
 }// namespace vox::compute::metal
-

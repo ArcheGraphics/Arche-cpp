@@ -62,4 +62,3 @@ void MetalEvent::set_name(std::string_view name) noexcept {
 }
 
 }// namespace vox::compute::metal
-

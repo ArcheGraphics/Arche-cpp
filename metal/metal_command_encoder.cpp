@@ -184,4 +184,3 @@ void MetalCommandEncoder::visit(CustomCommand *command) noexcept {
 }
 
 }// namespace vox::compute::metal
-

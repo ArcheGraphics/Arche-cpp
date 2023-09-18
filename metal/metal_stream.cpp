@@ -28,7 +28,7 @@ MetalStageBufferPool *MetalStream::upload_pool() noexcept {
         std::scoped_lock lock{_upload_pool_creation_mutex};
         if (_upload_pool == nullptr) {
             _upload_pool = std::make_unique<MetalStageBufferPool>(
-                _queue->device(), 64_M, true);
+                _queue->device(), 64 * 1024u * 1024u, true);
         }
     }
     return _upload_pool.get();
@@ -39,7 +39,7 @@ MetalStageBufferPool *MetalStream::download_pool() noexcept {
         std::scoped_lock lock{_download_pool_creation_mutex};
         if (_download_pool == nullptr) {
             _download_pool = std::make_unique<MetalStageBufferPool>(
-                _queue->device(), 32_M, false);
+                _queue->device(), 32 * 1024u * 1024u, false);
         }
     }
     return _download_pool.get();
@@ -102,7 +102,8 @@ void MetalStream::dispatch(CommandList &&list) noexcept {
 }
 
 void MetalStream::present(MetalSwapchain *swapchain, MetalTexture *image) noexcept {
-    swapchain->present(_queue, image->handle());
+    // todo
+    //    swapchain->present(_queue, image->handle());
 }
 
 void MetalStream::submit(MTL::CommandBuffer *command_buffer) noexcept {
