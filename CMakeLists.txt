@@ -67,6 +67,7 @@ add_subdirectory(test.math)
 
 add_subdirectory(common)
 add_subdirectory(usd)
+add_subdirectory(runtime)
 
 if (APPLE)
     add_subdirectory(metal)

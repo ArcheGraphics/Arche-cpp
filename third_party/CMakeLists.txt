@@ -54,6 +54,10 @@ set_target_properties(imgui PROPERTIES FOLDER "ThirdParty" POSITION_INDEPENDENT_
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/stb")
 
+# half
+add_library(half INTERFACE)
+target_include_directories(half INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/half/include")
+
 # spdlog
 add_subdirectory(spdlog)
 

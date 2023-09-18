@@ -6,36 +6,32 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(common LANGUAGES C CXX)
+project(runtime LANGUAGES C CXX)
 
 set(COMMON_FILES
-        # Header Files
-        helpers.h
-        logging.h
-        timer.h
-        filesystem.h
-        utils.h
-        # Source Files
-        logging.cpp
-        timer.cpp
-        filesystem.cpp
-        utils.cpp
-        basic_types.cpp
+        bindless_array.cpp
+        buffer.cpp
+        byte_buffer.cpp
+        command_list.cpp
+        device.cpp
+        dispatch_buffer.cpp
+        event.cpp
+        image.cpp
+        mipmap.cpp
+        stream.cpp
+        volume.cpp
+        rhi/command_encoder.cpp
+        rhi/device_interface.cpp
+        rhi/pixel.cpp
+        rhi/resource.cpp
 )
 
-set(GUI_FILES
-        gui/window.cpp
-        gui/window.h
-        gui/input.h
-        gui/imgui_impl_glfw.h
-        gui/imgui_impl_glfw.cpp
-)
-
-source_group("common\\" FILES ${COMMON_FILES})
+source_group("\\" FILES ${FRAMEWORK_FILES})
+source_group("compute\\" FILES ${COMPUTE_FILES})
+source_group("framegraph\\" FILES ${FG_FILES})
 
 set(PROJECT_FILES
         ${COMMON_FILES}
-        ${GUI_FILES}
 )
 
 #NB: switch this to shared library and things stop working. (there is likely two copies of volk somewhere.
@@ -60,8 +56,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..
 # Link third party libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
-        glfw
-        imgui
         half
 )
 
