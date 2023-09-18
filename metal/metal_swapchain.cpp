@@ -11,7 +11,7 @@
 #include "common/metal_helpers.h"
 #include "common/filesystem.h"
 
-namespace vox::metal {
+namespace vox::compute::metal {
 MetalSwapchain::MetalSwapchain(MTL::Device &device, uint64_t window_handle,
                                uint width, uint height, bool allow_hdr,
                                bool vsync, uint back_buffer_size) noexcept
@@ -112,4 +112,4 @@ void MetalSwapchain::set_name(std::string_view name) noexcept {
     }
 }
 
-}// namespace vox::metal
+}// namespace vox::compute::metal

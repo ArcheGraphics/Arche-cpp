@@ -11,7 +11,17 @@ project(metal-framework LANGUAGES C CXX)
 set(COMMON_FILES
         metal_api.h
         metal_swapchain.cpp
-        metal_swapchain_layer.mm)
+        metal_swapchain_layer.mm
+        metal_buffer.cpp
+        metal_command_encoder.cpp
+        metal_debug_capture.cpp
+        metal_device.cpp
+        metal_event.cpp
+        metal_stage_buffer_pool.cpp
+        metal_stream.cpp
+        metal_stream.mm
+        metal_texture.cpp
+)
 
 set(FG_FILES
         fg/framegraph.h

@@ -16,7 +16,7 @@ extern "C" CA::MetalLayer *metal_backend_create_layer(
     bool hdr, bool vsync,
     uint32_t back_buffer_count) noexcept;
 
-namespace vox::metal {
+namespace vox::compute::metal {
 class MetalSwapchain {
 public:
     MetalSwapchain(MTL::Device &device, uint64_t window_handle,
@@ -42,4 +42,4 @@ private:
     MTL::PixelFormat _format;
 };
 
-}// namespace vox::metal
+}// namespace vox::compute::metal

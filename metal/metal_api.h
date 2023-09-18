@@ -8,7 +8,7 @@
 
 #include <Metal/Metal.hpp>
 
-namespace vox::metal {
+namespace vox::compute::metal {
 
 namespace detail {
 
@@ -35,4 +35,4 @@ decltype(auto) with_autorelease_pool(F &&f) noexcept {
     return std::forward<F>(f)();
 }
 
-}// namespace vox::metal
+}// namespace vox::compute::metal
