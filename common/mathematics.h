@@ -78,31 +78,31 @@ using std::min;
 [[nodiscard]] constexpr float degrees(float rad) noexcept { return rad * inv_pi * 180.0f; }
 
 /// Make function apply to floatN element-wise
-#define LUISA_MAKE_VECTOR_UNARY_FUNC(func)                                                                \
+#define VOX_MAKE_VECTOR_UNARY_FUNC(func)                                                                \
     [[nodiscard]] inline auto func(float2 v) noexcept { return float2{func(v.x), func(v.y)}; }            \
     [[nodiscard]] inline auto func(float3 v) noexcept { return float3{func(v.x), func(v.y), func(v.z)}; } \
     [[nodiscard]] inline auto func(float4 v) noexcept { return float4{func(v.x), func(v.y), func(v.z), func(v.w)}; }
 
-LUISA_MAKE_VECTOR_UNARY_FUNC(acos)
-LUISA_MAKE_VECTOR_UNARY_FUNC(asin)
-LUISA_MAKE_VECTOR_UNARY_FUNC(atan)
-LUISA_MAKE_VECTOR_UNARY_FUNC(cos)
-LUISA_MAKE_VECTOR_UNARY_FUNC(sin)
-LUISA_MAKE_VECTOR_UNARY_FUNC(tan)
-LUISA_MAKE_VECTOR_UNARY_FUNC(sqrt)
-LUISA_MAKE_VECTOR_UNARY_FUNC(ceil)
-LUISA_MAKE_VECTOR_UNARY_FUNC(floor)
-LUISA_MAKE_VECTOR_UNARY_FUNC(fract)
-LUISA_MAKE_VECTOR_UNARY_FUNC(round)
-LUISA_MAKE_VECTOR_UNARY_FUNC(exp)
-LUISA_MAKE_VECTOR_UNARY_FUNC(log)
-LUISA_MAKE_VECTOR_UNARY_FUNC(log10)
-LUISA_MAKE_VECTOR_UNARY_FUNC(log2)
-LUISA_MAKE_VECTOR_UNARY_FUNC(abs)
-LUISA_MAKE_VECTOR_UNARY_FUNC(radians)
-LUISA_MAKE_VECTOR_UNARY_FUNC(degrees)
+VOX_MAKE_VECTOR_UNARY_FUNC(acos)
+VOX_MAKE_VECTOR_UNARY_FUNC(asin)
+VOX_MAKE_VECTOR_UNARY_FUNC(atan)
+VOX_MAKE_VECTOR_UNARY_FUNC(cos)
+VOX_MAKE_VECTOR_UNARY_FUNC(sin)
+VOX_MAKE_VECTOR_UNARY_FUNC(tan)
+VOX_MAKE_VECTOR_UNARY_FUNC(sqrt)
+VOX_MAKE_VECTOR_UNARY_FUNC(ceil)
+VOX_MAKE_VECTOR_UNARY_FUNC(floor)
+VOX_MAKE_VECTOR_UNARY_FUNC(fract)
+VOX_MAKE_VECTOR_UNARY_FUNC(round)
+VOX_MAKE_VECTOR_UNARY_FUNC(exp)
+VOX_MAKE_VECTOR_UNARY_FUNC(log)
+VOX_MAKE_VECTOR_UNARY_FUNC(log10)
+VOX_MAKE_VECTOR_UNARY_FUNC(log2)
+VOX_MAKE_VECTOR_UNARY_FUNC(abs)
+VOX_MAKE_VECTOR_UNARY_FUNC(radians)
+VOX_MAKE_VECTOR_UNARY_FUNC(degrees)
 
-#undef LUISA_MAKE_VECTOR_UNARY_FUNC
+#undef VOX_MAKE_VECTOR_UNARY_FUNC
 
 template<typename T>
 [[nodiscard]] inline auto abs(Vector<T, 2> v) noexcept { return Vector<T, 2>{abs(v.x), abs(v.y)}; }
@@ -112,7 +112,7 @@ template<typename T>
 [[nodiscard]] inline auto abs(Vector<T, 4> v) noexcept { return Vector<T, 4>{abs(v.x), abs(v.y), abs(v.z), abs(v.w)}; }
 
 /// Make function apply to floatN element-wise
-#define LUISA_MAKE_VECTOR_BINARY_FUNC(func)                                                  \
+#define VOX_MAKE_VECTOR_BINARY_FUNC(func)                                                  \
     template<typename T>                                                                     \
     [[nodiscard]] constexpr auto func(Vector<T, 2> v, Vector<T, 2> u) noexcept {             \
         return Vector<T, 2>{func(v.x, u.x), func(v.y, u.y)};                                 \
@@ -126,13 +126,13 @@ template<typename T>
         return Vector<T, 4>{func(v.x, u.x), func(v.y, u.y), func(v.z, u.z), func(v.w, u.w)}; \
     }
 
-LUISA_MAKE_VECTOR_BINARY_FUNC(atan2)
-LUISA_MAKE_VECTOR_BINARY_FUNC(pow)
-LUISA_MAKE_VECTOR_BINARY_FUNC(min)
-LUISA_MAKE_VECTOR_BINARY_FUNC(max)
-LUISA_MAKE_VECTOR_BINARY_FUNC(fmod)
+VOX_MAKE_VECTOR_BINARY_FUNC(atan2)
+VOX_MAKE_VECTOR_BINARY_FUNC(pow)
+VOX_MAKE_VECTOR_BINARY_FUNC(min)
+VOX_MAKE_VECTOR_BINARY_FUNC(max)
+VOX_MAKE_VECTOR_BINARY_FUNC(fmod)
 
-#undef LUISA_MAKE_VECTOR_BINARY_FUNC
+#undef VOX_MAKE_VECTOR_BINARY_FUNC
 
 [[nodiscard]] inline auto isnan(float x) noexcept {
     auto u = 0u;

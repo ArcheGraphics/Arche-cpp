@@ -52,8 +52,8 @@ public:
     void synchronize(uint64_t fence = std::numeric_limits<uint64_t>::max()) const noexcept;
 };
 
-LUISA_MARK_STREAM_EVENT_TYPE(Event::Signal)
-LUISA_MARK_STREAM_EVENT_TYPE(Event::Wait)
+VOX_MARK_STREAM_EVENT_TYPE(Event::Signal)
+VOX_MARK_STREAM_EVENT_TYPE(Event::Wait)
 
 class TimelineEvent final : public Resource {
 

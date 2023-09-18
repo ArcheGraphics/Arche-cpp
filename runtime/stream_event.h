@@ -17,7 +17,7 @@ template<typename T>
 struct is_stream_event_impl : std::false_type {};
 }// namespace detail
 
-#define LUISA_MARK_STREAM_EVENT_TYPE(T) \
+#define VOX_MARK_STREAM_EVENT_TYPE(T) \
     template<>                          \
     struct vox::compute::detail::is_stream_event_impl<T> : std::true_type {};
 

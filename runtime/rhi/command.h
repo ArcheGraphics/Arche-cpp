@@ -27,7 +27,7 @@ struct IndirectDispatchArg {
     uint32_t max_dispatch_size;
 };
 
-#define LUISA_COMPUTE_RUNTIME_COMMANDS \
+#define VOX_COMPUTE_RUNTIME_COMMANDS \
     BufferUploadCommand,               \
         BufferDownloadCommand,         \
         BufferCopyCommand,             \
@@ -39,44 +39,44 @@ struct IndirectDispatchArg {
         TextureToBufferCopyCommand,    \
         CustomCommand
 
-#define LUISA_MAKE_COMMAND_FWD_DECL(CMD) class CMD;
-LUISA_MAP(LUISA_MAKE_COMMAND_FWD_DECL, LUISA_COMPUTE_RUNTIME_COMMANDS)
-#undef LUISA_MAKE_COMMAND_FWD_DECL
+#define VOX_MAKE_COMMAND_FWD_DECL(CMD) class CMD;
+VOX_MAP(VOX_MAKE_COMMAND_FWD_DECL, VOX_COMPUTE_RUNTIME_COMMANDS)
+#undef VOX_MAKE_COMMAND_FWD_DECL
 
 struct CommandVisitor {
-#define LUISA_MAKE_COMMAND_VISITOR_INTERFACE(CMD) \
+#define VOX_MAKE_COMMAND_VISITOR_INTERFACE(CMD) \
     virtual void visit(const CMD *) noexcept = 0;
-    LUISA_MAP(LUISA_MAKE_COMMAND_VISITOR_INTERFACE, LUISA_COMPUTE_RUNTIME_COMMANDS)
-#undef LUISA_MAKE_COMMAND_VISITOR_INTERFACE
+    VOX_MAP(VOX_MAKE_COMMAND_VISITOR_INTERFACE, VOX_COMPUTE_RUNTIME_COMMANDS)
+#undef VOX_MAKE_COMMAND_VISITOR_INTERFACE
     virtual ~CommandVisitor() noexcept = default;
 };
 
 struct MutableCommandVisitor {
-#define LUISA_MAKE_COMMAND_VISITOR_INTERFACE(CMD) \
+#define VOX_MAKE_COMMAND_VISITOR_INTERFACE(CMD) \
     virtual void visit(CMD *) noexcept = 0;
-    LUISA_MAP(LUISA_MAKE_COMMAND_VISITOR_INTERFACE, LUISA_COMPUTE_RUNTIME_COMMANDS)
-#undef LUISA_MAKE_COMMAND_VISITOR_INTERFACE
+    VOX_MAP(VOX_MAKE_COMMAND_VISITOR_INTERFACE, VOX_COMPUTE_RUNTIME_COMMANDS)
+#undef VOX_MAKE_COMMAND_VISITOR_INTERFACE
     virtual ~MutableCommandVisitor() noexcept = default;
 };
 
 class Command;
 class CommandList;
 
-#define LUISA_MAKE_COMMAND_COMMON_ACCEPT()                                                \
+#define VOX_MAKE_COMMAND_COMMON_ACCEPT()                                                \
     void accept(CommandVisitor &visitor) const noexcept override { visitor.visit(this); } \
     void accept(MutableCommandVisitor &visitor) noexcept override { visitor.visit(this); }
 
-#define LUISA_MAKE_COMMAND_COMMON(Type) \
-    LUISA_MAKE_COMMAND_COMMON_ACCEPT()  \
+#define VOX_MAKE_COMMAND_COMMON(Type) \
+    VOX_MAKE_COMMAND_COMMON_ACCEPT()  \
     StreamTag stream_tag() const noexcept override { return Type; }
 
 class Command {
 
 public:
     enum struct Tag {
-#define LUISA_MAKE_COMMAND_TAG(Cmd) E##Cmd,
-        LUISA_MAP(LUISA_MAKE_COMMAND_TAG, LUISA_COMPUTE_RUNTIME_COMMANDS)
-#undef LUISA_MAKE_COMMAND_TAG
+#define VOX_MAKE_COMMAND_TAG(Cmd) E##Cmd,
+        VOX_MAP(VOX_MAKE_COMMAND_TAG, VOX_COMPUTE_RUNTIME_COMMANDS)
+#undef VOX_MAKE_COMMAND_TAG
     };
 
 private:
@@ -143,7 +143,7 @@ public:
     [[nodiscard]] auto is_indirect() const noexcept { return std::holds_alternative<IndirectDispatchArg>(_dispatch_size); }
     [[nodiscard]] auto dispatch_size() const noexcept { return std::get<uint3>(_dispatch_size); }
     [[nodiscard]] auto indirect_dispatch() const noexcept { return std::get<IndirectDispatchArg>(_dispatch_size); }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COMPUTE)
 };
 
 class BufferUploadCommand final : public Command {
@@ -169,7 +169,7 @@ public:
     [[nodiscard]] auto offset() const noexcept { return _offset; }
     [[nodiscard]] auto size() const noexcept { return _size; }
     [[nodiscard]] auto data() const noexcept { return _data; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class BufferDownloadCommand final : public Command {
@@ -192,7 +192,7 @@ public:
     [[nodiscard]] auto offset() const noexcept { return _offset; }
     [[nodiscard]] auto size() const noexcept { return _size; }
     [[nodiscard]] auto data() const noexcept { return _data; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class BufferCopyCommand final : public Command {
@@ -218,7 +218,7 @@ public:
     [[nodiscard]] auto src_offset() const noexcept { return _src_offset; }
     [[nodiscard]] auto dst_offset() const noexcept { return _dst_offset; }
     [[nodiscard]] auto size() const noexcept { return _size; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class BufferToTextureCopyCommand final : public Command {
@@ -252,7 +252,7 @@ public:
     [[nodiscard]] auto level() const noexcept { return _texture_level; }
     [[nodiscard]] auto texture_offset() const noexcept { return uint3(_texture_offset[0], _texture_offset[1], _texture_offset[2]); }
     [[nodiscard]] auto size() const noexcept { return uint3(_texture_size[0], _texture_size[1], _texture_size[2]); }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class TextureToBufferCopyCommand final : public Command {
@@ -286,7 +286,7 @@ public:
     [[nodiscard]] auto level() const noexcept { return _texture_level; }
     [[nodiscard]] auto texture_offset() const noexcept { return uint3(_texture_offset[0], _texture_offset[1], _texture_offset[2]); }
     [[nodiscard]] auto size() const noexcept { return uint3(_texture_size[0], _texture_size[1], _texture_size[2]); }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class TextureCopyCommand final : public Command {
@@ -321,7 +321,7 @@ public:
     [[nodiscard]] auto src_offset() const noexcept { return _src_offset; }
     [[nodiscard]] auto dst_offset() const noexcept { return _dst_offset; }
     [[nodiscard]] auto dst_level() const noexcept { return _dst_level; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class TextureUploadCommand final : public Command {
@@ -353,7 +353,7 @@ public:
     [[nodiscard]] auto size() const noexcept { return uint3(_size[0], _size[1], _size[2]); }
     [[nodiscard]] auto offset() const noexcept { return uint3(_offset[0], _offset[1], _offset[2]); }
     [[nodiscard]] auto data() const noexcept { return _data; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class TextureDownloadCommand final : public Command {
@@ -385,7 +385,7 @@ public:
     [[nodiscard]] auto size() const noexcept { return uint3(_size[0], _size[1], _size[2]); }
     [[nodiscard]] auto offset() const noexcept { return uint3(_offset[0], _offset[1], _offset[2]); }
     [[nodiscard]] auto data() const noexcept { return _data; }
-    LUISA_MAKE_COMMAND_COMMON(StreamTag::COPY)
+    VOX_MAKE_COMMAND_COMMON(StreamTag::COPY)
 };
 
 class CustomCommand : public Command {
@@ -395,7 +395,7 @@ public:
         : Command{Command::Tag::ECustomCommand} {}
     [[nodiscard]] virtual uint64_t uuid() const noexcept = 0;
     ~CustomCommand() noexcept override = default;
-    LUISA_MAKE_COMMAND_COMMON_ACCEPT()
+    VOX_MAKE_COMMAND_COMMON_ACCEPT()
 };
 
 // For custom shader-dispatch or pass

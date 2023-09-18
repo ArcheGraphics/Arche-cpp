@@ -50,6 +50,6 @@ public:
     [[nodiscard]] Present present(ImageView<float> frame) const noexcept;
 };
 
-LUISA_MARK_STREAM_EVENT_TYPE(Swapchain::Present)
+VOX_MARK_STREAM_EVENT_TYPE(Swapchain::Present)
 
 }// namespace vox::compute

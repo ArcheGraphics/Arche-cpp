@@ -25,7 +25,7 @@ template<typename T>
 
 }// namespace vox
 
-#define LUISA_MAGIC_ENUM_RANGE(E, E_MIN, E_MAX)                                    \
+#define VOX_MAGIC_ENUM_RANGE(E, E_MIN, E_MAX)                                    \
     namespace magic_enum::customize {                                              \
     template<>                                                                     \
     struct enum_range<E> {                                                         \

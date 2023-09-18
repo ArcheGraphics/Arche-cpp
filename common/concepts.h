@@ -123,49 +123,49 @@ template<typename T>
 concept basic = is_basic_v<T>;
 
 // operator traits
-#define LUISA_MAKE_UNARY_OP_CONCEPT(op, op_name) \
+#define VOX_MAKE_UNARY_OP_CONCEPT(op, op_name) \
     template<typename Operand>                   \
     concept op_name = requires(Operand operand) { op operand; };
-LUISA_MAKE_UNARY_OP_CONCEPT(+, operator_plus)
-LUISA_MAKE_UNARY_OP_CONCEPT(-, operator_minus)
-LUISA_MAKE_UNARY_OP_CONCEPT(!, operator_not)
-LUISA_MAKE_UNARY_OP_CONCEPT(~, operator_bit_not)
-#undef LUISA_MAKE_UNARY_OP_CONCEPT
+VOX_MAKE_UNARY_OP_CONCEPT(+, operator_plus)
+VOX_MAKE_UNARY_OP_CONCEPT(-, operator_minus)
+VOX_MAKE_UNARY_OP_CONCEPT(!, operator_not)
+VOX_MAKE_UNARY_OP_CONCEPT(~, operator_bit_not)
+#undef VOX_MAKE_UNARY_OP_CONCEPT
 
-#define LUISA_MAKE_BINARY_OP_CONCEPT(op, op_name) \
+#define VOX_MAKE_BINARY_OP_CONCEPT(op, op_name) \
     template<typename Lhs, typename Rhs>          \
     concept op_name = requires(Lhs lhs, Rhs rhs) { lhs op rhs; };
-LUISA_MAKE_BINARY_OP_CONCEPT(+, operator_add)
-LUISA_MAKE_BINARY_OP_CONCEPT(-, operator_sub)
-LUISA_MAKE_BINARY_OP_CONCEPT(*, operator_mul)
-LUISA_MAKE_BINARY_OP_CONCEPT(/, operator_div)
-LUISA_MAKE_BINARY_OP_CONCEPT(%, operator_mod)
-LUISA_MAKE_BINARY_OP_CONCEPT(&, operator_bit_and)
-LUISA_MAKE_BINARY_OP_CONCEPT(|, operator_bit_or)
-LUISA_MAKE_BINARY_OP_CONCEPT(^, operator_bit_Xor)
-LUISA_MAKE_BINARY_OP_CONCEPT(<<, operator_shift_left)
-LUISA_MAKE_BINARY_OP_CONCEPT(>>, operator_shift_right)
-LUISA_MAKE_BINARY_OP_CONCEPT(&&, operator_and)
-LUISA_MAKE_BINARY_OP_CONCEPT(||, operator_or)
-LUISA_MAKE_BINARY_OP_CONCEPT(==, operator_equal)
-LUISA_MAKE_BINARY_OP_CONCEPT(!=, operator_not_equal)
-LUISA_MAKE_BINARY_OP_CONCEPT(<, operator_less)
-LUISA_MAKE_BINARY_OP_CONCEPT(<=, operator_less_equal)
-LUISA_MAKE_BINARY_OP_CONCEPT(>, operator_greater)
-LUISA_MAKE_BINARY_OP_CONCEPT(>=, operator_greater_equal)
+VOX_MAKE_BINARY_OP_CONCEPT(+, operator_add)
+VOX_MAKE_BINARY_OP_CONCEPT(-, operator_sub)
+VOX_MAKE_BINARY_OP_CONCEPT(*, operator_mul)
+VOX_MAKE_BINARY_OP_CONCEPT(/, operator_div)
+VOX_MAKE_BINARY_OP_CONCEPT(%, operator_mod)
+VOX_MAKE_BINARY_OP_CONCEPT(&, operator_bit_and)
+VOX_MAKE_BINARY_OP_CONCEPT(|, operator_bit_or)
+VOX_MAKE_BINARY_OP_CONCEPT(^, operator_bit_Xor)
+VOX_MAKE_BINARY_OP_CONCEPT(<<, operator_shift_left)
+VOX_MAKE_BINARY_OP_CONCEPT(>>, operator_shift_right)
+VOX_MAKE_BINARY_OP_CONCEPT(&&, operator_and)
+VOX_MAKE_BINARY_OP_CONCEPT(||, operator_or)
+VOX_MAKE_BINARY_OP_CONCEPT(==, operator_equal)
+VOX_MAKE_BINARY_OP_CONCEPT(!=, operator_not_equal)
+VOX_MAKE_BINARY_OP_CONCEPT(<, operator_less)
+VOX_MAKE_BINARY_OP_CONCEPT(<=, operator_less_equal)
+VOX_MAKE_BINARY_OP_CONCEPT(>, operator_greater)
+VOX_MAKE_BINARY_OP_CONCEPT(>=, operator_greater_equal)
 
-LUISA_MAKE_BINARY_OP_CONCEPT(=, assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(+=, add_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(-=, sub_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(*=, mul_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(/=, div_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(%=, mod_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(&=, bit_and_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(|=, bit_or_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(^=, bit_xor_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(<<=, shift_left_assignable)
-LUISA_MAKE_BINARY_OP_CONCEPT(>>=, shift_right_assignable)
-#undef LUISA_MAKE_BINARY_OP_CONCEPT
+VOX_MAKE_BINARY_OP_CONCEPT(=, assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(+=, add_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(-=, sub_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(*=, mul_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(/=, div_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(%=, mod_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(&=, bit_and_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(|=, bit_or_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(^=, bit_xor_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(<<=, shift_left_assignable)
+VOX_MAKE_BINARY_OP_CONCEPT(>>=, shift_right_assignable)
+#undef VOX_MAKE_BINARY_OP_CONCEPT
 
 template<typename Lhs, typename Rhs>
 concept operator_access = requires(Lhs lhs, Rhs rhs) { lhs[rhs]; };

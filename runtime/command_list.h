@@ -11,7 +11,7 @@
 #include "runtime/rhi/command.h"
 #include "common/concepts.h"
 
-#ifdef LUISA_ENABLE_API
+#ifdef VOX_ENABLE_API
 #include "api/common.h>
 #endif
 namespace lc::validation {

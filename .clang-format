@@ -106,8 +106,8 @@ SpaceBeforeParensOptions:
 # This is currently a workaround. Switching to
 #   `Macros` from clangd-17 will be better.
 ForEachMacros:
-  - LUISA_STRUCT
-  - LUISA_BINDING_GROUP
+  - VOX_STRUCT
+  - VOX_BINDING_GROUP
 IfMacros:
   - $if
   - $elif

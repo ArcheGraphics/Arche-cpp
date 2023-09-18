@@ -85,29 +85,29 @@ struct Vector : public detail::VectorStorage<T, N> {
 /**
  * @brief Make vector types of size 2, 3, 4
  *  
- * Ex. LUISA_MAKE_VECTOR_TYPES(int) -> int2, int3, int4
+ * Ex. VOX_MAKE_VECTOR_TYPES(int) -> int2, int3, int4
  */
-#define LUISA_MAKE_VECTOR_TYPES(T) \
+#define VOX_MAKE_VECTOR_TYPES(T) \
     using T##2 = Vector<T, 2>;     \
     using T##3 = Vector<T, 3>;     \
     using T##4 = Vector<T, 4>;
 
-LUISA_MAKE_VECTOR_TYPES(bool)
+VOX_MAKE_VECTOR_TYPES(bool)
 
-LUISA_MAKE_VECTOR_TYPES(short)
-LUISA_MAKE_VECTOR_TYPES(ushort)
+VOX_MAKE_VECTOR_TYPES(short)
+VOX_MAKE_VECTOR_TYPES(ushort)
 
-LUISA_MAKE_VECTOR_TYPES(int)
-LUISA_MAKE_VECTOR_TYPES(uint)
+VOX_MAKE_VECTOR_TYPES(int)
+VOX_MAKE_VECTOR_TYPES(uint)
 
-LUISA_MAKE_VECTOR_TYPES(ulong)
-LUISA_MAKE_VECTOR_TYPES(slong)
+VOX_MAKE_VECTOR_TYPES(ulong)
+VOX_MAKE_VECTOR_TYPES(slong)
 
-LUISA_MAKE_VECTOR_TYPES(half)
-LUISA_MAKE_VECTOR_TYPES(float)
-LUISA_MAKE_VECTOR_TYPES(double)
+VOX_MAKE_VECTOR_TYPES(half)
+VOX_MAKE_VECTOR_TYPES(float)
+VOX_MAKE_VECTOR_TYPES(double)
 
-#undef LUISA_MAKE_VECTOR_TYPES
+#undef VOX_MAKE_VECTOR_TYPES
 
 /// Matrix only allows size of 2, 3, 4
 template<size_t N>
@@ -286,7 +286,7 @@ template<typename T, size_t N,
 }
 
 /// Binary & Assignment operators
-#define LUISA_MAKE_VECTOR_BINARY_OPERATOR(op, ...)                                    \
+#define VOX_MAKE_VECTOR_BINARY_OPERATOR(op, ...)                                    \
     template<typename T, size_t N, std::enable_if_t<__VA_ARGS__, int> = 0>            \
     [[nodiscard]] constexpr auto operator op(                                         \
         vox::Vector<T, N> lhs, vox::Vector<T, N> rhs) noexcept {                      \
@@ -315,19 +315,19 @@ template<typename T, size_t N,
     [[nodiscard]] constexpr auto operator op(T lhs, vox::Vector<T, N> rhs) noexcept { \
         return vox::Vector<T, N>{lhs} op rhs;                                         \
     }
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(+, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(-, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(*, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(/, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(%, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(<<, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(>>, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(|, std::negation_v<vox::is_floating_point<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(&, std::negation_v<vox::is_floating_point<T>>)
-LUISA_MAKE_VECTOR_BINARY_OPERATOR(^, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(+, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(-, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(*, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(/, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(%, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(<<, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(>>, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(|, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(&, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_BINARY_OPERATOR(^, std::negation_v<vox::is_floating_point<T>>)
 
 /// Binary logic operators
-#define LUISA_MAKE_VECTOR_LOGIC_OPERATOR(op, ...)                                     \
+#define VOX_MAKE_VECTOR_LOGIC_OPERATOR(op, ...)                                     \
     template<typename T, size_t N, std::enable_if_t<__VA_ARGS__, int> = 0>            \
     [[nodiscard]] constexpr auto operator op(                                         \
         vox::Vector<T, N> lhs, vox::Vector<T, N> rhs) noexcept {                      \
@@ -356,17 +356,17 @@ LUISA_MAKE_VECTOR_BINARY_OPERATOR(^, std::negation_v<vox::is_floating_point<T>>)
     [[nodiscard]] constexpr auto operator op(T lhs, vox::Vector<T, N> rhs) noexcept { \
         return vox::Vector<T, N>{lhs} op rhs;                                         \
     }
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(||, vox::is_boolean_v<T>)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(&&, vox::is_boolean_v<T>)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(==, true)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(!=, true)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(<, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(>, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(<=, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_LOGIC_OPERATOR(>=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(||, vox::is_boolean_v<T>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(&&, vox::is_boolean_v<T>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(==, true)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(!=, true)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(<, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(>, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(<=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_LOGIC_OPERATOR(>=, std::negation_v<vox::is_boolean<T>>)
 
 /// Assign operators
-#define LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(op, ...)                         \
+#define VOX_MAKE_VECTOR_ASSIGN_OPERATOR(op, ...)                         \
     template<typename T, size_t N, std::enable_if_t<__VA_ARGS__, int> = 0> \
     constexpr decltype(auto) operator op(                                  \
         vox::Vector<T, N> &lhs, vox::Vector<T, N> rhs) noexcept {          \
@@ -381,20 +381,20 @@ LUISA_MAKE_VECTOR_LOGIC_OPERATOR(>=, std::negation_v<vox::is_boolean<T>>)
         vox::Vector<T, N> &lhs, T rhs) noexcept {                          \
         return (lhs op vox::Vector<T, N>{rhs});                            \
     }
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(+=, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(-=, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(*=, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(/=, std::negation_v<vox::is_boolean<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(%=, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(<<=, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(>>=, vox::is_integral_v<T>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(|=, std::negation_v<vox::is_floating_point<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(&=, std::negation_v<vox::is_floating_point<T>>)
-LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(^=, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(+=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(-=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(*=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(/=, std::negation_v<vox::is_boolean<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(%=, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(<<=, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(>>=, vox::is_integral_v<T>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(|=, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(&=, std::negation_v<vox::is_floating_point<T>>)
+VOX_MAKE_VECTOR_ASSIGN_OPERATOR(^=, std::negation_v<vox::is_floating_point<T>>)
 
-#undef LUISA_MAKE_VECTOR_BINARY_OPERATOR
-#undef LUISA_MAKE_VECTOR_LOGIC_OPERATOR
-#undef LUISA_MAKE_VECTOR_ASSIGN_OPERATOR
+#undef VOX_MAKE_VECTOR_BINARY_OPERATOR
+#undef VOX_MAKE_VECTOR_LOGIC_OPERATOR
+#undef VOX_MAKE_VECTOR_ASSIGN_OPERATOR
 
 /// float2x2 multiplied by float
 [[nodiscard]] constexpr auto operator*(const vox::float2x2 m, float s) noexcept {
@@ -504,7 +504,7 @@ LUISA_MAKE_VECTOR_ASSIGN_OPERATOR(^=, std::negation_v<vox::is_floating_point<T>>
 namespace vox {
 
 /// make_typeN definitions
-#define LUISA_MAKE_TYPE_N(type)                                                                                              \
+#define VOX_MAKE_TYPE_N(type)                                                                                              \
     [[nodiscard]] constexpr auto make_##type##2(type s = {}) noexcept { return type##2(s); }                                 \
     [[nodiscard]] constexpr auto make_##type##2(type x, type y) noexcept { return type##2(x, y); }                           \
     template<typename T>                                                                                                     \
@@ -546,18 +546,18 @@ namespace vox {
     [[nodiscard]] constexpr auto make_##type##4(type##3 v, type w) noexcept { return type##4(v.x, v.y, v.z, w); }            \
     [[nodiscard]] constexpr auto make_##type##4(type x, type##3 v) noexcept { return type##4(x, v.x, v.y, v.z); }
 
-LUISA_MAKE_TYPE_N(bool)
-LUISA_MAKE_TYPE_N(float)
-LUISA_MAKE_TYPE_N(int)
-LUISA_MAKE_TYPE_N(uint)
-LUISA_MAKE_TYPE_N(short)
-LUISA_MAKE_TYPE_N(ushort)
-LUISA_MAKE_TYPE_N(slong)
-LUISA_MAKE_TYPE_N(ulong)
-LUISA_MAKE_TYPE_N(half)
-LUISA_MAKE_TYPE_N(double)
+VOX_MAKE_TYPE_N(bool)
+VOX_MAKE_TYPE_N(float)
+VOX_MAKE_TYPE_N(int)
+VOX_MAKE_TYPE_N(uint)
+VOX_MAKE_TYPE_N(short)
+VOX_MAKE_TYPE_N(ushort)
+VOX_MAKE_TYPE_N(slong)
+VOX_MAKE_TYPE_N(ulong)
+VOX_MAKE_TYPE_N(half)
+VOX_MAKE_TYPE_N(double)
 
-#undef LUISA_MAKE_TYPE_N
+#undef VOX_MAKE_TYPE_N
 
 /// make float2x2
 [[nodiscard]] constexpr auto make_float2x2(float s = 1.0f) noexcept {
