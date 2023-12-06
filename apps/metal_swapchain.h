@@ -8,7 +8,6 @@
 
 #include <QuartzCore/QuartzCore.hpp>
 #include <Metal/Metal.hpp>
-#include "runtime/rhi/pixel.h"
 #include <string_view>
 
 extern "C" CA::MetalLayer *metal_backend_create_layer(
@@ -18,17 +17,13 @@ extern "C" CA::MetalLayer *metal_backend_create_layer(
     uint32_t back_buffer_count) noexcept;
 
 namespace vox::compute::metal {
-class MetalDevice;
-
 class MetalSwapchain {
 public:
-    MetalSwapchain(MetalDevice *device, uint64_t window_handle,
+    MetalSwapchain(MTL::Device* device, uint64_t window_handle,
                    uint width, uint height, bool allow_hdr = false,
                    bool vsync = true, uint back_buffer_size = 1) noexcept;
 
     ~MetalSwapchain() noexcept;
-
-    [[nodiscard]] PixelStorage pixel_storage() const noexcept;
 
     [[nodiscard]] auto layer() const noexcept { return _layer; }
 

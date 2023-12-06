@@ -372,7 +372,7 @@ Viewport::Viewport(uint64_t window_handle, uint width, uint height) {
     _startTimeInSeconds = 0;
     _sceneSetup = false;
 
-    _swapchain = std::make_unique<metal::MetalSwapchain>(*_device, window_handle, width, height);
+    _swapchain = std::make_unique<compute::metal::MetalSwapchain>(_device.get(), window_handle, width, height);
 
     initializeMaterial();
 

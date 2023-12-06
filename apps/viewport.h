@@ -16,7 +16,7 @@
 #include <pxr/usdImaging/usdImagingGL/engine.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
-#include "metal/metal_swapchain.h"
+#include "metal_swapchain.h"
 
 namespace vox {
 class Camera;
@@ -67,7 +67,7 @@ private:
     double updateTime();
 
 private:
-    std::unique_ptr<metal::MetalSwapchain> _swapchain{};
+    std::unique_ptr<compute::metal::MetalSwapchain> _swapchain{};
     std::shared_ptr<MTL::Device> _device{};
     dispatch_semaphore_t _inFlightSemaphore{};
 

@@ -20,10 +20,6 @@ set(COMMON_FILES
         timer.cpp
         filesystem.cpp
         utils.cpp
-        basic_types.cpp
-        magic_enum.h
-        first_fit.cpp
-        pool.cpp
 )
 
 set(GUI_FILES

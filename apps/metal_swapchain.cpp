@@ -10,14 +10,13 @@
 #include "common/logging.h"
 #include "common/metal_helpers.h"
 #include "common/filesystem.h"
-#include "metal_device.h"
 
 namespace vox::compute::metal {
-MetalSwapchain::MetalSwapchain(MetalDevice *device, uint64_t window_handle,
+MetalSwapchain::MetalSwapchain(MTL::Device* device, uint64_t window_handle,
                                uint width, uint height, bool allow_hdr,
                                bool vsync, uint back_buffer_size) noexcept
     : _layer{metal_backend_create_layer(
-          device->handle(), window_handle,
+          device, window_handle,
           width, height, allow_hdr,
           vsync, back_buffer_size)},
       _render_pass_desc{make_shared(MTL::RenderPassDescriptor::alloc()->init())} {
@@ -28,7 +27,7 @@ MetalSwapchain::MetalSwapchain(MetalDevice *device, uint64_t window_handle,
     attachment_desc->setClearColor(MTL::ClearColor(1.0, 1.0, 1.0, 1.0));
     _format = allow_hdr ? MTL::PixelFormatRGBA16Float : MTL::PixelFormatBGRA8Unorm;
 
-    create_pso(device->handle());
+    create_pso(device);
 }
 
 MetalSwapchain::~MetalSwapchain() noexcept {
@@ -77,12 +76,6 @@ void MetalSwapchain::create_pso(MTL::Device *device) {
     if (!_pipeline) {
         LOGE("Failed to created pipeline state, error {}", error->description()->cString(NS::StringEncoding::UTF8StringEncoding))
     }
-}
-
-PixelStorage MetalSwapchain::pixel_storage() const noexcept {
-    return _layer->pixelFormat() == MTL::PixelFormatRGBA16Float ?
-               PixelStorage::HALF4 :
-               PixelStorage::BYTE4;
 }
 
 void MetalSwapchain::present(MTL::CommandBuffer *command_buffer, MTL::Texture *image) noexcept {
