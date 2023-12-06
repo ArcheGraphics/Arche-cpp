@@ -16,7 +16,7 @@
 #include <pxr/usdImaging/usdImagingGL/engine.h>
 #include <pxr/usd/usdGeom/bboxCache.h>
 
-#include "metal_swapchain.h"
+#include "common/gui/metal_swapchain.h"
 
 namespace vox {
 class Camera;

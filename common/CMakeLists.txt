@@ -28,6 +28,8 @@ set(GUI_FILES
         gui/input.h
         gui/imgui_impl_glfw.h
         gui/imgui_impl_glfw.cpp
+        gui/metal_swapchain_layer.mm
+        gui/metal_swapchain.cpp
 )
 
 source_group("common\\" FILES ${COMMON_FILES})
@@ -61,6 +63,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         glfw
         imgui
+        metal-cpp
 )
 
 if (${NEED_LINK_ATOMIC})

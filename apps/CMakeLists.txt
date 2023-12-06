@@ -11,8 +11,6 @@ add_executable(${PROJECT_NAME}
         main.cpp
         viewport.mm
         camera.cpp
-        metal_swapchain.cpp
-        metal_swapchain_layer.mm
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../)
