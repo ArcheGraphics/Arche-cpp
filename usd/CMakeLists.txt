@@ -117,6 +117,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         mikktspace
         cgltf
         imgui
+        glfw
         ${PXR_LIBRARY_NAMES}
 )
 
