@@ -61,8 +61,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         spdlog
         glfw
         imgui
-        half
-        magic_enum
 )
 
 if (${NEED_LINK_ATOMIC})
